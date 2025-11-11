@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3000
 const todoRoute = require('./controllers/todo')
 const app = express()
 
+// app.use(express.json)
 app.use('/api/todo', todoRoute)
 
 app.get('/', (req, res) => {
