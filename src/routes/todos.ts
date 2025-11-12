@@ -1,9 +1,16 @@
 import { Router } from 'express'
-import { listTodos } from '../controllers/todos.ts'
+import {
+  createTodo,
+  deleteTodo,
+  listTodos,
+  updateTodo,
+} from '../controllers/todos.ts'
 
 const router = Router()
 
-// Get list of TODOS
 router.get('/', listTodos)
+router.post('/', createTodo)
+router.put('/:id', updateTodo)
+router.delete('/:id', deleteTodo)
 
 export default router
