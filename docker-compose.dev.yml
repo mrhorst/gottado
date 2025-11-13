@@ -1,0 +1,9 @@
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./drizzle/postgres/docker_volume:/var/lib/postgresql/18/docker
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - 5432:5432

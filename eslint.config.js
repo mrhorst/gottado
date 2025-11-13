@@ -29,6 +29,6 @@ export default tseslint.config(
     },
     // Specify files to apply this configuration to
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['dist/', 'node_modules/'], // Files/folders to ignore
+    ignores: ['dist/', 'node_modules/', '*.config.*'], // Files/folders to ignore
   }
 )

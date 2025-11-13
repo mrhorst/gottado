@@ -16,13 +16,17 @@
   "description": "",
   "dependencies": {
     "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "drizzle-orm": "^0.44.7",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
+    "drizzle-kit": "^0.31.6",
     "eslint": "^9.39.1",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
