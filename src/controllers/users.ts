@@ -1,6 +1,7 @@
 import db from '../utils/db.ts'
 import { Request, Response, NextFunction } from 'express'
 import { usersTable } from '../db/schema.ts'
+import { eq } from 'drizzle-orm'
 
 // returns all users
 const listUsers = async (_req: Request, res: Response, next: NextFunction) => {
@@ -25,6 +26,13 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
 const updateUser = async (_req: Request, _res: Response) => {}
 
-const deleteUser = async (_req: Request, _res: Response) => {}
+const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await db.delete(usersTable).where(eq(usersTable.id, req.user.id))
+    res.status(204).send()
+  } catch (error: unknown) {
+    next(error)
+  }
+}
 
 export { listUsers, createUser, updateUser, deleteUser }
