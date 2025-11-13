@@ -28,7 +28,7 @@ const updateUser = async (_req: Request, _res: Response) => {}
 
 const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await db.delete(usersTable).where(eq(usersTable.id, req.user.id))
+    await db.delete(usersTable).where(eq(usersTable.id, 1)) //req.user.id
     res.status(204).send()
   } catch (error: unknown) {
     next(error)
