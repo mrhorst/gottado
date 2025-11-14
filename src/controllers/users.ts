@@ -2,6 +2,7 @@ import db from '../utils/db.ts'
 import { Request, Response, NextFunction } from 'express'
 import { usersTable } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
+import * as bcrypt from 'bcrypt'
 
 // returns all users
 const listUsers = async (_req: Request, res: Response, next: NextFunction) => {
@@ -15,9 +16,18 @@ const listUsers = async (_req: Request, res: Response, next: NextFunction) => {
 
 // CREATE a user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  const body = req.body
   try {
-    const user = await db.insert(usersTable).values(body).returning()
+    const { email, name, password } = req.body
+    const passwordHash = await bcrypt.hash(password, 10)
+    const newUser = { email, name, passwordHash }
+    const user = await db
+      .insert(usersTable)
+      .values(newUser)
+      .returning({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+      })
     res.send(user[0])
   } catch (error: unknown) {
     next(error)

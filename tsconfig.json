@@ -11,10 +11,12 @@
     "rootDir": "src",
     "sourceMap": true,
     "types": ["node"],
-    "baseUrl": ".",
-    "paths": {
-      "@utils/*": ["src/utils/*"]
-    },
+    "baseUrl": "./",
+    // "paths": {
+    //   "@utils/*": ["src/utils/*"],
+    //   "@controllers/*": ["src/controllers/*"],
+    //   "@config/*": ["src/utils/config"]
+    // },
     "allowImportingTsExtensions": true,
     "noEmit": true
   },

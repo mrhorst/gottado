@@ -4,13 +4,23 @@ import {
   varchar,
   date,
   AnyPgColumn,
+  text,
+  timestamp,
 } from 'drizzle-orm/pg-core'
+
+import { sql } from 'drizzle-orm'
 
 export const usersTable = pgTable('users', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar({ length: 255 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
-  taskId: integer('task_id').references(() => tasksTable.id),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
 })
 
 export const tasksTable = pgTable('tasks', {
