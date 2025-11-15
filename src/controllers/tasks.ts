@@ -1,10 +1,19 @@
 import db from '../utils/db.ts'
-import { NextFunction, Request, Response } from 'express'
+import { NextFunction, Request, RequestHandler, Response } from 'express'
 import { tasksTable, usersTable } from '../db/schema.ts'
 import { AuthRequest } from 'src/middleware/authentication.ts'
 import { eq } from 'drizzle-orm'
 
-const listTasks = async (_req: Request, res: Response) => {
+export interface AuthenticatedRequest extends Request {
+  token?: string
+  user?: {
+    email: string
+    sub: string | number
+    iat: number
+  }
+}
+
+const listTasks = async (req: AuthenticatedRequest, res: Response) => {
   const tasks = await await db
     .select({
       id: tasksTable.id,
@@ -15,6 +24,8 @@ const listTasks = async (_req: Request, res: Response) => {
     })
     .from(tasksTable)
     .innerJoin(usersTable, eq(tasksTable.userId, usersTable.id))
+    .where(eq(tasksTable.userId, Number(req.user?.sub)))
+
   res.send(tasks)
 }
 
