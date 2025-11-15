@@ -2,7 +2,7 @@ import db from '../utils/db.ts'
 import { NextFunction, Request, Response } from 'express'
 import { tasksTable, usersTable } from '../db/schema.ts'
 import { AuthRequest } from 'src/middleware/authentication.ts'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 export interface AuthenticatedRequest extends Request {
   token?: string
@@ -46,16 +46,57 @@ const createTask = async (
   }
 }
 
-const updateTask = async (req: AuthenticatedRequest, res: Response) => {
-  const id = req.params.id
-  const task = await db
-    .update(tasksTable)
-    .set(req.body)
-    .where(eq(tasksTable.id, Number(id)))
-    .returning()
-  res.send(task)
+const updateTask = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const taskIdToBeUpdated = req.params.id
+  const authenticatedUserId = req.user?.sub
+
+  try {
+    const task = await db
+      .update(tasksTable)
+      .set(req.body)
+      .where(
+        and(
+          eq(tasksTable.id, Number(taskIdToBeUpdated)),
+          eq(tasksTable.userId, Number(authenticatedUserId))
+        )
+      )
+      .returning()
+
+    if (task.length === 0) return res.sendStatus(404)
+
+    res.send(task)
+  } catch (err) {
+    next(err)
+  }
 }
 
-const deleteTask = async (_req: Request, _res: Response) => {}
+const deleteTask = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const taskIdToBeDeleted = req.params.id
+  const authenticatedUserId = req.user?.sub
+
+  try {
+    const deletedTaskId = await db
+      .delete(tasksTable)
+      .where(
+        and(
+          eq(tasksTable.id, Number(taskIdToBeDeleted)),
+          eq(tasksTable.userId, Number(authenticatedUserId))
+        )
+      )
+      .returning({ id: tasksTable.id })
+    if (deletedTaskId.length === 0) return res.sendStatus(404)
+    res.sendStatus(204)
+  } catch (err) {
+    next(err)
+  }
+}
 
 export { listTasks, createTask, updateTask, deleteTask }
