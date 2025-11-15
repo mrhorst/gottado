@@ -22,6 +22,8 @@ export const usersTable = pgTable('users', {
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()
     .default(sql`now()`),
+  active: boolean().notNull().default(true),
+  deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
 })
 
 export const tasksTable = pgTable('tasks', {

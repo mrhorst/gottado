@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 const listTasks = async (req: AuthenticatedRequest, res: Response) => {
-  const tasks = await await db
+  const tasks = await db
     .select({
       id: tasksTable.id,
       title: tasksTable.title,
