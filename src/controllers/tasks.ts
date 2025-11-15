@@ -1,5 +1,5 @@
 import db from '../utils/db.ts'
-import { NextFunction, Request, RequestHandler, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { tasksTable, usersTable } from '../db/schema.ts'
 import { AuthRequest } from 'src/middleware/authentication.ts'
 import { eq } from 'drizzle-orm'
@@ -46,7 +46,15 @@ const createTask = async (
   }
 }
 
-const updateTask = async (_req: Request, _res: Response) => {}
+const updateTask = async (req: AuthenticatedRequest, res: Response) => {
+  const id = req.params.id
+  const task = await db
+    .update(tasksTable)
+    .set(req.body)
+    .where(eq(tasksTable.id, Number(id)))
+    .returning()
+  res.send(task)
+}
 
 const deleteTask = async (_req: Request, _res: Response) => {}
 

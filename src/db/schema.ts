@@ -6,6 +6,7 @@ import {
   AnyPgColumn,
   text,
   timestamp,
+  boolean,
 } from 'drizzle-orm/pg-core'
 
 import { sql } from 'drizzle-orm'
@@ -28,7 +29,8 @@ export const tasksTable = pgTable('tasks', {
   description: varchar({ length: 255 }),
   title: varchar({ length: 100 }).notNull(),
   dueDate: date('due_date'),
-  userId: integer('users_id')
+  complete: boolean().notNull().default(false),
+  userId: integer('user_id')
     .references((): AnyPgColumn => usersTable.id)
     .notNull(),
 })
