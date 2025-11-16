@@ -11,7 +11,7 @@ import {
 const api = Router()
 
 api.use('/', authRouter)
-api.use('/users', usersRouter)
+api.use('/users', usersRouter) // we need to revisit this later to see how we should protect it
 api.use('/tasks', tokenExtractor, authenticateUser, tasksRouter)
 
 export default api
