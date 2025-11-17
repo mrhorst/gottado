@@ -3,7 +3,9 @@
 # dependencies
 node_modules/
 
+
 .env
+../.DS_Store
 
 # Expo
 .expo/

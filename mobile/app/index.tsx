@@ -1,15 +1,19 @@
-import { Text, View } from "react-native";
+import { NativeRouter } from 'react-router-native'
+
+import AppRouter from './router/AppRouter'
+import AuthProvider from './auth/AuthContext'
+
+const v7_flag = {
+  v7_relativeSplatPath: true,
+  v7_startTransition: true,
+}
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+    <AuthProvider>
+      <NativeRouter future={v7_flag}>
+        <AppRouter />
+      </NativeRouter>
+    </AuthProvider>
+  )
 }
