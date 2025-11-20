@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-native'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '../context/auth/AuthContext'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { token } = useAuth()

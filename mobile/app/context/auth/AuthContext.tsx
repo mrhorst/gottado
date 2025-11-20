@@ -26,7 +26,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         const storedToken = await AsyncStorage.getItem('auth_token')
         setToken(storedToken)
       } catch (err) {
-        console.log(err)
+        console.error(err)
       } finally {
         setReady(true)
       }

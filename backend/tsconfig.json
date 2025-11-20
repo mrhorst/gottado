@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "outDir": "dist",
-    "rootDir": "backend/src",
+    "rootDir": "src",
     "sourceMap": true,
     "types": ["node"],
     "baseUrl": "./",
@@ -20,6 +20,6 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["backend/src", "typings.d.ts"],
+  "include": ["src", "typings.d.ts"],
   "exclude": ["dist", "node_modules"]
 }

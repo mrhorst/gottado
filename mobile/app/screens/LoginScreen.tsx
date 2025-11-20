@@ -1,14 +1,9 @@
-import axios from 'axios'
 import { useState } from 'react'
 import { Button, Text, TextInput, View } from 'react-native'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '../context/auth/AuthContext'
 import { useLocation, useNavigate } from 'react-router-native'
 import styles from './styles'
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL
-const api = axios.create({
-  baseURL: API_URL + '/api',
-})
+import api from '../services/api'
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('')

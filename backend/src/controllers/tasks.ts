@@ -20,7 +20,8 @@ const listTasks = async (req: AuthenticatedRequest, res: Response) => {
       title: tasksTable.title,
       description: tasksTable.description,
       dueDate: tasksTable.dueDate,
-      user: { id: usersTable.id, name: usersTable.name },
+      complete: tasksTable.complete,
+      // user: { id: usersTable.id, name: usersTable.name },
     })
     .from(tasksTable)
     .innerJoin(usersTable, eq(tasksTable.userId, usersTable.id))

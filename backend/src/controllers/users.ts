@@ -47,4 +47,17 @@ const deleteUser = async (
   }
 }
 
-export { listUsers, createUser, updateUser, deleteUser }
+const me = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user
+    res.send(user)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export { listUsers, createUser, updateUser, deleteUser, me }

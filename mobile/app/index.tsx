@@ -1,7 +1,8 @@
 import { NativeRouter } from 'react-router-native'
 
 import AppRouter from './router/AppRouter'
-import AuthProvider from './auth/AuthContext'
+import AuthProvider from './context/auth/AuthContext'
+import UserProvider from './context/user/UserContext'
 
 const v7_flag = {
   v7_relativeSplatPath: true,
@@ -11,9 +12,11 @@ const v7_flag = {
 export default function Index() {
   return (
     <AuthProvider>
-      <NativeRouter future={v7_flag}>
-        <AppRouter />
-      </NativeRouter>
+      <UserProvider>
+        <NativeRouter future={v7_flag}>
+          <AppRouter />
+        </NativeRouter>
+      </UserProvider>
     </AuthProvider>
   )
 }

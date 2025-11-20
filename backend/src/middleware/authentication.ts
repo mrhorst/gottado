@@ -29,7 +29,10 @@ const authenticateUser = async (
 ) => {
   const token = req.token
   const user = token ? jwt.verify(token, JWT_SECRET) : ''
-  if (!user) return res.status(400).send({ error: 'token invalid' })
+  if (!user)
+    return res
+      .status(400)
+      .send({ error: 'blocked by middleware: token invalid' })
 
   req.user = user
   next()
