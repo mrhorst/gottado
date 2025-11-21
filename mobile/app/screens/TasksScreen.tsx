@@ -31,7 +31,7 @@ const TasksScreen = () => {
   return (
     <View style={{ padding: 16 }}>
       <View style={styles.tasksScreenHeader}>
-        <Button title='Dashboard' onPress={() => nav('/dashboard')}></Button>
+        <Button title='Back' onPress={() => nav(-1)}></Button>
         <Text style={{ fontSize: 18, fontWeight: '700' }}>{user?.name}</Text>
         <Button title='Logout' onPress={logout} />
       </View>

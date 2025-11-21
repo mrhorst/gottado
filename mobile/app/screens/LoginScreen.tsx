@@ -18,7 +18,8 @@ const LoginScreen = () => {
     await login(data.token)
 
     const redirectTo = location.state?.from ?? '/dashboard'
-    nav(redirectTo)
+
+    nav(redirectTo, { replace: true })
   }
 
   return (
