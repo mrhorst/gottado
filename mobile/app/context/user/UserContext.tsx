@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../auth/AuthContext'
 
 export type LoggedUser = {
+  name: string
   email: string
   sub: number
   iat: number

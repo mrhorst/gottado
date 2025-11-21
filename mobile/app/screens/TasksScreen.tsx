@@ -35,7 +35,7 @@ const TasksScreen = () => {
           alignItems: 'center',
         }}
       >
-        <Text style={{ fontWeight: '700' }}>{user?.email}</Text>
+        <Text style={{ fontWeight: '700' }}>{user?.name}</Text>
         <Button title='Logout' onPress={logout} />
       </View>
 
@@ -47,38 +47,42 @@ const TasksScreen = () => {
           borderRadius: 10,
         }}
       >
-        {tasks.map((t) => (
-          <View
-            style={{
-              borderBottomWidth: 1,
-              padding: 10,
-              marginBottom: 20,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}
-            key={t.id}
-          >
-            <Text
+        {tasks.length === 0 ? (
+          <Text style={styles.header}>You have 0 tasks!</Text>
+        ) : (
+          tasks.map((t) => (
+            <View
               style={{
-                fontWeight: '600',
-                textDecorationLine: t.complete ? 'line-through' : 'none',
+                borderBottomWidth: 1,
+                padding: 10,
+                marginBottom: 20,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
               }}
+              key={t.id}
             >
-              {t.title}
-            </Text>
-            <Pressable onPress={() => completeTask(t)}>
-              <View
+              <Text
                 style={{
-                  borderWidth: 2,
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  borderColor: '#888',
+                  fontWeight: '600',
+                  textDecorationLine: t.complete ? 'line-through' : 'none',
                 }}
-              ></View>
-            </Pressable>
-          </View>
-        ))}
+              >
+                {t.title}
+              </Text>
+              <Pressable onPress={() => completeTask(t)}>
+                <View
+                  style={{
+                    borderWidth: 2,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderColor: '#888',
+                  }}
+                ></View>
+              </Pressable>
+            </View>
+          ))
+        )}
       </View>
     </View>
   )

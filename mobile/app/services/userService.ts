@@ -6,7 +6,6 @@ export interface UserTasks {
   id?: number
   title: string
   complete: boolean
-  // user: { id: number; name: string }
 }
 
 const fetchLoggedUser = async () => {
