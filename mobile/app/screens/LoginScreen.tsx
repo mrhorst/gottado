@@ -17,7 +17,7 @@ const LoginScreen = () => {
     const { data } = await api.post('/login', { email, password })
     await login(data.token)
 
-    const redirectTo = location.state?.from ?? '/welcome'
+    const redirectTo = location.state?.from ?? '/dashboard'
     nav(redirectTo)
   }
 

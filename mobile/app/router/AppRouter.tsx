@@ -7,10 +7,10 @@ import DashboardScreen from '../screens/DashboardScreen'
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path='/' element={<Navigate to='/welcome' replace />} />
+      <Route path='/' element={<Navigate to='/dashboard' replace />} />
       <Route path='/login' element={<LoginScreen />} />
       <Route
-        path='/welcome'
+        path='/dashboard'
         element={
           <ProtectedRoute>
             <DashboardScreen />
@@ -25,7 +25,7 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
-      <Route path='*' element={<Navigate to='/welcome' replace />} />
+      <Route path='*' element={<Navigate to='/dashboard' replace />} />
     </Routes>
   )
 }
