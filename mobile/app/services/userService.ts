@@ -3,7 +3,7 @@ import api from './api'
 export interface UserTasks {
   description: string
   dueDate: string
-  id?: number
+  id: number
   title: string
   complete: boolean
 }
@@ -18,10 +18,8 @@ const getTasks = async (): Promise<UserTasks[]> => {
   return data
 }
 
-const setTaskCompleted = async (task: UserTasks) => {
-  const { id, ...taskNoId } = task
-  const completedTask = { ...taskNoId, complete: !task.complete }
-  const { data } = await api.put(`/tasks/${task.id}`, completedTask)
+const setTaskCompleted = async (id: number, complete: boolean) => {
+  const { data } = await api.put(`/tasks/${id}`, { complete })
   return data
 }
 

@@ -3,29 +3,67 @@ import { useAuth } from '../context/auth/AuthContext'
 import styles from './styles'
 import { useLoggedUser } from '../context/user/UserContext'
 import { getTasks, setTaskCompleted, UserTasks } from '../services/userService'
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-native'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { sortTasks } from '../utils/taskHelpers'
 
 const TasksScreen = () => {
   const { logout } = useAuth()
   const { user } = useLoggedUser()
-  const [tasks, setTasks] = useState<UserTasks[] | []>([])
   const nav = useNavigate()
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    const loadTasks = async () => {
-      const userTasks = await getTasks()
-      setTasks(userTasks)
-    }
-    loadTasks()
-  }, [user])
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['tasks', user?.sub],
+    queryFn: getTasks,
+    enabled: !!user,
+  })
+  const sortedTasks = useMemo(() => {
+    return sortTasks(tasks)
+  }, [tasks])
 
-  const completeTask = async (task: UserTasks) => {
-    const updated = await setTaskCompleted(task)
+  const mutation = useMutation({
+    mutationFn: ({ id, complete }: { id: number; complete: boolean }) =>
+      setTaskCompleted(id, complete),
 
-    setTasks((prev) =>
-      prev.map((t) => (t.id === updated[0].id ? updated[0] : t))
-    )
+    onMutate: async ({ id, complete }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks', user?.sub] })
+      const previousTasks = queryClient.getQueryData<UserTasks[]>([
+        'tasks',
+        user?.sub,
+      ])
+
+      const newTasks = previousTasks
+        ? previousTasks.map((task) =>
+            task.id === id ? { ...task, complete } : task
+          )
+        : []
+
+      queryClient.setQueryData<UserTasks[]>(
+        ['tasks', user?.sub],
+        sortTasks(newTasks)
+      )
+      return { previousTasks }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.sub] })
+    },
+    onError: (err, _updatedTask, context) => {
+      queryClient.setQueryData(['tasks', user?.sub], context?.previousTasks)
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.sub] })
+    },
+  })
+
+  const completeTask = (t: UserTasks) => {
+    mutation.mutate({ id: t.id, complete: !t.complete })
+  }
+
+  if (isLoading) {
+    return <Text>Loading...</Text>
   }
 
   return (
@@ -41,7 +79,7 @@ const TasksScreen = () => {
         {tasks.length === 0 ? (
           <Text style={styles.header}>You have 0 tasks!</Text>
         ) : (
-          tasks.map((t) => (
+          sortedTasks.map((t) => (
             <View style={styles.taskCard} key={t.id}>
               <Text
                 style={{
