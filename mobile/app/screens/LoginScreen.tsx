@@ -4,6 +4,7 @@ import { useAuth } from '../context/auth/AuthContext'
 import { useLocation, useNavigate } from 'react-router-native'
 import styles from './styles'
 import api from '../services/api'
+import { Stack } from 'expo-router'
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('')
@@ -23,8 +24,7 @@ const LoginScreen = () => {
   }
 
   return (
-    <View style={{ padding: 16 }}>
-      <Text style={styles.header}>Login</Text>
+    <View style={[styles.screenContainer, { marginTop: 50 }]}>
       <TextInput
         value={email}
         onChangeText={setEmail}
@@ -41,6 +41,7 @@ const LoginScreen = () => {
         placeholder='Password'
       />
       <Button title='Sign in' onPress={onSubmit} />
+      <Stack.Screen options={{ title: 'Login' }} />
     </View>
   )
 }

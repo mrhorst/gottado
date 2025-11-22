@@ -28,6 +28,10 @@ export default function UserProvider({ children }: { children: ReactNode }) {
 
   const { token } = useAuth()
 
+  useEffect(() => {
+    loadUser()
+  }, [token])
+
   const loadUser = async () => {
     setLoading(true)
     try {
@@ -40,10 +44,6 @@ export default function UserProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
   }
-
-  useEffect(() => {
-    loadUser()
-  }, [token])
 
   const value: UserContextType = {
     user,

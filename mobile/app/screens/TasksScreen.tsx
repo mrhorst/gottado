@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { sortTasks } from '../utils/taskHelpers'
+import { Stack } from 'expo-router'
 
 const TasksScreen = () => {
   const { logout } = useAuth()
@@ -19,6 +20,7 @@ const TasksScreen = () => {
     queryFn: getTasks,
     enabled: !!user,
   })
+
   const sortedTasks = useMemo(() => {
     return sortTasks(tasks)
   }, [tasks])
@@ -67,14 +69,13 @@ const TasksScreen = () => {
   }
 
   return (
-    <View style={{ padding: 16 }}>
-      <View style={styles.tasksScreenHeader}>
+    <View style={styles.screenContainer}>
+      <Stack.Screen options={{ title: 'Tasks' }} />
+      <View style={styles.headerContainer}>
         <Button title='Back' onPress={() => nav(-1)}></Button>
         <Text style={{ fontSize: 18, fontWeight: '700' }}>{user?.name}</Text>
         <Button title='Logout' onPress={logout} />
       </View>
-
-      <Text style={styles.header}>Tasks</Text>
       <View style={styles.tasksContainer}>
         {tasks.length === 0 ? (
           <Text style={styles.header}>You have 0 tasks!</Text>

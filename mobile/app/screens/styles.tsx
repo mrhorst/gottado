@@ -42,10 +42,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: '#888',
   },
-  tasksScreenHeader: {
+  headerContainer: {
+    marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  screenContainer: {
+    padding: 20,
   },
 })
 export default styles
