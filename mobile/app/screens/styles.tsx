@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  completeTaskToggle: {
+  toggleCompleteTask: {
     borderWidth: 2,
     width: 20,
     height: 20,
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     borderColor: '#888',
   },
   headerContainer: {
-    marginTop: 10,
+    marginVertical: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

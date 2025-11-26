@@ -9,6 +9,8 @@ const api: AxiosInstance = axios.create({
   },
 })
 
+console.log('api:', api.getUri())
+
 interface CustomAxiosConfig extends AxiosRequestConfig {
   _retry?: boolean
 }
@@ -40,7 +42,45 @@ api.interceptors.response.use(
 
       return Promise.reject(new Error('token expired'))
     }
-    return Promise.reject(error.response.data)
+    if (error.response) {
+      const { status, data } = error.response
+      const serverMsg =
+        (data && typeof data === 'object' && (data as any).message) ||
+        (data && typeof data === 'object' && (data as any).error) ||
+        (typeof data === 'string' ? data : null)
+
+      if (__DEV__) {
+        console.warn('HTTP error:', { status, data })
+      }
+
+      return Promise.reject(
+        new Error(
+          serverMsg
+            ? `${serverMsg} (HTTP ${status})`
+            : `Request failed (HTTP ${status})`
+        )
+      )
+    }
+
+    // No response (network/timeout)
+    if (error.request) {
+      const isTimeout = (error as any).code === 'ECONNABORTED'
+      const msg = isTimeout
+        ? 'Request timed out. Please check your connection and try again.'
+        : 'No response from server. Check your connection or the server status.'
+      if (__DEV__) {
+        console.warn('Network error:', {
+          code: (error as any).code,
+          message: error.message,
+        })
+      }
+      return Promise.reject(new Error(msg))
+    }
+
+    // Setup error
+    return Promise.reject(
+      new Error(error.message || 'Unexpected error occurred.')
+    )
   }
 )
 
