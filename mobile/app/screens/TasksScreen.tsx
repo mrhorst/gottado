@@ -124,7 +124,8 @@ const PendingTasks = ({
           <View style={styles.taskCard} key={t.id}>
             <Text
               style={{
-                fontWeight: '600',
+                fontWeight: '400',
+                fontSize: 18,
                 textDecorationLine: t.complete ? 'line-through' : 'none',
               }}
             >
@@ -179,7 +180,8 @@ const CompletedTasks = ({
             <View style={styles.taskCard} key={t.id}>
               <Text
                 style={{
-                  fontWeight: '600',
+                  fontWeight: '400',
+                  fontSize: 18,
                   textDecorationLine: t.complete ? 'line-through' : 'none',
                 }}
               >
