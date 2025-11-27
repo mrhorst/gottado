@@ -24,7 +24,7 @@ const LoginScreen = () => {
   }
 
   return (
-    <View style={[styles.screenContainer, { marginTop: 50 }]}>
+    <View style={styles.screenContainer}>
       <TextInput
         value={email}
         onChangeText={setEmail}

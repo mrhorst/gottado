@@ -23,4 +23,15 @@ const setTaskCompleted = async (id: number, complete: boolean) => {
   return data
 }
 
-export { fetchLoggedUser, getTasks, setTaskCompleted }
+const createNewTask = async (
+  title: string,
+  description: string,
+  dueDate: Date | null,
+  userId: number
+) => {
+  const newTask = { title, description, dueDate, userId }
+  const { data } = await api.post('/tasks', newTask)
+  return data
+}
+
+export { fetchLoggedUser, getTasks, setTaskCompleted, createNewTask }

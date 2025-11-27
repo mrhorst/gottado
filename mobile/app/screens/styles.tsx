@@ -15,7 +15,8 @@ const styles = StyleSheet.create({
   dashboardButton: {
     borderWidth: 1,
     borderRadius: 10,
-    padding: 30,
+    paddingHorizontal: 25,
+    paddingVertical: 45,
     backgroundColor: '#78f',
   },
   dashboardButtonContainer: {
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
   },
   screenContainer: {
     padding: 20,
+    marginTop: 50,
   },
 })
 export default styles

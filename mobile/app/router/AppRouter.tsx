@@ -4,6 +4,7 @@ import TasksScreen from '../screens/TasksScreen'
 import ProtectedRoute from './ProtectedRoute'
 import DashboardScreen from '../screens/DashboardScreen'
 import ProfileScreen from '../screens/ProfileScreen'
+import NewTaskScreen from '../screens/NewTaskScreen'
 
 export default function AppRouter() {
   return (
@@ -23,6 +24,14 @@ export default function AppRouter() {
         element={
           <ProtectedRoute>
             <TasksScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/tasks/new'
+        element={
+          <ProtectedRoute>
+            <NewTaskScreen />
           </ProtectedRoute>
         }
       />
