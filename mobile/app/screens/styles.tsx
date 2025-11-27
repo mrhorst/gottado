@@ -45,14 +45,14 @@ const styles = StyleSheet.create({
     borderColor: '#888',
   },
   headerContainer: {
-    marginVertical: 30,
+    marginVertical: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   screenContainer: {
     padding: 20,
-    marginTop: 50,
+    marginTop: 30,
   },
 })
 export default styles

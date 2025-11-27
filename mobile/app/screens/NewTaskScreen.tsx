@@ -32,7 +32,7 @@ const NewTaskScreen = () => {
         <Button title='Back' onPress={() => nav(-1)}></Button>
         <Button title='Logout' onPress={logout} />
       </View>
-      <View style={styles.screenContainer}>
+      <View style={{ marginTop: 20 }}>
         <TextInput
           style={styles.input}
           placeholder='Title'
