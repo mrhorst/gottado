@@ -5,6 +5,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 8,
     marginBottom: 12,
+    fontSize: 16,
   },
   header: {
     fontSize: 24,
