@@ -1,4 +1,4 @@
-import { usersTable } from '../db/schema.ts'
+import { user } from '../db/schema.ts'
 import db from '../utils/db.ts'
 import { NextFunction, Request, Response } from 'express'
 import { eq } from 'drizzle-orm'
@@ -16,17 +16,18 @@ const userLogin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await db
       .select({
-        id: usersTable.id,
-        passwordHash: usersTable.passwordHash,
-        active: usersTable.active,
-        name: usersTable.name,
+        id: user.id,
+        passwordHash: user.passwordHash,
+        active: user.active,
+        name: user.name,
       })
-      .from(usersTable)
-      .where(eq(usersTable.email, email))
+      .from(user)
+      .where(eq(user.email, email))
 
-    const user = users[0]
-    if (user.active === false) return res.status(403).send('Inactive user')
-    const { passwordHash, id, name } = user
+    const userRecord = users[0]
+    if (userRecord.active === false)
+      return res.status(403).send('Inactive user')
+    const { passwordHash, id, name } = userRecord
     const passwordCorrect = await bcrypt.compare(password, passwordHash)
     if (!passwordCorrect) return res.status(401).send({ error: 'login failed' })
     const payload = { name, email, sub: id }

@@ -1,6 +1,6 @@
 import db from '../utils/db.ts'
 import { Request, Response, NextFunction } from 'express'
-import { usersTable } from '../db/schema.ts'
+import { user } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
 import * as bcrypt from 'bcrypt'
 import { AuthenticatedRequest } from './tasks.ts'
@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from './tasks.ts'
 // returns all users
 const listUsers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const usersList = await db.select().from(usersTable)
+    const usersList = await db.select().from(user)
     res.send(usersList)
   } catch (error: unknown) {
     next(error)
@@ -21,12 +21,13 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     const { email, name, password } = req.body
     const passwordHash = await bcrypt.hash(password, 10)
     const newUser = { email, name, passwordHash }
-    const user = await db.insert(usersTable).values(newUser).returning({
-      id: usersTable.id,
-      name: usersTable.name,
-      email: usersTable.email,
+    const users = await db.insert(user).values(newUser).returning({
+      id: user.id,
+      name: user.name,
+      email: user.email,
     })
-    res.send(user[0])
+    const userRecord = users[0]
+    res.send(userRecord)
   } catch (error: unknown) {
     next(error)
   }
@@ -40,7 +41,7 @@ const deleteUser = async (
   next: NextFunction
 ) => {
   try {
-    await db.delete(usersTable).where(eq(usersTable.id, Number(req.user?.sub))) //req.user.id
+    await db.delete(user).where(eq(user.id, Number(req.user?.sub))) //req.user.id
     res.sendStatus(204)
   } catch (error: unknown) {
     next(error)

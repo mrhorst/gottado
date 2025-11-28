@@ -7,11 +7,13 @@ import {
   text,
   timestamp,
   boolean,
+  primaryKey,
+  index,
 } from 'drizzle-orm/pg-core'
 
 import { sql } from 'drizzle-orm'
 
-export const usersTable = pgTable('users', {
+export const user = pgTable('users', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar({ length: 255 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
@@ -26,13 +28,51 @@ export const usersTable = pgTable('users', {
   deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
 })
 
-export const tasksTable = pgTable('tasks', {
+export const task = pgTable('tasks', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   description: varchar({ length: 255 }),
   title: varchar({ length: 100 }).notNull(),
   dueDate: date('due_date'),
   complete: boolean().notNull().default(false),
-  userId: integer('user_id')
-    .references((): AnyPgColumn => usersTable.id)
+  sectionId: integer('section_id')
+    .references((): AnyPgColumn => section.id)
     .notNull(),
 })
+
+export const section = pgTable('sections', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull(),
+  ownerId: integer('owner_id')
+    .references((): AnyPgColumn => user.id)
+    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  active: boolean().notNull().default(true),
+  deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
+})
+
+export const section_member = pgTable(
+  'section_members',
+  {
+    sectionId: integer('section_id')
+      .references(() => section.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: integer('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    role: varchar({ length: 20 })
+      .notNull()
+      .default('editor')
+      .$type<'owner' | 'editor' | 'viewer'>(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.sectionId, table.userId] }),
+    userIdx: index('section_members_user_id_idx').on(table.userId),
+    sectionIdx: index('section_members_section_id_idx').on(table.sectionId),
+    roleIdx: index('section_members_role_idx').on(table.role),
+  })
+)

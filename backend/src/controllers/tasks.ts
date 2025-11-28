@@ -1,6 +1,6 @@
 import db from '../utils/db.ts'
 import { NextFunction, Request, Response } from 'express'
-import { tasksTable, usersTable } from '../db/schema.ts'
+import { task, user } from '../db/schema.ts'
 import { AuthRequest } from 'src/middleware/authentication.ts'
 import { and, eq } from 'drizzle-orm'
 
@@ -16,16 +16,16 @@ export interface AuthenticatedRequest extends Request {
 const listTasks = async (req: AuthenticatedRequest, res: Response) => {
   const tasks = await db
     .select({
-      id: tasksTable.id,
-      title: tasksTable.title,
-      description: tasksTable.description,
-      dueDate: tasksTable.dueDate,
-      complete: tasksTable.complete,
-      // user: { id: usersTable.id, name: usersTable.name },
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      complete: task.complete,
+      // user: { id: user.id, name: user.name },
     })
-    .from(tasksTable)
-    .innerJoin(usersTable, eq(tasksTable.userId, usersTable.id))
-    .where(eq(tasksTable.userId, Number(req.user?.sub)))
+    .from(task)
+    .innerJoin(user, eq(task.userId, user.id))
+    .where(eq(task.userId, Number(req.user?.sub)))
 
   res.send(tasks)
 }
@@ -40,7 +40,7 @@ const createTask = async (
     const taskPayload = { ...body, userId: req.user?.sub }
     console.log(taskPayload)
 
-    const task = await db.insert(tasksTable).values(taskPayload).returning()
+    const taskRecord = await db.insert(task).values(taskPayload).returning()
     res.status(201).send(task)
   } catch (err: unknown) {
     next(err)
@@ -56,18 +56,18 @@ const updateTask = async (
   const authenticatedUserId = req.user?.sub
 
   try {
-    const task = await db
-      .update(tasksTable)
+    const taskRecord = await db
+      .update(task)
       .set(req.body)
       .where(
         and(
-          eq(tasksTable.id, Number(taskIdToBeUpdated)),
-          eq(tasksTable.userId, Number(authenticatedUserId))
+          eq(task.id, Number(taskIdToBeUpdated)),
+          eq(task.userId, Number(authenticatedUserId))
         )
       )
       .returning()
 
-    if (task.length === 0) return res.sendStatus(404)
+    if (taskRecord.length === 0) return res.sendStatus(404)
 
     res.send(task)
   } catch (err) {
@@ -85,14 +85,14 @@ const deleteTask = async (
 
   try {
     const deletedTaskId = await db
-      .delete(tasksTable)
+      .delete(task)
       .where(
         and(
-          eq(tasksTable.id, Number(taskIdToBeDeleted)),
-          eq(tasksTable.userId, Number(authenticatedUserId))
+          eq(task.id, Number(taskIdToBeDeleted)),
+          eq(task.userId, Number(authenticatedUserId))
         )
       )
-      .returning({ id: tasksTable.id })
+      .returning({ id: task.id })
     if (deletedTaskId.length === 0) return res.sendStatus(404)
     res.sendStatus(204)
   } catch (err) {
