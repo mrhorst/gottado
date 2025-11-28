@@ -1,7 +1,7 @@
 import { Button, Pressable, Text, View } from 'react-native'
 import styles from './styles'
 import { useLoggedUser } from '../context/user/UserContext'
-import { getTasks, setTaskCompleted, UserTasks } from '../services/userService'
+import { getTasks, setTaskCompleted, UserTasks } from '../services/taskService'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { sortTasks } from '../utils/taskHelpers'

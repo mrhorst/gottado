@@ -1,7 +1,7 @@
 import { Button, Text, TextInput, View } from 'react-native'
 import styles from './styles'
 import { Stack } from 'expo-router'
-import { createNewTask } from '../services/userService'
+import { createNewTask } from '../services/taskService'
 import { useState } from 'react'
 import { useLoggedUser } from '../context/user/UserContext'
 import { useNavigate } from 'react-router-native'

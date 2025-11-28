@@ -1,4 +1,4 @@
-import { UserTasks } from '../services/userService'
+import { UserTasks } from '../services/taskService'
 
 export const sortTasks = (tasks: UserTasks[]): UserTasks[] => {
   return [...tasks].sort((a, b) => {

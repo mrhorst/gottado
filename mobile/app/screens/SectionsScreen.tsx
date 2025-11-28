@@ -8,7 +8,6 @@ const SectionsScreen = () => {
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Sections' }} />
       <NavigationHeader />
-      <Text style={styles.header}>SectionsScreen</Text>
     </View>
   )
 }

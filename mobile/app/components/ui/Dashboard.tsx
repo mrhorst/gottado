@@ -1,7 +1,7 @@
 import { useAuth } from '@/app/context/auth/AuthContext'
 import { LoggedUser, useLoggedUser } from '@/app/context/user/UserContext'
 import styles from '@/app/screens/styles'
-import { getTasks } from '@/app/services/userService'
+import { getTasks } from '@/app/services/taskService'
 import { useQuery } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
 import { Button, Text, View } from 'react-native'
