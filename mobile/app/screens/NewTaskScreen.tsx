@@ -5,7 +5,7 @@ import { createNewTask } from '../services/userService'
 import { useState } from 'react'
 import { useLoggedUser } from '../context/user/UserContext'
 import { useNavigate } from 'react-router-native'
-import { useAuth } from '../context/auth/AuthContext'
+import NavigationHeader from '../components/ui/NavigationHeader'
 
 const NewTaskScreen = () => {
   const [title, setTitle] = useState('')
@@ -13,7 +13,6 @@ const NewTaskScreen = () => {
   const [date, setDate] = useState<Date | null>(null)
   const { user } = useLoggedUser()
   const nav = useNavigate()
-  const { logout } = useAuth()
 
   if (!user) return null
 
@@ -28,10 +27,7 @@ const NewTaskScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Create Task' }} />
-      <View style={styles.headerContainer}>
-        <Button title='Back' onPress={() => nav(-1)}></Button>
-        <Button title='Logout' onPress={logout} />
-      </View>
+      <NavigationHeader />
       <View style={{ marginTop: 20 }}>
         <TextInput
           style={styles.input}

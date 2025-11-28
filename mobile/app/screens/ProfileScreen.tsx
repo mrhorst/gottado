@@ -1,14 +1,11 @@
 import { Button, Text, View } from 'react-native'
-import { useNavigate } from 'react-router-native'
 import { useLoggedUser } from '../context/user/UserContext'
-import { useAuth } from '../context/auth/AuthContext'
 import styles from './styles'
 import { Stack } from 'expo-router'
+import NavigationHeader from '../components/ui/NavigationHeader'
 
 const ProfileScreen = () => {
-  const nav = useNavigate()
   const { user } = useLoggedUser()
-  const { logout } = useAuth()
 
   if (!user) return null
 
@@ -17,10 +14,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Profile' }} />
-      <View style={styles.headerContainer}>
-        <Button title='Back' onPress={() => nav(-1)}></Button>
-        <Button title='Logout' onPress={logout} />
-      </View>
+      <NavigationHeader />
       <View style={{ marginTop: 50, gap: 30 }}>
         <View style={{ flexDirection: 'row', gap: 30 }}>
           <Text style={{ fontWeight: 600, flex: 1 }}>Name:</Text>

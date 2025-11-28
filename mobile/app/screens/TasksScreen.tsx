@@ -1,18 +1,15 @@
 import { Button, Pressable, Text, View } from 'react-native'
-import { useAuth } from '../context/auth/AuthContext'
 import styles from './styles'
 import { useLoggedUser } from '../context/user/UserContext'
 import { getTasks, setTaskCompleted, UserTasks } from '../services/userService'
-import { useNavigate } from 'react-router-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { sortTasks } from '../utils/taskHelpers'
 import { Stack } from 'expo-router'
+import NavigationHeader from '../components/ui/NavigationHeader'
 
 const TasksScreen = () => {
-  const { logout } = useAuth()
   const { user } = useLoggedUser()
-  const nav = useNavigate()
   const queryClient = useQueryClient()
 
   const { data: tasks = [], isLoading } = useQuery({
@@ -74,10 +71,7 @@ const TasksScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Tasks' }} />
-      <View style={styles.headerContainer}>
-        <Button title='Back' onPress={() => nav(-1)}></Button>
-        <Button title='Logout' onPress={logout} />
-      </View>
+      <NavigationHeader />
       {pendingTasks.length === 0 ? (
         <View style={{ marginTop: 30, gap: 50 }}>
           <Text style={styles.header}>You have 0 pending tasks!</Text>
