@@ -9,8 +9,6 @@ const api: AxiosInstance = axios.create({
   },
 })
 
-console.log('api:', api.getUri())
-
 interface CustomAxiosConfig extends AxiosRequestConfig {
   _retry?: boolean
 }

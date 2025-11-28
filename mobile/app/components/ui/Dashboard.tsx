@@ -59,10 +59,10 @@ const DashboardButtonGrid = () => {
     <View style={{ flexDirection: 'row' }}>
       <View style={styles.dashboardButtonContainer}>
         <DashboardButton to='/tasks' title='Tasks' />
-        <DashboardButton to='/tasks/new' title='Create Task' />
+        <DashboardButton to='/sections' title='Sections' />
       </View>
       <View style={styles.dashboardButtonContainer}>
-        <DashboardButton to='/tasks' title='Tasks' />
+        <DashboardButton to='/tasks/new' title='Create Task' />
         <DashboardButton to='/profile' title='Profile' />
       </View>
     </View>

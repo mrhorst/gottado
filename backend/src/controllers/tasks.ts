@@ -1,6 +1,6 @@
 import db from '../utils/db.ts'
 import { NextFunction, Request, Response } from 'express'
-import { task, user } from '../db/schema.ts'
+import { section, sectionMember, task } from '../db/schema.ts'
 import { AuthRequest } from 'src/middleware/authentication.ts'
 import { and, eq } from 'drizzle-orm'
 
@@ -13,21 +13,30 @@ export interface AuthenticatedRequest extends Request {
   }
 }
 
-const listTasks = async (req: AuthenticatedRequest, res: Response) => {
-  const tasks = await db
-    .select({
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      dueDate: task.dueDate,
-      complete: task.complete,
-      // user: { id: user.id, name: user.name },
-    })
-    .from(task)
-    .innerJoin(user, eq(task.userId, user.id))
-    .where(eq(task.userId, Number(req.user?.sub)))
+const listTasks = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tasks = await db
+      .select({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        complete: task.complete,
+      })
+      .from(task)
+      .innerJoin(section, eq(task.sectionId, section.id))
+      .innerJoin(sectionMember, eq(section.id, sectionMember.sectionId))
+      .where(eq(sectionMember.userId, Number(req.user?.sub)))
 
-  res.send(tasks)
+    res.send(tasks)
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
 }
 
 const createTask = async (
@@ -38,10 +47,10 @@ const createTask = async (
   try {
     const body = req.body
     const taskPayload = { ...body, userId: req.user?.sub }
-    console.log(taskPayload)
+    // console.log(taskPayload)
 
     const taskRecord = await db.insert(task).values(taskPayload).returning()
-    res.status(201).send(task)
+    res.status(201).send(taskRecord)
   } catch (err: unknown) {
     next(err)
   }
@@ -62,7 +71,7 @@ const updateTask = async (
       .where(
         and(
           eq(task.id, Number(taskIdToBeUpdated)),
-          eq(task.userId, Number(authenticatedUserId))
+          eq(sectionMember.userId, Number(authenticatedUserId))
         )
       )
       .returning()
@@ -89,7 +98,7 @@ const deleteTask = async (
       .where(
         and(
           eq(task.id, Number(taskIdToBeDeleted)),
-          eq(task.userId, Number(authenticatedUserId))
+          eq(sectionMember.userId, Number(authenticatedUserId))
         )
       )
       .returning({ id: task.id })

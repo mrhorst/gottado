@@ -55,7 +55,7 @@ export const section = pgTable('sections', {
   deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
 })
 
-export const section_member = pgTable(
+export const sectionMember = pgTable(
   'section_members',
   {
     sectionId: integer('section_id')
@@ -69,10 +69,10 @@ export const section_member = pgTable(
       .default('editor')
       .$type<'owner' | 'editor' | 'viewer'>(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.sectionId, table.userId] }),
-    userIdx: index('section_members_user_id_idx').on(table.userId),
-    sectionIdx: index('section_members_section_id_idx').on(table.sectionId),
-    roleIdx: index('section_members_role_idx').on(table.role),
-  })
+  (table) => [
+    primaryKey({ columns: [table.sectionId, table.userId] }),
+    index('section_members_user_id_idx').on(table.userId),
+    index('section_members_section_id_idx').on(table.sectionId),
+    index('section_members_role_idx').on(table.role),
+  ]
 )
