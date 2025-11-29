@@ -1,7 +1,7 @@
 import db from '../utils/db.ts'
 import { NextFunction, Request, Response } from 'express'
 import { section, sectionMember, task } from '../db/schema.ts'
-import { AuthRequest } from 'src/middleware/authentication.ts'
+import { AuthRequest } from '@/middleware/authentication.ts'
 import { and, eq } from 'drizzle-orm'
 
 export interface AuthenticatedRequest extends Request {

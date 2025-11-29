@@ -4,7 +4,7 @@ import {
   createSection,
   updateSection,
   deleteSection,
-} from 'src/controllers/sections.ts'
+} from '../controllers/sections.ts'
 
 const router = Router()
 

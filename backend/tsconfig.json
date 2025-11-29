@@ -7,19 +7,23 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "sourceMap": true,
-    "types": ["node"],
-    "baseUrl": "./",
-    // "paths": {
-    //   "@utils/*": ["src/utils/*"],
-    //   "@controllers/*": ["src/controllers/*"],
-    //   "@config/*": ["src/utils/config"]
-    // },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+
+    "outDir": "dist",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "types": ["node"]
   },
   "include": ["src", "typings.d.ts"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
+
+  "ts-node": {
+    "esm": true
+  }
 }
