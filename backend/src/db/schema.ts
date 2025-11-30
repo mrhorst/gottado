@@ -66,7 +66,7 @@ export const sectionMember = pgTable(
       .notNull(),
     role: varchar({ length: 20 })
       .notNull()
-      .default('editor')
+      .default('viewer')
       .$type<'owner' | 'editor' | 'viewer'>(),
   },
   (table) => [
