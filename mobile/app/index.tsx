@@ -4,6 +4,7 @@ import AppRouter from './router/AppRouter'
 import AuthProvider from './context/auth/AuthContext'
 import UserProvider from './context/user/UserContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import SectionProvider from './context/section/SectionContext'
 
 const v7_flag = {
   v7_relativeSplatPath: true,
@@ -18,9 +19,11 @@ export default function Index() {
       <QueryClientProvider client={client}>
         <AuthProvider>
           <UserProvider>
-            <NativeRouter future={v7_flag}>
-              <AppRouter />
-            </NativeRouter>
+            <SectionProvider>
+              <NativeRouter future={v7_flag}>
+                <AppRouter />
+              </NativeRouter>
+            </SectionProvider>
           </UserProvider>
         </AuthProvider>
       </QueryClientProvider>

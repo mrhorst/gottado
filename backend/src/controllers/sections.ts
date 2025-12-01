@@ -6,11 +6,11 @@ import { eq } from 'drizzle-orm'
 
 const listSections = async (req: AuthenticatedRequest, res: Response) => {
   const userId = Number(req.user!.sub)
-  const [userSections] = await db
+  const sections = await db
     .select()
     .from(section)
     .where(eq(section.ownerId, userId))
-  res.status(200).send(userSections)
+  res.status(200).send(sections)
 }
 const createSection = async (req: AuthenticatedRequest, res: Response) => {
   const { name } = req.body

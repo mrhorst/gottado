@@ -5,11 +5,16 @@ import NavigationHeader from '../components/ui/NavigationHeader'
 import { useState } from 'react'
 import { createSection } from '../services/sectionService'
 import { useLoggedUser } from '../context/user/UserContext'
+import { useSections } from '../context/section/SectionContext'
 
 const SectionsScreen = () => {
   const [name, setName] = useState('')
   const { user } = useLoggedUser()
-  // const {sections} = useSections()
+  const { sections, isLoading } = useSections()
+
+  if (isLoading) return <Text>Loading...</Text>
+
+  console.log(sections)
 
   return (
     <View style={styles.screenContainer}>
@@ -32,8 +37,8 @@ const SectionsScreen = () => {
           Sections created by you
         </Text>
         <FlatList
-          data={[1, 2]}
-          renderItem={({ item }) => <Text>{item}</Text>}
+          data={sections}
+          renderItem={({ item }) => <Text>{item.name}</Text>}
         ></FlatList>
       </View>
     </View>

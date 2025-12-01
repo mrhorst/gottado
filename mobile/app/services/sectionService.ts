@@ -5,4 +5,10 @@ const createSection = async (name: string, userId: number) => {
   return data
 }
 
-export { createSection }
+const getSections = async () => {
+  const { data } = await api.get('/sections')
+  console.log(data)
+  return data
+}
+
+export { createSection, getSections }
