@@ -1,23 +1,29 @@
-import { useSectionQuery } from '@/app/hooks/useSections'
+import { useSectionQuery } from '@/app/hooks/useSectionQuery'
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
 
-interface Section {
+export interface Section {
   name: string
   id: number
+}
+
+export interface SectionMembership {
+  ownerId: number
+  sectionId: number
   role: 'owner' | 'editor' | 'viewer'
 }
 
 interface SectionContextValue {
-  sections: []
+  sections: Section[] | undefined
   activeSection: Section | null
   setActiveSection: (section: Section | null) => void
   isLoading: boolean
+  addSection: (name: string) => void
 }
 
 const SectionContext = createContext<SectionContextValue | undefined>(undefined)
 
 export default function SectionProvider({ children }: { children: ReactNode }) {
-  const { sections, isLoading } = useSectionQuery()
+  const { sections, isLoading, addSection } = useSectionQuery()
   const [activeSectionId, setActiveSectionId] = useState<number | null>(null)
 
   const activeSection = useMemo(() => {
@@ -34,6 +40,7 @@ export default function SectionProvider({ children }: { children: ReactNode }) {
     activeSection,
     setActiveSection,
     isLoading,
+    addSection,
   }
 
   return (

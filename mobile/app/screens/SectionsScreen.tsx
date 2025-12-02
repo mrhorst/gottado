@@ -1,20 +1,29 @@
-import { Button, FlatList, Text, TextInput, View } from 'react-native'
+import {
+  Button,
+  FlatList,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from 'react-native'
 import styles from './styles'
 import { Stack } from 'expo-router'
 import NavigationHeader from '../components/ui/NavigationHeader'
 import { useState } from 'react'
-import { createSection } from '../services/sectionService'
-import { useLoggedUser } from '../context/user/UserContext'
 import { useSections } from '../context/section/SectionContext'
+import { useNavigate } from 'react-router-native'
 
 const SectionsScreen = () => {
   const [name, setName] = useState('')
-  const { user } = useLoggedUser()
-  const { sections, isLoading } = useSections()
+  const { sections, isLoading, addSection } = useSections()
+  const nav = useNavigate()
 
   if (isLoading) return <Text>Loading...</Text>
 
-  console.log(sections)
+  const handleAddSection = (name: string) => {
+    addSection(name)
+    setName('')
+  }
 
   return (
     <View style={styles.screenContainer}>
@@ -27,18 +36,23 @@ const SectionsScreen = () => {
           value={name}
           onChangeText={(name) => setName(name)}
         ></TextInput>
-        <Button
-          title='Create task'
-          onPress={() => createSection(name, Number(user?.sub))}
-        />
+        <Button title='Create task' onPress={() => handleAddSection(name)} />
       </View>
       <View style={[{ marginTop: 20 }, styles.tasksContainer]}>
-        <Text style={{ fontSize: 18, fontWeight: 700, textAlign: 'center' }}>
-          Sections created by you
-        </Text>
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 22, fontWeight: 700, textAlign: 'center' }}>
+            Sections
+          </Text>
+        </View>
         <FlatList
           data={sections}
-          renderItem={({ item }) => <Text>{item.name}</Text>}
+          renderItem={({ item }) => (
+            <Pressable onPress={() => nav(`/sections/${item.id}`)}>
+              <Text style={{ fontSize: 18, fontWeight: 700, margin: 10 }}>
+                {item.name}
+              </Text>
+            </Pressable>
+          )}
         ></FlatList>
       </View>
     </View>

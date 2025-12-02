@@ -6,6 +6,7 @@ import DashboardScreen from '../screens/DashboardScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 import NewTaskScreen from '../screens/NewTaskScreen'
 import SectionsScreen from '../screens/SectionsScreen'
+import SectionScreen from '../screens/SectionScreen'
 
 export default function AppRouter() {
   return (
@@ -49,6 +50,14 @@ export default function AppRouter() {
         element={
           <ProtectedRoute>
             <ProfileScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/sections/:id'
+        element={
+          <ProtectedRoute>
+            <SectionScreen />
           </ProtectedRoute>
         }
       />

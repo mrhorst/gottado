@@ -2,14 +2,29 @@ import { Request, Response } from 'express'
 import { section, sectionMember } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { AuthenticatedRequest } from './tasks.ts'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 const listSections = async (req: AuthenticatedRequest, res: Response) => {
   const userId = Number(req.user!.sub)
   const sections = await db
-    .select()
+    .select({
+      id: section.id,
+      name: section.name,
+      createdAt: section.createdAt,
+      membership: {
+        role: sectionMember.role,
+      },
+    })
     .from(section)
     .where(eq(section.ownerId, userId))
+    .leftJoin(
+      sectionMember,
+      and(
+        eq(sectionMember.userId, section.ownerId),
+        eq(sectionMember.sectionId, section.id)
+      )
+    )
+
   res.status(200).send(sections)
 }
 const createSection = async (req: AuthenticatedRequest, res: Response) => {
