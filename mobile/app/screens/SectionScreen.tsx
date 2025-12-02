@@ -9,8 +9,11 @@ const SectionScreen = () => {
   const sectionId = Number(id)
 
   const { sections } = useSectionQuery()
-  const { sectionMembers, isLoading } = useSectionMembersQuery()
+  const { sectionMembersResponse, isLoading } = useSectionMembersQuery()
   const section = sections?.find((s) => s.id === sectionId)
+
+  const sectionMembers = sectionMembersResponse?.members
+  const nonSectionMembers = sectionMembersResponse?.nonMembers
 
   if (isLoading) return <Text>Loading...</Text>
 
@@ -34,6 +37,21 @@ const SectionScreen = () => {
             renderItem={({ item }) => (
               <Text style={{ fontWeight: 600, fontSize: 20, padding: 10 }}>
                 {item.member} ({item.role})
+              </Text>
+            )}
+          />
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
+            Users NOT subscribed
+          </Text>
+
+          <FlatList
+            style={{ margin: 10 }}
+            data={nonSectionMembers}
+            renderItem={({ item }) => (
+              <Text style={{ fontWeight: 600, fontSize: 20, padding: 10 }}>
+                {item.name} ({item.email})
               </Text>
             )}
           />

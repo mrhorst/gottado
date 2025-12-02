@@ -9,17 +9,29 @@ interface SectionMembers {
   member: string
 }
 
+interface SectionNonMembers {
+  id: number
+  name: string
+  email: string
+}
+
+interface SectionMembersResponse {
+  members: SectionMembers[]
+  nonMembers: SectionNonMembers[]
+}
+
 export const useSectionMembersQuery = () => {
   const { user } = useLoggedUser()
   const { id } = useParams()
   const {
     data,
     isLoading,
-  }: { data: SectionMembers[] | undefined; isLoading: boolean } = useQuery({
-    queryKey: ['sectionMembers', user?.sub],
-    enabled: !!user,
-    queryFn: () => getSectionMembers(Number(id)),
-  })
+  }: { data: SectionMembersResponse | undefined; isLoading: boolean } =
+    useQuery({
+      queryKey: ['sectionMembers', user?.sub],
+      enabled: !!user,
+      queryFn: () => getSectionMembers(Number(id)),
+    })
 
-  return { sectionMembers: data, isLoading }
+  return { sectionMembersResponse: data, isLoading }
 }
