@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { section, sectionMember, user } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { AuthenticatedRequest } from './tasks.ts'
-import { eq } from 'drizzle-orm'
+import { and, eq, notExists } from 'drizzle-orm'
 
 const listSections = async (req: AuthenticatedRequest, res: Response) => {
   const userId = Number(req.user!.sub)
@@ -55,7 +55,7 @@ const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
   // const userId = req.user!.sub
   const sectionId = Number(req.params.id)
 
-  const sectionInfo = await db
+  const members = await db
     .select({
       member: user.name,
       sectionName: section.name,
@@ -66,7 +66,31 @@ const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
     .leftJoin(user, eq(sectionMember.userId, user.id))
     .leftJoin(section, eq(section.id, sectionId))
 
-  res.send(sectionInfo)
+  const nonMembers = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    })
+    .from(user)
+    .where(
+      and(
+        eq(user.active, true),
+        notExists(
+          db
+            .select()
+            .from(sectionMember)
+            .where(
+              and(
+                eq(sectionMember.userId, user.id),
+                eq(sectionMember.sectionId, sectionId)
+              )
+            )
+        )
+      )
+    )
+
+  res.send({ members, nonMembers })
 }
 
 export {
