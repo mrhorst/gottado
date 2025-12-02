@@ -7,8 +7,12 @@ const createSection = async (name: string, userId: number) => {
 
 const getSections = async () => {
   const { data } = await api.get('/sections')
-  console.log(data)
   return data
 }
 
-export { createSection, getSections }
+const getSectionMembers = async (id: number) => {
+  const { data } = await api.get(`/sections/${id}`)
+  return data
+}
+
+export { createSection, getSections, getSectionMembers }

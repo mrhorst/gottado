@@ -1,24 +1,44 @@
-import { Text, View } from 'react-native'
+import { FlatList, Text, View } from 'react-native'
 import NavigationHeader from '../components/ui/NavigationHeader'
 import { useParams } from 'react-router-native'
 import { useSectionQuery } from '../hooks/useSectionQuery'
-import { Stack } from 'expo-router'
+import { useSectionMembersQuery } from '../hooks/useSectionMembersQuery'
 
 const SectionScreen = () => {
   const { id } = useParams()
   const sectionId = Number(id)
 
   const { sections } = useSectionQuery()
+  const { sectionMembers, isLoading } = useSectionMembersQuery()
   const section = sections?.find((s) => s.id === sectionId)
-  console.log(section)
+
+  if (isLoading) return <Text>Loading...</Text>
 
   return (
     <View>
       <NavigationHeader />
-      <Stack.Screen options={{ title: section?.name }} />
-      <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
-        {section?.name}
-      </Text>
+      <View>
+        <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
+          {section?.name}
+        </Text>
+      </View>
+      <View>
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
+            Users subscribed
+          </Text>
+
+          <FlatList
+            style={{ margin: 10 }}
+            data={sectionMembers}
+            renderItem={({ item }) => (
+              <Text style={{ fontWeight: 600, fontSize: 20, padding: 10 }}>
+                {item.member} ({item.role})
+              </Text>
+            )}
+          />
+        </View>
+      </View>
     </View>
   )
 }

@@ -49,7 +49,7 @@ const SectionsScreen = () => {
           renderItem={({ item }) => (
             <Pressable onPress={() => nav(`/sections/${item.id}`)}>
               <Text style={{ fontSize: 18, fontWeight: 700, margin: 10 }}>
-                {item.name}
+                {item.name} ({item.role})
               </Text>
             </Pressable>
           )}

@@ -1,32 +1,26 @@
 import { Request, Response } from 'express'
-import { section, sectionMember } from '@/db/schema.ts'
+import { section, sectionMember, user } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { AuthenticatedRequest } from './tasks.ts'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 const listSections = async (req: AuthenticatedRequest, res: Response) => {
   const userId = Number(req.user!.sub)
-  const sections = await db
+
+  const subscribed = await db
     .select({
       id: section.id,
       name: section.name,
       createdAt: section.createdAt,
-      membership: {
-        role: sectionMember.role,
-      },
+      role: sectionMember.role,
     })
-    .from(section)
-    .where(eq(section.ownerId, userId))
-    .leftJoin(
-      sectionMember,
-      and(
-        eq(sectionMember.userId, section.ownerId),
-        eq(sectionMember.sectionId, section.id)
-      )
-    )
+    .from(sectionMember)
+    .where(eq(sectionMember.userId, userId))
+    .leftJoin(section, eq(sectionMember.sectionId, section.id))
 
-  res.status(200).send(sections)
+  res.status(200).send(subscribed)
 }
+
 const createSection = async (req: AuthenticatedRequest, res: Response) => {
   const { name } = req.body
   const ownerId = Number(req.user!.sub)
@@ -57,4 +51,28 @@ const deleteSection = (_req: Request, res: Response) => {
   res.status(501).send('TODO')
 }
 
-export { listSections, createSection, updateSection, deleteSection }
+const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
+  // const userId = req.user!.sub
+  const sectionId = Number(req.params.id)
+
+  const sectionInfo = await db
+    .select({
+      member: user.name,
+      sectionName: section.name,
+      role: sectionMember.role,
+    })
+    .from(sectionMember)
+    .where(eq(sectionMember.sectionId, sectionId))
+    .leftJoin(user, eq(sectionMember.userId, user.id))
+    .leftJoin(section, eq(section.id, sectionId))
+
+  res.send(sectionInfo)
+}
+
+export {
+  listSections,
+  createSection,
+  updateSection,
+  deleteSection,
+  getSectionInfo,
+}

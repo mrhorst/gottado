@@ -4,11 +4,6 @@ import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
 export interface Section {
   name: string
   id: number
-}
-
-export interface SectionMembership {
-  ownerId: number
-  sectionId: number
   role: 'owner' | 'editor' | 'viewer'
 }
 
