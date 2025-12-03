@@ -9,7 +9,7 @@ interface SectionMembers {
   member: string
 }
 
-interface SectionNonMembers {
+export interface SectionNonMembers {
   id: number
   name: string
   email: string

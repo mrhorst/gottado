@@ -54,5 +54,29 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: 30,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent grey
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  roleContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginVertical: 20,
+  },
 })
+
 export default styles

@@ -1,19 +1,19 @@
-import { FlatList, Text, View } from 'react-native'
+import { FlatList, Pressable, Text, View } from 'react-native'
 import NavigationHeader from '../components/ui/NavigationHeader'
-import { useParams } from 'react-router-native'
+import { useNavigate, useParams } from 'react-router-native'
 import { useSectionQuery } from '../hooks/useSectionQuery'
 import { useSectionMembersQuery } from '../hooks/useSectionMembersQuery'
 
 const SectionScreen = () => {
   const { id } = useParams()
   const sectionId = Number(id)
+  const nav = useNavigate()
 
   const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading } = useSectionMembersQuery()
   const section = sections?.find((s) => s.id === sectionId)
 
   const sectionMembers = sectionMembersResponse?.members
-  const nonSectionMembers = sectionMembersResponse?.nonMembers
 
   if (isLoading) return <Text>Loading...</Text>
 
@@ -35,26 +35,20 @@ const SectionScreen = () => {
             style={{ margin: 10 }}
             data={sectionMembers}
             renderItem={({ item }) => (
-              <Text style={{ fontWeight: 600, fontSize: 20, padding: 10 }}>
+              <Text style={{ fontWeight: 600, fontSize: 16, padding: 10 }}>
                 {item.member} ({item.role})
               </Text>
             )}
           />
         </View>
         <View style={{ marginTop: 20 }}>
-          <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
-            Users NOT subscribed
-          </Text>
-
-          <FlatList
-            style={{ margin: 10 }}
-            data={nonSectionMembers}
-            renderItem={({ item }) => (
-              <Text style={{ fontWeight: 600, fontSize: 20, padding: 10 }}>
-                {item.name} ({item.email})
-              </Text>
-            )}
-          />
+          <Pressable onPress={() => nav(`/sections/${id}/add-member`)}>
+            <Text
+              style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}
+            >
+              Add Member
+            </Text>
+          </Pressable>
         </View>
       </View>
     </View>
