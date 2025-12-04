@@ -4,7 +4,16 @@ import {
   SectionNonMembers,
   useSectionMembersQuery,
 } from '../hooks/useSectionMembersQuery'
-import { FlatList, Pressable, Text, TextInput, View } from 'react-native'
+import {
+  Button,
+  FlatList,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 import NavigationHeader from '../components/ui/NavigationHeader'
 import styles from './styles'
 import { useState } from 'react'
@@ -20,12 +29,15 @@ const AddSectionMemberScreen = () => {
   const nonSectionMembers = sectionMembersResponse?.nonMembers
 
   const [searchName, setSearchName] = useState('')
+  const [selectedUser, setSelectedUser] = useState<SectionNonMembers | null>(
+    null
+  )
 
   if (isLoading) return <Text>Loading...</Text>
 
   const _renderItem = ({ item }: { item: SectionNonMembers }) => {
     return (
-      <Pressable>
+      <Pressable onPress={() => setSelectedUser(item)}>
         <Text style={{ fontSize: 18 }}>
           {item.name} ({item.email})
         </Text>
@@ -36,10 +48,50 @@ const AddSectionMemberScreen = () => {
   const dataToDisplay = nonSectionMembers?.filter((m) =>
     m.name.toLowerCase().includes(searchName.toLowerCase())
   )
+  const ROLES = ['editor', 'viewer']
+
+  // type enum for safety?
+  const handleRoleChange = (role: string) => {
+    if (!selectedUser) return
+
+    console.log(`User: ${selectedUser?.name} \nRole: ${role}`)
+    setSelectedUser(null)
+  }
 
   return (
     <View>
       <NavigationHeader />
+      <Modal
+        animationType='fade'
+        transparent
+        visible={!!selectedUser}
+        onRequestClose={() => setSelectedUser(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontSize: 20, marginBottom: 15 }}>
+              Add {selectedUser?.name}?
+            </Text>
+            <Text style={{ fontSize: 18 }}>Select a role:</Text>
+            <View style={styles.roleContainer}>
+              {ROLES.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={styles.roleButton}
+                  onPress={() => handleRoleChange(r)}
+                >
+                  <Text style={styles.roleText}>{r.toUpperCase()}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Button
+              title={'Cancel'}
+              color={'red'}
+              onPress={() => setSelectedUser(null)}
+            />
+          </View>
+        </View>
+      </Modal>
       <View>
         <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
           Section: {section?.name}

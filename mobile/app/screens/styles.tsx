@@ -77,6 +77,15 @@ const styles = StyleSheet.create({
     gap: 10,
     marginVertical: 20,
   },
+  roleButton: {
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+  },
+  roleText: {
+    fontSize: 16,
+    fontWeight: 500,
+  },
 })
 
 export default styles
