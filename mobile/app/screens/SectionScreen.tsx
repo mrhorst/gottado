@@ -1,4 +1,4 @@
-import { FlatList, Pressable, Text, View } from 'react-native'
+import { Button, FlatList, Pressable, Text, View } from 'react-native'
 import NavigationHeader from '../components/ui/NavigationHeader'
 import { useNavigate, useParams } from 'react-router-native'
 import { useSectionQuery } from '../hooks/useSectionQuery'
@@ -42,13 +42,10 @@ const SectionScreen = () => {
           />
         </View>
         <View style={{ marginTop: 20 }}>
-          <Pressable onPress={() => nav(`/sections/${id}/add-member`)}>
-            <Text
-              style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}
-            >
-              Add Member
-            </Text>
-          </Pressable>
+          <Button
+            title='Add Member'
+            onPress={() => nav(`/sections/${id}/add-member`)}
+          />
         </View>
       </View>
     </View>
