@@ -25,10 +25,16 @@ const addMember = async (userId: number, sectionId: number, role: string) => {
 }
 
 const updateMemberRole = async (
-  memberName: string,
+  userId: number,
   sectionId: number,
   role: string
-) => {}
+) => {
+  return await api.put(`/sections/${sectionId}/members`, {
+    userId,
+    sectionId,
+    role,
+  })
+}
 
 export {
   createSection,

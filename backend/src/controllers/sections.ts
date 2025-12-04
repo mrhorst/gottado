@@ -57,8 +57,9 @@ const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
 
   const members = await db
     .select({
-      member: user.name,
+      name: user.name,
       sectionName: section.name,
+      userId: user.id,
       role: sectionMember.role,
     })
     .from(sectionMember)
@@ -99,6 +100,21 @@ const addMember = async (req: AuthenticatedRequest, res: Response) => {
   res.send(201)
 }
 
+const updateMemberRole = async (req: AuthenticatedRequest, res: Response) => {
+  const { sectionId, userId, role } = req.body
+  const updatedMember = await db
+    .update(sectionMember)
+    .set({ role })
+    .where(
+      and(
+        eq(sectionMember.sectionId, sectionId),
+        eq(sectionMember.userId, userId)
+      )
+    )
+    .returning()
+  res.send(updatedMember)
+}
+
 export {
   listSections,
   createSection,
@@ -106,4 +122,5 @@ export {
   deleteSection,
   getSectionInfo,
   addMember,
+  updateMemberRole,
 }
