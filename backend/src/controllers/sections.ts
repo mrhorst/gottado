@@ -93,10 +93,17 @@ const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
   res.send({ members, nonMembers })
 }
 
+const addMember = async (req: AuthenticatedRequest, res: Response) => {
+  const { sectionId, userId, role } = req.body
+  await db.insert(sectionMember).values({ sectionId, userId, role })
+  res.send(201)
+}
+
 export {
   listSections,
   createSection,
   updateSection,
   deleteSection,
   getSectionInfo,
+  addMember,
 }

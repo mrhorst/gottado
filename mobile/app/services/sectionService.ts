@@ -15,4 +15,25 @@ const getSectionMembers = async (id: number) => {
   return data
 }
 
-export { createSection, getSections, getSectionMembers }
+// role as enum for safety?
+const addMember = async (userId: number, sectionId: number, role: string) => {
+  return await api.post(`/sections/${sectionId}/members`, {
+    userId,
+    sectionId,
+    role,
+  })
+}
+
+const updateMemberRole = async (
+  memberName: string,
+  sectionId: number,
+  role: string
+) => {}
+
+export {
+  createSection,
+  getSections,
+  getSectionMembers,
+  addMember,
+  updateMemberRole,
+}

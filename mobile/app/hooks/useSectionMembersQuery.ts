@@ -3,7 +3,7 @@ import { useLoggedUser } from '../context/user/UserContext'
 import { getSectionMembers } from '../services/sectionService'
 import { useParams } from 'react-router-native'
 
-interface SectionMembers {
+export interface SectionMembers {
   role: 'owner' | 'editor' | 'viewer'
   sectionName: string
   member: string
@@ -15,7 +15,7 @@ export interface SectionNonMembers {
   email: string
 }
 
-interface SectionMembersResponse {
+export interface SectionMembersResponse {
   members: SectionMembers[]
   nonMembers: SectionNonMembers[]
 }

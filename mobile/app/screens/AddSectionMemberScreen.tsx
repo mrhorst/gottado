@@ -17,6 +17,7 @@ import {
 import NavigationHeader from '../components/ui/NavigationHeader'
 import styles from './styles'
 import { useState } from 'react'
+import { addMember } from '../services/sectionService'
 
 const AddSectionMemberScreen = () => {
   const { id } = useParams()
@@ -51,10 +52,14 @@ const AddSectionMemberScreen = () => {
   const ROLES = ['editor', 'viewer']
 
   // type enum for safety?
-  const handleRoleChange = (role: string) => {
+  const handleRoleChange = async (role: string) => {
     if (!selectedUser) return
 
-    console.log(`User: ${selectedUser?.name} \nRole: ${role}`)
+    await addMember(selectedUser.id, sectionId, role)
+
+    console.log(
+      `User: ${selectedUser?.name}\nSection Id: ${sectionId} \nRole: ${role}`
+    )
     setSelectedUser(null)
   }
 
