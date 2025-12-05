@@ -36,7 +36,7 @@ const SectionsScreen = () => {
           value={name}
           onChangeText={(name) => setName(name)}
         ></TextInput>
-        <Button title='Create task' onPress={() => handleAddSection(name)} />
+        <Button title='Create section' onPress={() => handleAddSection(name)} />
       </View>
       <View style={[{ marginTop: 20 }, styles.tasksContainer]}>
         <View style={{ marginBottom: 20 }}>

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-native'
+import { useNavigate, useParams } from 'react-router-native'
 import { useSectionQuery } from '../hooks/useSectionQuery'
 import {
   SectionNonMembers,
@@ -22,6 +22,7 @@ import { addMember } from '../services/sectionService'
 const AddSectionMemberScreen = () => {
   const { id } = useParams()
   const sectionId = Number(id)
+  const nav = useNavigate()
 
   const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading } = useSectionMembersQuery()
@@ -57,10 +58,8 @@ const AddSectionMemberScreen = () => {
 
     await addMember(selectedUser.id, sectionId, role)
 
-    console.log(
-      `User: ${selectedUser?.name}\nSection Id: ${sectionId} \nRole: ${role}`
-    )
     setSelectedUser(null)
+    nav(-1)
   }
 
   return (
