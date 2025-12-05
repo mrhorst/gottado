@@ -26,6 +26,7 @@ const listTasks = async (
         description: task.description,
         dueDate: task.dueDate,
         complete: task.complete,
+        sectionName: section.name,
       })
       .from(task)
       .innerJoin(section, eq(task.sectionId, section.id))
@@ -62,23 +63,17 @@ const updateTask = async (
   next: NextFunction
 ) => {
   const taskIdToBeUpdated = req.params.id
-  const authenticatedUserId = req.user?.sub
 
   try {
     const taskRecord = await db
       .update(task)
       .set(req.body)
-      .where(
-        and(
-          eq(task.id, Number(taskIdToBeUpdated)),
-          eq(sectionMember.userId, Number(authenticatedUserId))
-        )
-      )
+      .where(and(eq(task.id, Number(taskIdToBeUpdated))))
       .returning()
 
     if (taskRecord.length === 0) return res.sendStatus(404)
 
-    res.send(task)
+    res.send(taskRecord[0])
   } catch (err) {
     next(err)
   }

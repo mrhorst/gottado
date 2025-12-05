@@ -6,6 +6,7 @@ export interface UserTasks {
   id: number
   title: string
   complete: boolean
+  sectionName: string
 }
 
 const getTasks = async (): Promise<UserTasks[]> => {

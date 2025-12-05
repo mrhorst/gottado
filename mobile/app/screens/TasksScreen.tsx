@@ -1,4 +1,4 @@
-import { Button, Pressable, Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import styles from './styles'
 import { useLoggedUser } from '../context/user/UserContext'
 import { getTasks, setTaskCompleted, UserTasks } from '../services/taskService'
@@ -7,16 +7,24 @@ import { useMemo, useState } from 'react'
 import { sortTasks } from '../utils/taskHelpers'
 import { Stack } from 'expo-router'
 import NavigationHeader from '../components/ui/NavigationHeader'
+import { Section, useSections } from '../context/section/SectionContext'
+
+interface SectionStats {
+  sectionPendingTasks: (s: Section, p: UserTasks[]) => UserTasks[]
+  sectionCompletedTasks: (s: Section, p: UserTasks[]) => UserTasks[]
+}
 
 const TasksScreen = () => {
   const { user } = useLoggedUser()
   const queryClient = useQueryClient()
 
-  const { data: tasks = [], isLoading } = useQuery({
+  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery({
     queryKey: ['tasks', user?.sub],
     queryFn: getTasks,
     enabled: !!user,
   })
+
+  const { sections, isLoading: isLoadingSections } = useSections()
 
   const sortedTasks = useMemo(() => {
     return sortTasks(tasks)
@@ -61,17 +69,41 @@ const TasksScreen = () => {
     mutation.mutate({ id: t.id, complete: !t.complete })
   }
 
-  if (isLoading) {
-    return <Text>Loading...</Text>
+  if (isLoadingTasks) {
+    return <Text>Loading tasks...</Text>
+  }
+
+  if (isLoadingSections || sections === undefined) {
+    return <Text>Loading sections...</Text>
   }
 
   const pendingTasks = tasks.filter((t) => !t.complete)
   const completedTasks = tasks.filter((t) => t.complete)
 
+  const sectionPendingTasks = (
+    section: Section,
+    pendingTasks: UserTasks[]
+  ): UserTasks[] => {
+    return pendingTasks.filter((t) => t.sectionName === section.name)
+  }
+
+  const sectionCompletedTasks = (
+    section: Section,
+    completedTasks: UserTasks[]
+  ): UserTasks[] => {
+    return completedTasks.filter((t) => t.sectionName === section.name)
+  }
+
+  const sectionStats = {
+    sectionPendingTasks,
+    sectionCompletedTasks,
+  }
+
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Tasks' }} />
       <NavigationHeader />
+
       {pendingTasks.length === 0 ? (
         <View style={{ marginTop: 30, gap: 50 }}>
           <Text style={styles.header}>You have 0 pending tasks!</Text>
@@ -84,9 +116,11 @@ const TasksScreen = () => {
       ) : (
         <View style={{ gap: 30 }}>
           <PendingTasks
+            sections={sections}
             tasks={sortedTasks}
             pendingTasks={pendingTasks}
             toggleCompleteTask={toggleCompleteTask}
+            sectionStats={sectionStats}
           />
           <CompletedTasks
             tasks={sortedTasks}
@@ -100,39 +134,46 @@ const TasksScreen = () => {
 }
 
 const PendingTasks = ({
+  sections,
   tasks,
   pendingTasks,
   toggleCompleteTask,
+  sectionStats,
 }: {
+  sections: Section[]
   tasks: UserTasks[]
   pendingTasks: UserTasks[]
   toggleCompleteTask: (t: UserTasks) => void
+  sectionStats: SectionStats
 }) => {
-  return (
-    <View style={styles.tasksContainer}>
+  return sections?.map((s) => (
+    <View key={s.id} style={styles.tasksContainer}>
       <Text style={{ fontWeight: 700, fontSize: 24, textAlign: 'center' }}>
-        Pending {pendingTasks.length}/{tasks.length}
+        {s.name} {sectionStats.sectionPendingTasks(s, pendingTasks).length}/
+        {sectionStats.sectionCompletedTasks(s, tasks).length}
       </Text>
-      {tasks.map((t) =>
+      {pendingTasks.map((t) =>
         !t.complete ? (
-          <View style={styles.taskCard} key={t.id}>
-            <Text
-              style={{
-                fontWeight: '400',
-                fontSize: 18,
-                textDecorationLine: t.complete ? 'line-through' : 'none',
-              }}
-            >
-              {t.title}
-            </Text>
-            <Pressable onPress={() => toggleCompleteTask(t)}>
-              <View style={styles.toggleCompleteTask}></View>
-            </Pressable>
-          </View>
+          t.sectionName === s.name ? (
+            <View style={styles.taskCard} key={t.id}>
+              <Text
+                style={{
+                  fontWeight: '400',
+                  fontSize: 18,
+                  textDecorationLine: t.complete ? 'line-through' : 'none',
+                }}
+              >
+                {t.title}
+              </Text>
+              <Pressable onPress={() => toggleCompleteTask(t)}>
+                <View style={styles.toggleCompleteTask}></View>
+              </Pressable>
+            </View>
+          ) : null
         ) : null
       )}
     </View>
-  )
+  ))
 }
 
 const CompletedTasks = ({
