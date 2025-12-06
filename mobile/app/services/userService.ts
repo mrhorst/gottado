@@ -5,4 +5,10 @@ const fetchLoggedUser = async () => {
   return data
 }
 
-export { fetchLoggedUser }
+const createUser = async (email: string, name: string, password: string) => {
+  const { data } = await api.post('/signup', { email, name, password })
+
+  return data
+}
+
+export { fetchLoggedUser, createUser }

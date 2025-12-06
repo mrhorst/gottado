@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, TextInput, View } from 'react-native'
+import { Button, Pressable, Text, TextInput, View } from 'react-native'
 import { useAuth } from '../../context/auth/AuthContext'
 import { useLocation, useNavigate } from 'react-router-native'
 import styles from '../styles'
@@ -42,6 +42,12 @@ const LoginScreen = () => {
       />
       <Button title='Sign in' onPress={onSubmit} />
       <Stack.Screen options={{ title: 'Login' }} />
+      <View>
+        <Text>Not a user yet? </Text>
+        <Pressable onPress={() => nav('/signup')}>
+          <Text>Click here to create an account!</Text>
+        </Pressable>
+      </View>
     </View>
   )
 }

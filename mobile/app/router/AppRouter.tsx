@@ -8,12 +8,14 @@ import NewTaskScreen from '../screens/tasks/NewTaskScreen'
 import AddSectionMemberScreen from '../screens/sections/AddSectionMemberScreen'
 import SectionDetailScreen from '../screens/sections/SectionDetailScreen'
 import SectionListScreen from '../screens/sections/SectionListScreen'
+import SignupScreen from '../screens/auth/SignupScreen'
 
 export default function AppRouter() {
   return (
     <Routes>
       <Route path='/' element={<Navigate to='/dashboard' replace />} />
       <Route path='/login' element={<LoginScreen />} />
+      <Route path='/signup' element={<SignupScreen />} />
       <Route
         path='/dashboard'
         element={
