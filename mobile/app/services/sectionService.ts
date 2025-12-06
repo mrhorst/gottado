@@ -36,10 +36,15 @@ const updateMemberRole = async (
   })
 }
 
+const removeMember = async (userId: number, sectionId: number) => {
+  return await api.delete(`/sections/${sectionId}/members/${userId}`)
+}
+
 export {
   createSection,
   getSections,
   getSectionMembers,
   addMember,
   updateMemberRole,
+  removeMember,
 }

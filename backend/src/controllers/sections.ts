@@ -115,6 +115,19 @@ const updateMemberRole = async (req: AuthenticatedRequest, res: Response) => {
   res.send(updatedMember)
 }
 
+const unsubscribeMember = async (req: AuthenticatedRequest, res: Response) => {
+  const { id: sectionId, userId } = req.params
+  await db
+    .delete(sectionMember)
+    .where(
+      and(
+        eq(sectionMember.sectionId, Number(sectionId)),
+        eq(sectionMember.userId, Number(userId))
+      )
+    )
+  res.send(204)
+}
+
 export {
   listSections,
   createSection,
@@ -123,4 +136,5 @@ export {
   getSectionInfo,
   addMember,
   updateMemberRole,
+  unsubscribeMember,
 }

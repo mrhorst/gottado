@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Button,
   FlatList,
@@ -7,23 +8,22 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import NavigationHeader from '../components/ui/NavigationHeader'
 import { useNavigate, useParams } from 'react-router-native'
-import { useSectionQuery } from '../hooks/useSectionQuery'
+import NavigationHeader from '../../components/ui/NavigationHeader'
 import {
   SectionMembers,
   useSectionMembersQuery,
-} from '../hooks/useSectionMembersQuery'
-import { useState } from 'react'
-import styles from './styles'
+} from '../../hooks/useSectionMembersQuery'
+import { useSectionQuery } from '../../hooks/useSectionQuery'
+import styles from '../styles'
 
-const SectionScreen = () => {
+const SectionDetailScreen = () => {
   const { id } = useParams()
   const sectionId = Number(id)
   const nav = useNavigate()
 
   const { sections } = useSectionQuery()
-  const { sectionMembersResponse, isLoading, updateMemberRole } =
+  const { sectionMembersResponse, isLoading, updateMember, unsubscribeMember } =
     useSectionMembersQuery()
 
   const section = sections?.find((s) => s.id === sectionId)
@@ -36,7 +36,13 @@ const SectionScreen = () => {
 
   const handleUpdateMember = (role: string) => {
     if (!selectedUser) return
-    updateMemberRole.mutate({ userId: selectedUser.userId, sectionId, role })
+    updateMember.mutate({ userId: selectedUser.userId, sectionId, role })
+    setSelectedUser(null)
+  }
+
+  const handleUnsubscribeUser = () => {
+    if (!selectedUser) return
+    unsubscribeMember.mutate({ sectionId, userId: selectedUser.userId })
     setSelectedUser(null)
   }
 
@@ -67,6 +73,16 @@ const SectionScreen = () => {
                   <Text style={styles.roleText}>{r.toUpperCase()}</Text>
                 </TouchableOpacity>
               ))}
+              <View style={{ backgroundColor: 'rgba(255,0,0,0.5)' }}>
+                <TouchableOpacity
+                  style={[styles.roleButton]}
+                  onPress={() => handleUnsubscribeUser()}
+                >
+                  <Text style={[styles.roleText, ,]}>
+                    {'remove'.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <Button
               title={'Cancel'}
@@ -118,4 +134,4 @@ const SectionScreen = () => {
     </View>
   )
 }
-export default SectionScreen
+export default SectionDetailScreen

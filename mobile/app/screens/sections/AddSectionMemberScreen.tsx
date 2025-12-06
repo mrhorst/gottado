@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from 'react-router-native'
-import { useSectionQuery } from '../hooks/useSectionQuery'
+import { useSectionQuery } from '../../hooks/useSectionQuery'
 import {
   SectionNonMembers,
   useSectionMembersQuery,
-} from '../hooks/useSectionMembersQuery'
+} from '../../hooks/useSectionMembersQuery'
 import {
   Button,
   FlatList,
@@ -14,10 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import NavigationHeader from '../components/ui/NavigationHeader'
-import styles from './styles'
+import NavigationHeader from '../../components/ui/NavigationHeader'
+import styles from '../styles'
 import { useState } from 'react'
-import { addMember } from '../services/sectionService'
+import { addMember } from '../../services/sectionService'
 
 const AddSectionMemberScreen = () => {
   const { id } = useParams()

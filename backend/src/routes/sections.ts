@@ -7,6 +7,7 @@ import {
   getSectionInfo,
   addMember,
   updateMemberRole,
+  unsubscribeMember,
 } from '../controllers/sections.ts'
 
 const router = Router()
@@ -19,5 +20,7 @@ router.delete('/:id', deleteSection)
 
 router.post('/:id/members', addMember)
 router.put('/:id/members', updateMemberRole)
+
+router.delete('/:id/members/:userId', unsubscribeMember)
 
 export default router

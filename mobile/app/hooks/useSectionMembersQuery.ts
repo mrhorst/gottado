@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLoggedUser } from '../context/user/UserContext'
-import { getSectionMembers, updateMemberRole } from '../services/sectionService'
+import {
+  getSectionMembers,
+  removeMember,
+  updateMemberRole,
+} from '../services/sectionService'
 import { useParams } from 'react-router-native'
 
 export interface SectionMembers {
@@ -35,7 +39,7 @@ export const useSectionMembersQuery = () => {
       queryFn: () => getSectionMembers(Number(id)),
     })
 
-  const mutation = useMutation({
+  const updateMember = useMutation({
     mutationFn: ({
       userId,
       sectionId,
@@ -50,5 +54,23 @@ export const useSectionMembersQuery = () => {
     },
   })
 
-  return { sectionMembersResponse: data, isLoading, updateMemberRole: mutation }
+  const unsubscribeMember = useMutation({
+    mutationFn: ({
+      sectionId,
+      userId,
+    }: {
+      sectionId: number
+      userId: number
+    }) => removeMember(sectionId, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sectionMembers', user?.sub] })
+    },
+  })
+
+  return {
+    sectionMembersResponse: data,
+    isLoading,
+    updateMember,
+    unsubscribeMember,
+  }
 }

@@ -1,13 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-native'
-import LoginScreen from '../screens/LoginScreen'
-import TasksScreen from '../screens/TasksScreen'
+import LoginScreen from '../screens/auth/LoginScreen'
+import TasksScreen from '../screens/tasks/TasksScreen'
 import ProtectedRoute from './ProtectedRoute'
 import DashboardScreen from '../screens/DashboardScreen'
-import ProfileScreen from '../screens/ProfileScreen'
-import NewTaskScreen from '../screens/NewTaskScreen'
-import SectionsScreen from '../screens/SectionsScreen'
-import SectionScreen from '../screens/SectionScreen'
-import AddSectionMemberScreen from '../screens/AddSectionMemberScreen'
+import ProfileScreen from '../screens/user/ProfileScreen'
+import NewTaskScreen from '../screens/tasks/NewTaskScreen'
+import AddSectionMemberScreen from '../screens/sections/AddSectionMemberScreen'
+import SectionDetailScreen from '../screens/sections/SectionDetailScreen'
+import SectionListScreen from '../screens/sections/SectionListScreen'
 
 export default function AppRouter() {
   return (
@@ -42,7 +42,7 @@ export default function AppRouter() {
         path='/sections'
         element={
           <ProtectedRoute>
-            <SectionsScreen />
+            <SectionListScreen />
           </ProtectedRoute>
         }
       />
@@ -58,7 +58,7 @@ export default function AppRouter() {
         path='/sections/:id'
         element={
           <ProtectedRoute>
-            <SectionScreen />
+            <SectionDetailScreen />
           </ProtectedRoute>
         }
       />

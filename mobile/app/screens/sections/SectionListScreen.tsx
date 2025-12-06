@@ -6,14 +6,14 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import styles from './styles'
+import styles from '../styles'
 import { Stack } from 'expo-router'
-import NavigationHeader from '../components/ui/NavigationHeader'
+import NavigationHeader from '../../components/ui/NavigationHeader'
 import { useState } from 'react'
-import { useSections } from '../context/section/SectionContext'
+import { useSections } from '../../context/section/SectionContext'
 import { useNavigate } from 'react-router-native'
 
-const SectionsScreen = () => {
+const SectionListScreen = () => {
   const [name, setName] = useState('')
   const { sections, isLoading, addSection } = useSections()
   const nav = useNavigate()
@@ -58,4 +58,4 @@ const SectionsScreen = () => {
     </View>
   )
 }
-export default SectionsScreen
+export default SectionListScreen

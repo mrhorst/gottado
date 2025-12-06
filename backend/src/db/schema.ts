@@ -10,6 +10,7 @@ import {
   primaryKey,
   index,
   check,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
 import { sql } from 'drizzle-orm'
@@ -79,5 +80,8 @@ export const sectionMember = pgTable(
     index('section_members_user_id_idx').on(table.userId),
     index('section_members_section_id_idx').on(table.sectionId),
     index('section_members_role_idx').on(table.role),
+    uniqueIndex('one_owner_per_section_idx')
+      .on(table.sectionId)
+      .where(sql`${table.role} = 'owner'`),
   ]
 )
