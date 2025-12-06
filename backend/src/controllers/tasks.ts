@@ -48,7 +48,6 @@ const createTask = async (
   try {
     const body = req.body
     const taskPayload = { ...body, userId: req.user?.sub }
-    // console.log(taskPayload)
 
     const taskRecord = await db.insert(task).values(taskPayload).returning()
     res.status(201).send(taskRecord)

@@ -9,6 +9,7 @@ import {
   boolean,
   primaryKey,
   index,
+  check,
 } from 'drizzle-orm/pg-core'
 
 import { sql } from 'drizzle-orm'
@@ -39,21 +40,25 @@ export const task = pgTable('tasks', {
     .notNull(),
 })
 
-export const section = pgTable('sections', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar({ length: 255 }).notNull(),
-  ownerId: integer('owner_id')
-    .references((): AnyPgColumn => user.id)
-    .notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .default(sql`now()`),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .default(sql`now()`),
-  active: boolean().notNull().default(true),
-  deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
-})
+export const section = pgTable(
+  'sections',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    name: varchar({ length: 255 }).notNull().unique(),
+    ownerId: integer('owner_id')
+      .references((): AnyPgColumn => user.id)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    active: boolean().notNull().default(true),
+    deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
+  },
+  (table) => [check('name_not_empty', sql`${table.name} <> ''`)]
+)
 
 export const sectionMember = pgTable(
   'section_members',

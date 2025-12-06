@@ -22,10 +22,10 @@ const setTaskCompleted = async (id: number, complete: boolean) => {
 const createNewTask = async (
   title: string,
   description: string,
-  dueDate: Date | null,
+  sectionId: number,
   userId: number
 ) => {
-  const newTask = { title, description, dueDate, userId }
+  const newTask = { title, description, sectionId, userId }
   const { data } = await api.post('/tasks', newTask)
   return data
 }

@@ -26,6 +26,15 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     textDecorationLine: 'line-through',
   },
+  selectSectionsButton: {
+    borderWidth: 1,
+    borderRadius: 10,
+    fontSize: 24,
+    fontWeight: '500',
+    textAlign: 'center',
+    padding: 10,
+    margin: 10,
+  },
   dashboardButton: {
     borderWidth: 1,
     borderRadius: 10,
@@ -87,10 +96,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
+  sectionModalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
   roleContainer: {
     flexDirection: 'row',
     gap: 10,
     marginVertical: 20,
+  },
+  sectionsButtonContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginVertical: 20,
+  },
+  sectionButton: {
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
   },
   roleButton: {
     borderWidth: 1,
@@ -100,6 +132,10 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: 16,
     fontWeight: 500,
+  },
+  sectionButtonText: {
+    fontSize: 16,
+    fontWeight: 600,
   },
 })
 
