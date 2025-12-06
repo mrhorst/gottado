@@ -8,9 +8,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   header: {
-    fontSize: 24,
-    marginBottom: 16,
+    fontSize: 30,
+    fontWeight: '600',
     textAlign: 'center',
+  },
+  sectionSummaryHeading: {
+    fontSize: 24,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  pendingTaskTitle: {
+    fontSize: 20,
+    fontWeight: '400',
+  },
+  completedTaskTitle: {
+    fontSize: 20,
+    fontWeight: '400',
+    textDecorationLine: 'line-through',
   },
   dashboardButton: {
     borderWidth: 1,
@@ -45,7 +59,8 @@ const styles = StyleSheet.create({
     borderColor: '#888',
   },
   headerContainer: {
-    marginVertical: 15,
+    marginTop: 15,
+    marginBottom: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -56,7 +71,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent grey
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
