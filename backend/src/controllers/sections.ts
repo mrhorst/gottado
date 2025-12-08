@@ -15,7 +15,7 @@ const listSections = async (req: AuthenticatedRequest, res: Response) => {
       role: sectionMember.role,
     })
     .from(sectionMember)
-    .where(eq(sectionMember.userId, userId))
+    .where(and(eq(sectionMember.userId, userId), eq(section.active, true)))
     .leftJoin(section, eq(sectionMember.sectionId, section.id))
 
   res.status(200).send(subscribed)
@@ -52,7 +52,6 @@ const deleteSection = (_req: Request, res: Response) => {
 }
 
 const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
-  // const userId = req.user!.sub
   const sectionId = Number(req.params.id)
 
   const members = await db
@@ -61,9 +60,12 @@ const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
       sectionName: section.name,
       userId: user.id,
       role: sectionMember.role,
+      sectionId: sectionMember.sectionId,
     })
     .from(sectionMember)
-    .where(eq(sectionMember.sectionId, sectionId))
+    .where(
+      and(eq(sectionMember.sectionId, sectionId), eq(section.active, true))
+    )
     .leftJoin(user, eq(sectionMember.userId, user.id))
     .leftJoin(section, eq(section.id, sectionId))
 

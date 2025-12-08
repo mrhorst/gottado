@@ -9,6 +9,7 @@ import { useParams } from 'react-router-native'
 
 export interface SectionMembers {
   userId: number
+  sectionId?: number
   role: 'owner' | 'editor' | 'viewer'
   sectionName: string
   name: string

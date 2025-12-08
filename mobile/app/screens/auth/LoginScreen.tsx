@@ -15,7 +15,7 @@ const LoginScreen = () => {
   const location = useLocation()
 
   const onSubmit = async () => {
-    const { data } = await api.post('/login', { email, password })
+    const { data } = await api.post('/login', { email, password }) // need to refactor this
     await login(data.token)
 
     const redirectTo = location.state?.from ?? '/dashboard'

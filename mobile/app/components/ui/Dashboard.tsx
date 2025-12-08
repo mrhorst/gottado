@@ -1,9 +1,11 @@
 import { useAuth } from '@/app/context/auth/AuthContext'
+import { useSections } from '@/app/context/section/SectionContext'
 import { LoggedUser, useLoggedUser } from '@/app/context/user/UserContext'
 import styles from '@/app/screens/styles'
 import { getTasks } from '@/app/services/taskService'
 import { useQuery } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
+import { useEffect, useState } from 'react'
 import { Button, Text, View } from 'react-native'
 import { Link } from 'react-router-native'
 
@@ -55,14 +57,24 @@ const DashboardPendingTasks = ({ user }: { user: LoggedUser }) => {
 }
 
 const DashboardButtonGrid = () => {
+  const [isOwnerOrEditor, setIsOwnerOrEditor] = useState(false)
+  const { sections } = useSections()
+
+  useEffect(() => {
+    const isFound = sections?.find(
+      (s) => s.role === 'owner' || s.role === 'editor'
+    )
+    if (isFound) setIsOwnerOrEditor(true)
+  }, [sections])
+
   return (
     <View style={{ flexDirection: 'row' }}>
       <View style={styles.dashboardButtonContainer}>
         <DashboardButton to='/tasks' title='Tasks' />
         <DashboardButton to='/sections' title='Sections' />
-      </View>
-      <View style={styles.dashboardButtonContainer}>
-        <DashboardButton to='/tasks/new' title='Create Task' />
+        {isOwnerOrEditor ? (
+          <DashboardButton to='/tasks/new' title='Create Task' />
+        ) : null}
         <DashboardButton to='/profile' title='Profile' />
       </View>
     </View>
