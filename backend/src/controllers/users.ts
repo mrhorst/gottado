@@ -5,10 +5,23 @@ import { eq } from 'drizzle-orm'
 import * as bcrypt from 'bcrypt'
 import { AuthenticatedRequest } from './tasks.ts'
 
-// returns all users
+const usersWithoutPasswordHash = {
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+  active: user.active,
+  deactivatedAt: user.deactivatedAt,
+}
+
+// returns all active users
 const listUsers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const usersList = await db.select().from(user)
+    const usersList = await db
+      .select(usersWithoutPasswordHash)
+      .from(user)
+      .where(eq(user.active, true))
     res.send(usersList)
   } catch (error: unknown) {
     next(error)
