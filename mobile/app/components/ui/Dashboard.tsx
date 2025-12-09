@@ -3,11 +3,11 @@ import { useSections } from '@/app/context/section/SectionContext'
 import { LoggedUser, useLoggedUser } from '@/app/context/user/UserContext'
 import styles from '@/app/screens/styles'
 import { getTasks } from '@/app/services/taskService'
+import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { Button, Text, View } from 'react-native'
-import { Link } from 'react-router-native'
+import { Button, Pressable, Text, View } from 'react-native'
 
 const Dashboard = () => {
   const { user } = useLoggedUser()
@@ -70,22 +70,26 @@ const DashboardButtonGrid = () => {
   return (
     <View style={{ flexDirection: 'row' }}>
       <View style={styles.dashboardButtonContainer}>
-        <DashboardButton to='/tasks' title='Tasks' />
-        <DashboardButton to='/sections' title='Sections' />
+        <DashboardButton to='Tasks' title='Tasks' />
+        <DashboardButton to='Sections' title='Sections' />
         {isOwnerOrEditor ? (
-          <DashboardButton to='/tasks/new' title='Create Task' />
+          <DashboardButton to='CreateTask' title='Create Task' />
         ) : null}
-        <DashboardButton to='/profile' title='Profile' />
+        <DashboardButton to='Profile' title='Profile' />
       </View>
     </View>
   )
 }
 
 const DashboardButton = ({ to, title }: { to: string; title: string }) => {
+  const navigation = useNavigation<any>()
   return (
-    <Link style={styles.dashboardButton} to={to}>
+    <Pressable
+      style={styles.dashboardButton}
+      onPress={() => navigation.navigate(to)}
+    >
       <Text style={styles.dashboardButtonText}>{title}</Text>
-    </Link>
+    </Pressable>
   )
 }
 export default Dashboard

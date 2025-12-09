@@ -4,7 +4,7 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        title: 'Gottado',
+        headerShown: false,
       }}
     />
   )

@@ -11,7 +11,7 @@ const TasksScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Tasks' }} />
-      <NavigationHeader />
+      <NavigationHeader secondaryBtn='newSection' />
 
       {allPendingTasks.length === 0 ? (
         <View style={{ gap: 30 }}>

@@ -14,7 +14,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Profile' }} />
-      <NavigationHeader />
+      <NavigationHeader secondaryBtn='logout' />
       <View style={{ marginTop: 50, gap: 30 }}>
         <View style={{ flexDirection: 'row', gap: 30 }}>
           <Text style={{ fontWeight: 600, flex: 1 }}>Name:</Text>

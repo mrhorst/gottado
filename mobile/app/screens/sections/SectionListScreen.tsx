@@ -11,12 +11,12 @@ import { Stack } from 'expo-router'
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import { useState } from 'react'
 import { useSections } from '../../context/section/SectionContext'
-import { useNavigate } from 'react-router-native'
+import { useNavigation } from '@react-navigation/native'
 
 const SectionListScreen = () => {
   const [name, setName] = useState('')
   const { sections, isLoading, addSection } = useSections()
-  const nav = useNavigate()
+  const navigation = useNavigation<any>()
 
   if (isLoading) return <Text>Loading...</Text>
 
@@ -28,7 +28,7 @@ const SectionListScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Sections' }} />
-      <NavigationHeader />
+      <NavigationHeader secondaryBtn='newTask' />
       <View style={{ marginTop: 20 }}>
         <TextInput
           style={styles.input}
@@ -47,7 +47,11 @@ const SectionListScreen = () => {
         <FlatList
           data={sections}
           renderItem={({ item }) => (
-            <Pressable onPress={() => nav(`/sections/${item.id}`)}>
+            <Pressable
+              onPress={() =>
+                navigation.navigate('SectionDetails', { id: item.id })
+              }
+            >
               <Text style={{ fontSize: 18, fontWeight: 700, margin: 10 }}>
                 {item.name} ({item.role})
               </Text>

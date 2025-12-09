@@ -1,26 +1,21 @@
 import { useState } from 'react'
 import { Button, Pressable, Text, TextInput, View } from 'react-native'
 import { useAuth } from '../../context/auth/AuthContext'
-import { useLocation, useNavigate } from 'react-router-native'
 import styles from '../styles'
 import api from '../../services/api'
 import { Stack } from 'expo-router'
+import { useNavigation } from '@react-navigation/native'
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const { login } = useAuth()
-  const nav = useNavigate()
-  const location = useLocation()
+  const navigation = useNavigation<any>()
 
   const onSubmit = async () => {
     const { data } = await api.post('/login', { email, password }) // need to refactor this
     await login(data.token)
-
-    const redirectTo = location.state?.from ?? '/dashboard'
-
-    nav(redirectTo, { replace: true })
   }
 
   return (
@@ -44,7 +39,7 @@ const LoginScreen = () => {
       <Stack.Screen options={{ title: 'Login' }} />
       <View>
         <Text>Not a user yet? </Text>
-        <Pressable onPress={() => nav('/signup')}>
+        <Pressable onPress={() => navigation.navigate('SignUp')}>
           <Text>Click here to create an account!</Text>
         </Pressable>
       </View>

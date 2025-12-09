@@ -11,9 +11,10 @@ import { Stack } from 'expo-router'
 import { createNewTask } from '../../services/taskService'
 import { useState } from 'react'
 import { useLoggedUser } from '../../context/user/UserContext'
-import { useNavigate } from 'react-router-native'
+
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import { Section, useSections } from '../../context/section/SectionContext'
+import { useNavigation } from '@react-navigation/native'
 
 const NewTaskScreen = () => {
   const [title, setTitle] = useState('')
@@ -23,7 +24,7 @@ const NewTaskScreen = () => {
 
   const { user } = useLoggedUser()
   const { sections } = useSections()
-  const nav = useNavigate()
+  const navigation = useNavigation()
 
   if (!user) return null
 
@@ -34,7 +35,7 @@ const NewTaskScreen = () => {
     if (!selectedSection) throw new Error('Section cannot be null')
 
     createNewTask(title, description, selectedSection.id, user?.sub)
-    nav(-1)
+    navigation.goBack()
   }
 
   const handleSelectSection = (item: Section) => {
@@ -77,7 +78,7 @@ const NewTaskScreen = () => {
         </View>
       </Modal>
       <Stack.Screen options={{ title: 'Create Task' }} />
-      <NavigationHeader />
+      <NavigationHeader secondaryBtn='newSection' />
       <View style={{ marginTop: 20 }}>
         <View style={{ marginBottom: 50 }}>
           <TextInput

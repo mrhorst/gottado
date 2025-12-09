@@ -1,4 +1,3 @@
-import { useNavigate, useParams } from 'react-router-native'
 import { useSectionQuery } from '../../hooks/useSectionQuery'
 import {
   SectionNonMembers,
@@ -18,11 +17,13 @@ import NavigationHeader from '../../components/ui/NavigationHeader'
 import styles from '../styles'
 import { useState } from 'react'
 import { addMember } from '../../services/sectionService'
+import { useNavigation, useRoute } from '@react-navigation/native'
 
 const AddSectionMemberScreen = () => {
-  const { id } = useParams()
+  const route = useRoute<any>()
+  const { id } = route.params || {}
   const sectionId = Number(id)
-  const nav = useNavigate()
+  const navigation = useNavigation()
 
   const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading } = useSectionMembersQuery()
@@ -59,12 +60,12 @@ const AddSectionMemberScreen = () => {
     await addMember(selectedUser.id, sectionId, role)
 
     setSelectedUser(null)
-    nav(-1)
+    navigation.goBack()
   }
 
   return (
-    <View>
-      <NavigationHeader />
+    <View style={styles.screenContainer}>
+      <NavigationHeader secondaryBtn='newSection' />
       <Modal
         animationType='fade'
         transparent

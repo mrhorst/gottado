@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { useNavigate, useParams } from 'react-router-native'
+
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import {
   SectionMembers,
@@ -16,12 +16,15 @@ import {
 } from '../../hooks/useSectionMembersQuery'
 import { useSectionQuery } from '../../hooks/useSectionQuery'
 import styles from '../styles'
+import { useNavigation, useRoute } from '@react-navigation/native'
 
 const SectionDetailScreen = () => {
-  const { id } = useParams()
+  const route = useRoute<any>()
+
+  const { id } = route.params || {}
+  const navigation = useNavigation<any>()
 
   const sectionId = Number(id)
-  const nav = useNavigate()
 
   const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading, updateMember, unsubscribeMember } =
@@ -50,8 +53,8 @@ const SectionDetailScreen = () => {
   if (isLoading) return <Text>Loading...</Text>
 
   return (
-    <View>
-      <NavigationHeader />
+    <View style={styles.screenContainer}>
+      <NavigationHeader secondaryBtn='newSection' />
       <Modal
         animationType='fade'
         transparent
@@ -128,7 +131,9 @@ const SectionDetailScreen = () => {
         <View style={{ marginTop: 20 }}>
           <Button
             title='Add Member'
-            onPress={() => nav(`/sections/${id}/add-member`)}
+            onPress={() =>
+              navigation.navigate('AddSectionMember', { id: sectionId })
+            }
           />
         </View>
       </View>

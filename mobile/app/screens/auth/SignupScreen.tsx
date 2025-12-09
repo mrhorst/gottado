@@ -3,18 +3,14 @@ import { Button, Text, TextInput, View } from 'react-native'
 import styles from '../styles'
 import { useState } from 'react'
 import { createUser } from '@/app/services/userService'
-import NavigationHeader from '@/app/components/ui/NavigationHeader'
 import api from '@/app/services/api'
 import { useAuth } from '@/app/context/auth/AuthContext'
-import { useLocation, useNavigate } from 'react-router-native'
 
 const SignupScreen = () => {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const { login } = useAuth()
-  const location = useLocation()
-  const nav = useNavigate()
 
   const onSubmit = async () => {
     try {
@@ -24,10 +20,6 @@ const SignupScreen = () => {
         password,
       }) // need to refactor this
       await login(data.token)
-
-      const redirectTo = location.state?.from ?? '/dashboard'
-
-      nav(redirectTo, { replace: true })
     } catch (err) {
       console.error(err)
     }
@@ -35,7 +27,6 @@ const SignupScreen = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <NavigationHeader />
       <View style={{ marginBottom: 30 }}>
         <Text style={styles.header}>Sign Up</Text>
       </View>

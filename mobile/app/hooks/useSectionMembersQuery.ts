@@ -5,7 +5,7 @@ import {
   removeMember,
   updateMemberRole,
 } from '../services/sectionService'
-import { useParams } from 'react-router-native'
+import { useRoute } from '@react-navigation/native'
 
 export interface SectionMembers {
   userId: number
@@ -28,7 +28,9 @@ export interface SectionMembersResponse {
 
 export const useSectionMembersQuery = () => {
   const { user } = useLoggedUser()
-  const { id } = useParams()
+  const route = useRoute<any>()
+  const { id } = route.params || {}
+
   const queryClient = useQueryClient()
   const {
     data,
