@@ -1,8 +1,9 @@
 import { Request, Response } from 'express'
 import { section, sectionMember, user } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
-import { AuthenticatedRequest } from './tasks.ts'
 import { and, eq, notExists } from 'drizzle-orm'
+import { getUserSectionRole } from '@/utils/controllerHelpers.ts'
+import { AuthenticatedRequest } from '@/types/index.ts'
 
 const listSections = async (req: AuthenticatedRequest, res: Response) => {
   const userId = Number(req.user!.sub)
@@ -170,22 +171,6 @@ const unsubscribeMember = async (req: AuthenticatedRequest, res: Response) => {
       )
     )
   res.send(204)
-}
-
-// Helper function
-const getUserSectionRole = async (userId: number, sectionId: number) => {
-  const result = await db
-    .select({ role: sectionMember.role })
-    .from(sectionMember)
-    .where(
-      and(
-        eq(sectionMember.userId, userId),
-        eq(sectionMember.sectionId, sectionId)
-      )
-    )
-    .limit(1)
-
-  return result[0]?.role || null
 }
 
 export {

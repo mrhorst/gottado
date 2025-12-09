@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express'
 import { user } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
 import * as bcrypt from 'bcrypt'
-import { AuthenticatedRequest } from './tasks.ts'
+import { AuthenticatedRequest } from '@/types/index.ts'
 
 const usersWithoutPasswordHash = {
   id: user.id,
