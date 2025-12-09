@@ -62,7 +62,7 @@ export const useSectionMembersQuery = () => {
     }: {
       sectionId: number
       userId: number
-    }) => removeMember(sectionId, userId),
+    }) => removeMember(userId, sectionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sectionMembers', user?.sub] })
     },

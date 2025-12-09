@@ -54,6 +54,15 @@ const deleteSection = (_req: Request, res: Response) => {
 const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
   const sectionId = Number(req.params.id)
 
+  const loggedUser = Number(req.user?.sub)
+
+  const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+  if (requesterRole !== 'owner') {
+    return res
+      .status(403)
+      .send({ error: 'only owners can see the section info' })
+  }
+
   const members = await db
     .select({
       name: user.name,
@@ -97,13 +106,29 @@ const getSectionInfo = async (req: AuthenticatedRequest, res: Response) => {
 }
 
 const addMember = async (req: AuthenticatedRequest, res: Response) => {
-  const { sectionId, userId, role } = req.body
-  await db.insert(sectionMember).values({ sectionId, userId, role })
+  const { sectionId, userId } = req.body
+  const loggedUser = Number(req.user?.sub)
+
+  const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+  if (requesterRole !== 'owner') {
+    return res.status(403).send({ error: 'only owners can add members' })
+  }
+
+  await db.insert(sectionMember).values({ sectionId, userId, role: 'viewer' })
   res.send(201)
 }
 
 const updateMemberRole = async (req: AuthenticatedRequest, res: Response) => {
   const { sectionId, userId, role } = req.body
+  const loggedUser = Number(req.user?.sub)
+
+  const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+  if (requesterRole !== 'owner') {
+    return res
+      .status(403)
+      .send({ error: 'only owners can update member roles' })
+  }
+
   const updatedMember = await db
     .update(sectionMember)
     .set({ role })
@@ -119,6 +144,23 @@ const updateMemberRole = async (req: AuthenticatedRequest, res: Response) => {
 
 const unsubscribeMember = async (req: AuthenticatedRequest, res: Response) => {
   const { id: sectionId, userId } = req.params
+  console.log(req.params)
+
+  const requesterRole = await getUserSectionRole(
+    Number(req.user?.sub),
+    Number(sectionId)
+  )
+
+  console.log('section id: ', sectionId)
+  console.log('user id: ', req.user?.sub)
+  console.log('requester role: ', requesterRole)
+
+  if (requesterRole !== 'owner') {
+    return res
+      .status(403)
+      .send({ error: 'only owners can unsubscribe members.' })
+  }
+
   await db
     .delete(sectionMember)
     .where(
@@ -128,6 +170,22 @@ const unsubscribeMember = async (req: AuthenticatedRequest, res: Response) => {
       )
     )
   res.send(204)
+}
+
+// Helper function
+const getUserSectionRole = async (userId: number, sectionId: number) => {
+  const result = await db
+    .select({ role: sectionMember.role })
+    .from(sectionMember)
+    .where(
+      and(
+        eq(sectionMember.userId, userId),
+        eq(sectionMember.sectionId, sectionId)
+      )
+    )
+    .limit(1)
+
+  return result[0]?.role || null
 }
 
 export {

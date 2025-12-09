@@ -19,6 +19,7 @@ import styles from '../styles'
 
 const SectionDetailScreen = () => {
   const { id } = useParams()
+
   const sectionId = Number(id)
   const nav = useNavigate()
 
