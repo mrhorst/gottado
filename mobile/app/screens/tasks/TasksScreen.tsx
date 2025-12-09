@@ -80,7 +80,9 @@ const CompletedTasks = () => {
             <View style={styles.taskCard} key={t.id}>
               <Text style={styles.completedTaskTitle}>{t.title}</Text>
               <Pressable onPress={() => toggleCompleteTask(t)}>
-                <View style={styles.toggleCompleteTask}></View>
+                <View style={styles.toggleCompleteTask}>
+                  <View style={styles.completedTaskButton}></View>
+                </View>
               </Pressable>
             </View>
           ) : null

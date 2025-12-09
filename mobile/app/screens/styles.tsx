@@ -62,10 +62,18 @@ const styles = StyleSheet.create({
   },
   toggleCompleteTask: {
     borderWidth: 2,
-    width: 20,
-    height: 20,
+    width: 30,
+    height: 30,
     borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderColor: '#888',
+  },
+  completedTaskButton: {
+    height: 18,
+    width: 18,
+    backgroundColor: '#333',
+    borderRadius: 5,
   },
   headerContainer: {
     marginTop: 15,
