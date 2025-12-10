@@ -11,19 +11,19 @@ const NavigationHeader = ({ secondaryBtn }: Props) => {
   const navigation = useNavigation<any>()
   const { logout } = useAuth()
   return (
-    <View style={styles.headerContainer}>
+    <View style={styles.navigationContainer}>
       <Button title='Back' onPress={() => navigation.goBack()}></Button>
       {secondaryBtn === 'logout' ? (
         <Button title='Logout' onPress={logout} />
       ) : secondaryBtn === 'newSection' ? (
         <Button
           title='New Section'
-          onPress={() => navigation.navigate('SectionListScreen')}
+          onPress={() => navigation.navigate('NewSection')}
         ></Button>
       ) : (
         <Button
           title='New Task'
-          onPress={() => navigation.navigate('Tasks')}
+          onPress={() => navigation.navigate('NewTask')}
         ></Button>
       )}
     </View>

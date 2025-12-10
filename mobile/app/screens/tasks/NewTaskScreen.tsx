@@ -8,13 +8,13 @@ import {
 } from 'react-native'
 import styles from '../styles'
 import { Stack } from 'expo-router'
-import { createNewTask } from '../../services/taskService'
 import { useState } from 'react'
 import { useLoggedUser } from '../../context/user/UserContext'
 
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import { Section, useSections } from '../../context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
+import { useTasksMutation } from '@/app/hooks/useTasksMutation'
 
 const NewTaskScreen = () => {
   const [title, setTitle] = useState('')
@@ -26,15 +26,22 @@ const NewTaskScreen = () => {
   const { sections } = useSections()
   const navigation = useNavigation()
 
+  const { createTask } = useTasksMutation()
+
   if (!user) return null
 
-  const createTask = async () => {
+  const createNewTask = async () => {
     if (!title || title === '') {
       throw new Error('title must be present')
     }
     if (!selectedSection) throw new Error('Section cannot be null')
 
-    createNewTask(title, description, selectedSection.id, user?.sub)
+    createTask({
+      title,
+      description,
+      sectionId: selectedSection.id,
+      userId: user?.sub,
+    })
     navigation.goBack()
   }
 
@@ -107,7 +114,7 @@ const NewTaskScreen = () => {
             </Text>
           )}
         </View>
-        <Button title='Create task' onPress={createTask} />
+        <Button title='Create task' onPress={createNewTask} />
       </View>
     </View>
   )

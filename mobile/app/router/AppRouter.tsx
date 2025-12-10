@@ -10,6 +10,7 @@ import SignupScreen from '../screens/auth/SignupScreen'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useLoggedUser } from '../context/user/UserContext'
+import NewSectionScreen from '../screens/sections/NewSectionScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -21,7 +22,7 @@ const HomeTabs = () => {
         headerShown: false,
         tabBarInactiveTintColor: 'grey',
         tabBarActiveTintColor: 'blue',
-        animation: 'shift',
+        animation: 'none',
       }}
     >
       <Tab.Screen name='Dashboard' component={DashboardScreen} />
@@ -40,7 +41,7 @@ export default function AppRouter() {
         <>
           <Stack.Screen name='Home' component={HomeTabs} />
           <Stack.Screen
-            name='CreateTask'
+            name='NewTask'
             component={NewTaskScreen}
             options={{
               presentation: 'modal',
@@ -51,6 +52,11 @@ export default function AppRouter() {
           <Stack.Screen
             name='SectionDetails'
             component={SectionDetailScreen}
+            options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name='NewSection'
+            component={NewSectionScreen}
             options={{ presentation: 'modal' }}
           />
           <Stack.Screen

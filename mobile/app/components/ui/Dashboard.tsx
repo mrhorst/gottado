@@ -17,13 +17,17 @@ const Dashboard = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <DashboardHeader user={user} />
-      <DashboardPendingTasks user={user} />
-      <DashboardButtonGrid />
-      <View style={{ marginTop: 50 }}>
-        <Button title='Logout' onPress={logout}></Button>
-      </View>
       <Stack.Screen options={{ title: 'Dashboard' }} />
+      <View style={{ justifyContent: 'center', flex: 1 }}>
+        <View>
+          <DashboardHeader user={user} />
+          <DashboardPendingTasks user={user} />
+        </View>
+
+        <View>
+          <Button title='Logout' onPress={logout}></Button>
+        </View>
+      </View>
     </View>
   )
 }

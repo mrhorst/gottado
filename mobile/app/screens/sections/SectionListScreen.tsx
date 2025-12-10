@@ -1,43 +1,20 @@
-import {
-  Button,
-  FlatList,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { FlatList, Pressable, Text, View } from 'react-native'
 import styles from '../styles'
 import { Stack } from 'expo-router'
 import NavigationHeader from '../../components/ui/NavigationHeader'
-import { useState } from 'react'
 import { useSections } from '../../context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
 
 const SectionListScreen = () => {
-  const [name, setName] = useState('')
-  const { sections, isLoading, addSection } = useSections()
+  const { sections, isLoading } = useSections()
   const navigation = useNavigation<any>()
 
   if (isLoading) return <Text>Loading...</Text>
 
-  const handleAddSection = (name: string) => {
-    addSection(name)
-    setName('')
-  }
-
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Sections' }} />
-      <NavigationHeader secondaryBtn='newTask' />
-      <View style={{ marginTop: 20 }}>
-        <TextInput
-          style={styles.input}
-          placeholder='Section Name'
-          value={name}
-          onChangeText={(name) => setName(name)}
-        ></TextInput>
-        <Button title='Create section' onPress={() => handleAddSection(name)} />
-      </View>
+      <NavigationHeader secondaryBtn='newSection' />
       <View style={[{ marginTop: 20 }, styles.tasksContainer]}>
         <View style={{ marginBottom: 20 }}>
           <Text style={{ fontSize: 22, fontWeight: 700, textAlign: 'center' }}>

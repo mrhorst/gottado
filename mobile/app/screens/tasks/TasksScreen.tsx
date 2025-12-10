@@ -5,37 +5,44 @@ import { Stack } from 'expo-router'
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import { useSections } from '../../context/section/SectionContext'
 import { useTasksQuery } from '../../hooks/useTasksQuery'
+import { useTasksMutation } from '@/app/hooks/useTasksMutation'
+import { UserTasks } from '@/app/services/taskService'
 
 const TasksScreen = () => {
   const { allPendingTasks } = useTasksQuery()
+  const { toggleComplete } = useTasksMutation()
+
+  const handleToggleComplete = (task: UserTasks) => {
+    toggleComplete({ id: task.id, complete: !task.complete })
+  }
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Tasks' }} />
-      <NavigationHeader secondaryBtn='newSection' />
+      <NavigationHeader secondaryBtn='newTask' />
 
       {allPendingTasks.length === 0 ? (
         <View style={{ gap: 30 }}>
           <Text style={styles.header}>You have 0 pending tasks!</Text>
-          <CompletedTasks />
+          <CompletedTasks handleToggleComplete={handleToggleComplete} />
         </View>
       ) : (
         <View style={{ gap: 30 }}>
-          <PendingTasks />
-          <CompletedTasks />
+          <PendingTasks handleToggleComplete={handleToggleComplete} />
+          <CompletedTasks handleToggleComplete={handleToggleComplete} />
         </View>
       )}
     </View>
   )
 }
 
-const PendingTasks = () => {
+const PendingTasks = ({
+  handleToggleComplete,
+}: {
+  handleToggleComplete: (t: UserTasks) => void
+}) => {
   const { sections } = useSections()
-  const {
-    sectionPendingTasks,
-    sectionCompletedTasks,
-    toggleCompleteTask,
-    sectionTotalTasks,
-  } = useTasksQuery()
+  const { sectionPendingTasks, sectionCompletedTasks, sectionTotalTasks } =
+    useTasksQuery()
 
   return sections?.map((s) =>
     sectionTotalTasks(s) === 0 || sectionPendingTasks(s).length === 0 ? null : (
@@ -47,7 +54,7 @@ const PendingTasks = () => {
         {sectionPendingTasks(s).map((t) => (
           <View style={styles.taskCard} key={t.id}>
             <Text style={styles.pendingTaskTitle}>{t.title}</Text>
-            <Pressable onPress={() => toggleCompleteTask(t)}>
+            <Pressable onPress={() => handleToggleComplete(t)}>
               <View style={styles.toggleCompleteTask}></View>
             </Pressable>
           </View>
@@ -57,8 +64,12 @@ const PendingTasks = () => {
   )
 }
 
-const CompletedTasks = () => {
-  const { tasks, toggleCompleteTask, allCompletedTasks } = useTasksQuery()
+const CompletedTasks = ({
+  handleToggleComplete,
+}: {
+  handleToggleComplete: (t: UserTasks) => void
+}) => {
+  const { tasks, allCompletedTasks } = useTasksQuery()
   const [isExpanded, setIsExpanded] = useState(false)
 
   const onHeaderTap = () => {
@@ -79,7 +90,7 @@ const CompletedTasks = () => {
           t.complete ? (
             <View style={styles.taskCard} key={t.id}>
               <Text style={styles.completedTaskTitle}>{t.title}</Text>
-              <Pressable onPress={() => toggleCompleteTask(t)}>
+              <Pressable onPress={() => handleToggleComplete(t)}>
                 <View style={styles.toggleCompleteTask}>
                   <View style={styles.completedTaskButton}></View>
                 </View>

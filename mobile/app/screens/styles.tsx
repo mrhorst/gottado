@@ -79,12 +79,19 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 30,
     flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navigationContainer: {
+    marginTop: 15,
+    marginBottom: 30,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   screenContainer: {
-    padding: 20,
-    marginTop: 30,
+    flex: 1,
+    padding: 30,
   },
   modalOverlay: {
     flex: 1,

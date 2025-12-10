@@ -1,3 +1,4 @@
+import { useSectionMutation } from '@/app/hooks/useSectionMutation'
 import { useSectionQuery } from '@/app/hooks/useSectionQuery'
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
 
@@ -12,13 +13,14 @@ interface SectionContextValue {
   activeSection: Section | null
   setActiveSection: (section: Section | null) => void
   isLoading: boolean
-  addSection: (name: string) => void
+  addSection: (name: string, options?: any) => void
 }
 
 const SectionContext = createContext<SectionContextValue | undefined>(undefined)
 
 export default function SectionProvider({ children }: { children: ReactNode }) {
-  const { sections, isLoading, addSection } = useSectionQuery()
+  const { sections, isLoading } = useSectionQuery()
+  const { addSection } = useSectionMutation()
   const [activeSectionId, setActiveSectionId] = useState<number | null>(null)
 
   const activeSection = useMemo(() => {
