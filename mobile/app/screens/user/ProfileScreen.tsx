@@ -1,8 +1,8 @@
 import { Text, View } from 'react-native'
-import { useLoggedUser } from '../../context/user/UserContext'
+import { useLoggedUser } from '@/context/user/UserContext'
 import styles from '../styles'
 import { Stack } from 'expo-router'
-import NavigationHeader from '../../components/ui/NavigationHeader'
+import NavigationHeader from '@/components/ui/NavigationHeader'
 
 const ProfileScreen = () => {
   const { user } = useLoggedUser()

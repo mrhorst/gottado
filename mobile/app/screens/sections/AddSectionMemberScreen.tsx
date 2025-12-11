@@ -1,9 +1,9 @@
-import { useSectionQuery } from '../../hooks/useSectionQuery'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
 import {
   MembershipRoles,
   SectionNonMembers,
   useMembershipQuery,
-} from '../../hooks/useMembershipQuery'
+} from '@/hooks/useMembershipQuery'
 import {
   Button,
   FlatList,
@@ -14,11 +14,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import NavigationHeader from '../../components/ui/NavigationHeader'
+import NavigationHeader from '@/components/ui/NavigationHeader'
 import styles from '../styles'
 import { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { useMembershipMutation } from '@/app/hooks/useMembershipMutation'
+import { useMembershipMutation } from '@/hooks/useMembershipMutation'
 
 const AddSectionMemberScreen = () => {
   const route = useRoute<any>()

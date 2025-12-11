@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Button, Pressable, Text, TextInput, View } from 'react-native'
-import { useAuth } from '../../context/auth/AuthContext'
+import { useAuth } from '@/context/auth/AuthContext'
 import styles from '../styles'
-import api from '../../services/api'
+import api from '@/services/api'
 import { Stack } from 'expo-router'
 import { useNavigation } from '@react-navigation/native'
 

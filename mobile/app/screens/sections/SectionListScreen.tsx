@@ -1,8 +1,8 @@
 import { FlatList, Pressable, Text, View } from 'react-native'
 import styles from '../styles'
 import { Stack } from 'expo-router'
-import NavigationHeader from '../../components/ui/NavigationHeader'
-import { useSections } from '../../context/section/SectionContext'
+import NavigationHeader from '@/components/ui/NavigationHeader'
+import { useSections } from '@/context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
 
 const SectionListScreen = () => {

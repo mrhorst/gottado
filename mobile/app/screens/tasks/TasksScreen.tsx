@@ -2,11 +2,11 @@ import { Pressable, Text, View } from 'react-native'
 import styles from '../styles'
 import { useState } from 'react'
 import { Stack } from 'expo-router'
-import NavigationHeader from '../../components/ui/NavigationHeader'
-import { useSections } from '../../context/section/SectionContext'
-import { useTasksQuery } from '../../hooks/useTasksQuery'
-import { useTasksMutation } from '@/app/hooks/useTasksMutation'
-import { UserTasks } from '@/app/services/taskService'
+import NavigationHeader from '@/components/ui/NavigationHeader'
+import { useSections } from '@/context/section/SectionContext'
+import { useTasksQuery } from '@/hooks/useTasksQuery'
+import { useTasksMutation } from '@/hooks/useTasksMutation'
+import { UserTasks } from '@/services/taskService'
 
 const TasksScreen = () => {
   const { allPendingTasks } = useTasksQuery()

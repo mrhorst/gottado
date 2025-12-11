@@ -2,9 +2,9 @@ import { Stack } from 'expo-router'
 import { Button, Text, TextInput, View } from 'react-native'
 import styles from '../styles'
 import { useState } from 'react'
-import { createUser } from '@/app/services/userService'
-import api from '@/app/services/api'
-import { useAuth } from '@/app/context/auth/AuthContext'
+import { createUser } from '@/services/userService'
+import api from '@/services/api'
+import { useAuth } from '@/context/auth/AuthContext'
 
 const SignupScreen = () => {
   const [email, setEmail] = useState('')

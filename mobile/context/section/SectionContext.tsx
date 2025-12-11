@@ -1,5 +1,5 @@
-import { useSectionMutation } from '@/app/hooks/useSectionMutation'
-import { useSectionQuery } from '@/app/hooks/useSectionQuery'
+import { useSectionMutation } from '@/hooks/useSectionMutation'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
 
 export interface Section {

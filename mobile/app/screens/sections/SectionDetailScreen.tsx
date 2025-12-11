@@ -9,16 +9,16 @@ import {
   View,
 } from 'react-native'
 
-import NavigationHeader from '../../components/ui/NavigationHeader'
+import NavigationHeader from '@/components/ui/NavigationHeader'
 import {
   MembershipRoles,
   SectionMembers,
   useMembershipQuery,
-} from '../../hooks/useMembershipQuery'
-import { useSectionQuery } from '../../hooks/useSectionQuery'
+} from '@/hooks/useMembershipQuery'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
 import styles from '../styles'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { useMembershipMutation } from '@/app/hooks/useMembershipMutation'
+import { useMembershipMutation } from '@/hooks/useMembershipMutation'
 
 const SectionDetailScreen = () => {
   const route = useRoute<any>()

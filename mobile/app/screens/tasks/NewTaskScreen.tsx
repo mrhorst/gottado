@@ -9,12 +9,12 @@ import {
 import styles from '../styles'
 import { Stack } from 'expo-router'
 import { useState } from 'react'
-import { useLoggedUser } from '../../context/user/UserContext'
+import { useLoggedUser } from '@/context/user/UserContext'
 
-import NavigationHeader from '../../components/ui/NavigationHeader'
-import { Section, useSections } from '../../context/section/SectionContext'
+import NavigationHeader from '@/components/ui/NavigationHeader'
+import { Section, useSections } from '@/context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
-import { useTasksMutation } from '@/app/hooks/useTasksMutation'
+import { useTasksMutation } from '@/hooks/useTasksMutation'
 
 const NewTaskScreen = () => {
   const [title, setTitle] = useState('')

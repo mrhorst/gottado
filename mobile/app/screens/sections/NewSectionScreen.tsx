@@ -1,4 +1,4 @@
-import { useSections } from '@/app/context/section/SectionContext'
+import { useSections } from '@/context/section/SectionContext'
 import { useState } from 'react'
 import { Button, Text, TextInput, View } from 'react-native'
 import styles from '../styles'

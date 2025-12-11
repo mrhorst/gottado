@@ -1,4 +1,4 @@
-import { fetchLoggedUser } from '@/app/services/userService'
+import { fetchLoggedUser } from '@/services/userService'
 import {
   createContext,
   ReactNode,
