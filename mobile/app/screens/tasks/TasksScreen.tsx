@@ -23,6 +23,7 @@ const TasksScreen = () => {
       {allPendingTasks.length === 0 ? (
         <View style={{ gap: 30 }}>
           <Text style={styles.header}>You have 0 pending tasks!</Text>
+          <PendingTasks handleToggleComplete={handleToggleComplete} />
           <CompletedTasks handleToggleComplete={handleToggleComplete} />
         </View>
       ) : (
@@ -35,6 +36,10 @@ const TasksScreen = () => {
   )
 }
 
+// Need to redo how this screen works. Complete garbage at the moment.
+// I'm thinking about adding a "show completed tasks" inside each section.
+// instead of having a "Completed" that displays all completed tasks together.
+
 const PendingTasks = ({
   handleToggleComplete,
 }: {
@@ -45,7 +50,19 @@ const PendingTasks = ({
     useTasksQuery()
 
   return sections?.map((s) =>
-    sectionTotalTasks(s) === 0 || sectionPendingTasks(s).length === 0 ? null : (
+    sectionPendingTasks(s).length === 0 && sectionTotalTasks(s) > 0 ? (
+      <View key={s.id} style={styles.tasksContainer}>
+        <Text
+          style={[
+            styles.sectionSummaryHeading,
+            { textDecorationLine: 'line-through' },
+          ]}
+        >
+          {s.name} {sectionCompletedTasks(s).length}/{sectionTotalTasks(s)}
+        </Text>
+      </View>
+    ) : sectionTotalTasks(s) === 0 &&
+      sectionPendingTasks(s).length === 0 ? null : (
       <View key={s.id} style={styles.tasksContainer}>
         <Text style={styles.sectionSummaryHeading}>
           {s.name} {sectionCompletedTasks(s).length}/{sectionTotalTasks(s)}

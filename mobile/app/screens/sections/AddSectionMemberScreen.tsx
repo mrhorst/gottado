@@ -1,8 +1,9 @@
 import { useSectionQuery } from '../../hooks/useSectionQuery'
 import {
+  MembershipRoles,
   SectionNonMembers,
-  useSectionMembersQuery,
-} from '../../hooks/useSectionMembersQuery'
+  useMembershipQuery,
+} from '../../hooks/useMembershipQuery'
 import {
   Button,
   FlatList,
@@ -16,8 +17,8 @@ import {
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import styles from '../styles'
 import { useState } from 'react'
-import { addMember } from '../../services/sectionService'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import { useMembershipMutation } from '@/app/hooks/useMembershipMutation'
 
 const AddSectionMemberScreen = () => {
   const route = useRoute<any>()
@@ -26,7 +27,8 @@ const AddSectionMemberScreen = () => {
   const navigation = useNavigation()
 
   const { sections } = useSectionQuery()
-  const { sectionMembersResponse, isLoading } = useSectionMembersQuery()
+  const { sectionMembersResponse, isLoading } = useMembershipQuery()
+  const { subscribeMember } = useMembershipMutation()
   const section = sections?.find((s) => s.id === sectionId)
 
   const nonSectionMembers = sectionMembersResponse?.nonMembers
@@ -51,17 +53,16 @@ const AddSectionMemberScreen = () => {
   const dataToDisplay = nonSectionMembers?.filter((m) =>
     m.name.toLowerCase().includes(searchName.toLowerCase())
   )
-  const ROLES = ['editor', 'viewer']
 
-  // type enum for safety?
-  const handleRoleChange = async (role: string) => {
+  const handleRoleChange = async (role: MembershipRoles) => {
     if (!selectedUser) return
 
-    await addMember(selectedUser.id, sectionId, role)
+    subscribeMember({ userId: selectedUser.id, sectionId, role })
 
     setSelectedUser(null)
     navigation.goBack()
   }
+  const ROLES: MembershipRoles[] = ['editor', 'viewer']
 
   return (
     <View style={styles.screenContainer}>

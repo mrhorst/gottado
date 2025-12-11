@@ -11,12 +11,14 @@ import {
 
 import NavigationHeader from '../../components/ui/NavigationHeader'
 import {
+  MembershipRoles,
   SectionMembers,
-  useSectionMembersQuery,
-} from '../../hooks/useSectionMembersQuery'
+  useMembershipQuery,
+} from '../../hooks/useMembershipQuery'
 import { useSectionQuery } from '../../hooks/useSectionQuery'
 import styles from '../styles'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import { useMembershipMutation } from '@/app/hooks/useMembershipMutation'
 
 const SectionDetailScreen = () => {
   const route = useRoute<any>()
@@ -27,8 +29,8 @@ const SectionDetailScreen = () => {
   const sectionId = Number(id)
 
   const { sections } = useSectionQuery()
-  const { sectionMembersResponse, isLoading, updateMember, unsubscribeMember } =
-    useSectionMembersQuery()
+  const { sectionMembersResponse, isLoading } = useMembershipQuery()
+  const { unsubscribeMember, updateMember } = useMembershipMutation()
 
   const section = sections?.find((s) => s.id === sectionId)
 
@@ -36,17 +38,17 @@ const SectionDetailScreen = () => {
 
   const [selectedUser, setSelectedUser] = useState<SectionMembers | null>(null)
 
-  const ROLES = ['editor', 'viewer']
+  const ROLES: MembershipRoles[] = ['editor', 'viewer']
 
-  const handleUpdateMember = (role: string) => {
+  const handleUpdateMember = (role: MembershipRoles) => {
     if (!selectedUser) return
-    updateMember.mutate({ userId: selectedUser.userId, sectionId, role })
+    updateMember({ userId: selectedUser.userId, sectionId, role })
     setSelectedUser(null)
   }
 
   const handleUnsubscribeUser = () => {
     if (!selectedUser) return
-    unsubscribeMember.mutate({ sectionId, userId: selectedUser.userId })
+    unsubscribeMember({ sectionId, userId: selectedUser.userId })
     setSelectedUser(null)
   }
 

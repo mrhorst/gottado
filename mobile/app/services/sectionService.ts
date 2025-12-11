@@ -1,3 +1,4 @@
+import { MembershipRoles } from '../hooks/useMembershipQuery'
 import api from './api'
 
 const createSection = async (name: string, userId: number) => {
@@ -15,8 +16,11 @@ const getSectionMembers = async (id: number) => {
   return data
 }
 
-// role as enum for safety?
-const addMember = async (userId: number, sectionId: number, role: string) => {
+const addMember = async (
+  userId: number,
+  sectionId: number,
+  role: MembershipRoles
+) => {
   return await api.post(`/sections/${sectionId}/members`, {
     userId,
     sectionId,
@@ -27,7 +31,7 @@ const addMember = async (userId: number, sectionId: number, role: string) => {
 const updateMemberRole = async (
   userId: number,
   sectionId: number,
-  role: string
+  role: MembershipRoles
 ) => {
   return await api.put(`/sections/${sectionId}/members`, {
     userId,
