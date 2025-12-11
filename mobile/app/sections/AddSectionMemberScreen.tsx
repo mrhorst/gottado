@@ -10,15 +10,15 @@ import {
   Modal,
   Pressable,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
 import NavigationHeader from '@/components/ui/NavigationHeader'
-import styles from '../styles'
+import styles from '@/app/styles'
 import { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useMembershipMutation } from '@/hooks/useMembershipMutation'
+import { Input } from '@/components/ui/Input'
 
 const AddSectionMemberScreen = () => {
   const route = useRoute<any>()
@@ -105,11 +105,11 @@ const AddSectionMemberScreen = () => {
       </View>
       <View>
         <View style={{ marginTop: 20, padding: 20, gap: 30 }}>
-          <TextInput
+          <Input
             placeholder='non member name...'
             style={styles.input}
             value={searchName}
-            onChangeText={(name) => setSearchName(name)}
+            onChangeText={(name: string) => setSearchName(name)}
           />
           <FlatList data={dataToDisplay} renderItem={_renderItem} />
         </View>

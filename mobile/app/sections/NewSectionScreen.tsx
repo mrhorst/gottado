@@ -1,8 +1,9 @@
 import { useSections } from '@/context/section/SectionContext'
 import { useState } from 'react'
-import { Button, Text, TextInput, View } from 'react-native'
-import styles from '../styles'
+import { Button, Text, View } from 'react-native'
+import styles from '@/app/styles'
 import { useNavigation } from '@react-navigation/native'
+import { Input } from '@/components/ui/Input'
 
 const NewSectionScreen = () => {
   const [name, setName] = useState('')
@@ -24,14 +25,14 @@ const NewSectionScreen = () => {
     <View style={styles.screenContainer}>
       <View style={{ marginTop: 20 }}>
         <View style={styles.headerContainer}>
-          <Text style={styles.header}>Create a new section</Text>
+          <Text style={styles.headerText}>Create a new section</Text>
         </View>
-        <TextInput
+        <Input
           style={styles.input}
           placeholder='Section Name'
           value={name}
-          onChangeText={(name) => setName(name)}
-        ></TextInput>
+          onChangeText={(name: string) => setName(name)}
+        />
         <Button title={'Button'} onPress={() => handleAddSection(name)} />
       </View>
     </View>

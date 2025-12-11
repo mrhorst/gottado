@@ -1,5 +1,5 @@
 import { useAuth } from '@/context/auth/AuthContext'
-import styles from '@/app/screens/styles'
+import styles from '@/app/styles'
 import { Button, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 

@@ -1,13 +1,28 @@
 import { useAuth } from '@/context/auth/AuthContext'
-import { useSections } from '@/context/section/SectionContext'
 import { LoggedUser, useLoggedUser } from '@/context/user/UserContext'
-import styles from '@/app/screens/styles'
 import { getTasks } from '@/services/taskService'
-import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
-import { useEffect, useState } from 'react'
-import { Button, Pressable, Text, View } from 'react-native'
+import { Button, StyleSheet, Text, View } from 'react-native'
+import { colors, spacing, typography } from '@/styles/theme'
+
+const styles = StyleSheet.create({
+  container: {
+    padding: spacing.md,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  welcomeText: {
+    ...typography.h1,
+    color: colors.primary,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...typography.h3,
+    color: colors.text,
+    textAlign: 'center',
+  },
+})
 
 const Dashboard = () => {
   const { user } = useLoggedUser()
@@ -16,9 +31,9 @@ const Dashboard = () => {
   if (!user) return null
 
   return (
-    <View style={styles.screenContainer}>
+    <View style={styles.container}>
       <Stack.Screen options={{ title: 'Dashboard' }} />
-      <View style={{ justifyContent: 'center', flex: 1 }}>
+      <View style={styles.container}>
         <View>
           <DashboardHeader user={user} />
           <DashboardPendingTasks user={user} />
@@ -34,8 +49,8 @@ const Dashboard = () => {
 
 const DashboardHeader = ({ user }: { user: LoggedUser }) => {
   return (
-    <View>
-      <Text style={styles.header}>Welcome, {user?.name}!</Text>
+    <View style={styles.container}>
+      <Text style={styles.welcomeText}>Welcome, {user?.name}!</Text>
     </View>
   )
 }
@@ -52,48 +67,13 @@ const DashboardPendingTasks = ({ user }: { user: LoggedUser }) => {
   const pendingTasks = tasks.filter((t) => t.complete === false)
 
   return (
-    <View style={{ marginBottom: 30 }}>
-      <Text style={{ textAlign: 'center' }}>
-        You currently have {pendingTasks.length} tasks pending.
+    <View style={styles.container}>
+      <Text style={styles.subtitle}>
+        You currently have {pendingTasks.length}
+        {pendingTasks.length === 1 ? ' task' : ' tasks'} pending.
       </Text>
     </View>
   )
 }
 
-const DashboardButtonGrid = () => {
-  const [isOwnerOrEditor, setIsOwnerOrEditor] = useState(false)
-  const { sections } = useSections()
-
-  useEffect(() => {
-    const isFound = sections?.find(
-      (s) => s.role === 'owner' || s.role === 'editor'
-    )
-    if (isFound) setIsOwnerOrEditor(true)
-  }, [sections])
-
-  return (
-    <View style={{ flexDirection: 'row' }}>
-      <View style={styles.dashboardButtonContainer}>
-        <DashboardButton to='Tasks' title='Tasks' />
-        <DashboardButton to='Sections' title='Sections' />
-        {isOwnerOrEditor ? (
-          <DashboardButton to='CreateTask' title='Create Task' />
-        ) : null}
-        <DashboardButton to='Profile' title='Profile' />
-      </View>
-    </View>
-  )
-}
-
-const DashboardButton = ({ to, title }: { to: string; title: string }) => {
-  const navigation = useNavigation<any>()
-  return (
-    <Pressable
-      style={styles.dashboardButton}
-      onPress={() => navigation.navigate(to)}
-    >
-      <Text style={styles.dashboardButtonText}>{title}</Text>
-    </Pressable>
-  )
-}
 export default Dashboard

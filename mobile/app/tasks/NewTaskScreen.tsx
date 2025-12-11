@@ -1,12 +1,5 @@
-import {
-  Button,
-  Modal,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
-import styles from '../styles'
+import { Button, Modal, Text, TouchableOpacity, View } from 'react-native'
+import styles from '@/app/styles'
 import { Stack } from 'expo-router'
 import { useState } from 'react'
 import { useLoggedUser } from '@/context/user/UserContext'
@@ -15,6 +8,7 @@ import NavigationHeader from '@/components/ui/NavigationHeader'
 import { Section, useSections } from '@/context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
+import { Input } from '@/components/ui/Input'
 
 const NewTaskScreen = () => {
   const [title, setTitle] = useState('')
@@ -88,18 +82,18 @@ const NewTaskScreen = () => {
       <NavigationHeader secondaryBtn='newSection' />
       <View style={{ marginTop: 20 }}>
         <View style={{ marginBottom: 50 }}>
-          <TextInput
+          <Input
             style={styles.input}
             placeholder='Title'
             value={title}
-            onChangeText={(title) => setTitle(title)}
-          ></TextInput>
-          <TextInput
+            onChangeText={(title: string) => setTitle(title)}
+          />
+          <Input
             style={styles.input}
             placeholder='Description'
             value={description}
-            onChangeText={(description) => setDescription(description)}
-          ></TextInput>
+            onChangeText={(description: string) => setDescription(description)}
+          />
           <Button
             title='Tap to select a section'
             onPress={() => setIsModalVisible(true)}

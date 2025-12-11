@@ -1,13 +1,8 @@
+import { colors, spacing, typography } from '@/styles/theme'
 import { StyleSheet } from 'react-native'
 
 const styles = StyleSheet.create({
-  input: {
-    borderWidth: 1,
-    padding: 8,
-    marginBottom: 12,
-    fontSize: 16,
-  },
-  header: {
+  headerText: {
     fontSize: 30,
     fontWeight: '600',
     textAlign: 'center',

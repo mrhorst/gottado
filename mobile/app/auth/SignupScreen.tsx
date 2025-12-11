@@ -1,10 +1,11 @@
 import { Stack } from 'expo-router'
-import { Button, Text, TextInput, View } from 'react-native'
-import styles from '../styles'
+import { Button, Text, View } from 'react-native'
+import styles from '@/app/styles'
 import { useState } from 'react'
 import { createUser } from '@/services/userService'
 import api from '@/services/api'
 import { useAuth } from '@/context/auth/AuthContext'
+import { Input } from '@/components/ui/Input'
 
 const SignupScreen = () => {
   const [email, setEmail] = useState('')
@@ -28,16 +29,16 @@ const SignupScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <View style={{ marginBottom: 30 }}>
-        <Text style={styles.header}>Sign Up</Text>
+        <Text style={styles.headerText}>Sign Up</Text>
       </View>
-      <TextInput
+      <Input
         value={name}
         onChangeText={setName}
         autoCapitalize='none'
         style={styles.input}
         placeholder='Name'
       />
-      <TextInput
+      <Input
         value={email}
         onChangeText={setEmail}
         autoCapitalize='none'
@@ -45,7 +46,7 @@ const SignupScreen = () => {
         style={styles.input}
         placeholder='Email'
       />
-      <TextInput
+      <Input
         value={password}
         onChangeText={setPassword}
         secureTextEntry

@@ -1,11 +1,28 @@
+import AuthProvider from '@/context/auth/AuthContext'
+import UserProvider from '@/context/user/UserContext'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import SectionProvider from '@/context/section/SectionContext'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Stack } from 'expo-router'
+
+const client = new QueryClient()
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
+    <SafeAreaProvider>
+      <QueryClientProvider client={client}>
+        <AuthProvider>
+          <UserProvider>
+            <SectionProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
+            </SectionProvider>
+          </UserProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   )
 }

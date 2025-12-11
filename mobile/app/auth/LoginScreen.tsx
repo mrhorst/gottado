@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Button, Pressable, Text, TextInput, View } from 'react-native'
+import { Button, Pressable, Text, View } from 'react-native'
 import { useAuth } from '@/context/auth/AuthContext'
-import styles from '../styles'
+import styles from '@/app/styles'
 import api from '@/services/api'
 import { Stack } from 'expo-router'
 import { useNavigation } from '@react-navigation/native'
+import { Input } from '@/components/ui/Input'
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('')
@@ -22,9 +23,9 @@ const LoginScreen = () => {
     <View style={styles.screenContainer}>
       <View style={{ justifyContent: 'center', flex: 1 }}>
         <View style={styles.headerContainer}>
-          <Text style={styles.header}>Login</Text>
+          <Text style={styles.headerText}>Login</Text>
         </View>
-        <TextInput
+        <Input
           value={email}
           onChangeText={setEmail}
           autoCapitalize='none'
@@ -32,7 +33,7 @@ const LoginScreen = () => {
           style={styles.input}
           placeholder='Email'
         />
-        <TextInput
+        <Input
           value={password}
           onChangeText={setPassword}
           secureTextEntry
