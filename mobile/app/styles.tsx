@@ -7,20 +7,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  sectionSummaryHeading: {
-    fontSize: 24,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  pendingTaskTitle: {
-    fontSize: 20,
-    fontWeight: '400',
-  },
-  completedTaskTitle: {
-    fontSize: 20,
-    fontWeight: '400',
-    textDecorationLine: 'line-through',
-  },
+
   selectSectionsButton: {
     borderWidth: 1,
     borderRadius: 10,
@@ -48,28 +35,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
   },
-  taskCard: {
-    borderBottomWidth: 1,
-    padding: 10,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  toggleCompleteTask: {
-    borderWidth: 2,
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: '#888',
-  },
-  completedTaskButton: {
-    height: 18,
-    width: 18,
-    backgroundColor: '#333',
-    borderRadius: 5,
-  },
+
   headerContainer: {
     marginTop: 15,
     marginBottom: 30,

@@ -7,10 +7,14 @@ import { Button, StyleSheet, Text, View } from 'react-native'
 import { colors, spacing, typography } from '@/styles/theme'
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     padding: spacing.md,
     flex: 1,
     justifyContent: 'center',
+  },
+  container: {
+    padding: spacing.md,
+    flex: 0,
   },
   welcomeText: {
     ...typography.h1,
@@ -31,7 +35,7 @@ const Dashboard = () => {
   if (!user) return null
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Dashboard' }} />
       <View style={styles.container}>
         <View>

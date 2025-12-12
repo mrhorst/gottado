@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useLoggedUser } from '@/context/user/UserContext'
 
 import NavigationHeader from '@/components/ui/NavigationHeader'
-import { Section, useSections } from '@/context/section/SectionContext'
+import { SectionProps, useSections } from '@/context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { Input } from '@/components/ui/Input'
@@ -13,7 +13,9 @@ import { Input } from '@/components/ui/Input'
 const NewTaskScreen = () => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [selectedSection, setSelectedSection] = useState<Section | null>(null)
+  const [selectedSection, setSelectedSection] = useState<SectionProps | null>(
+    null
+  )
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
 
   const { user } = useLoggedUser()
@@ -39,7 +41,7 @@ const NewTaskScreen = () => {
     navigation.goBack()
   }
 
-  const handleSelectSection = (item: Section) => {
+  const handleSelectSection = (item: SectionProps) => {
     setSelectedSection(item)
     setIsModalVisible(false)
   }
@@ -83,13 +85,11 @@ const NewTaskScreen = () => {
       <View style={{ marginTop: 20 }}>
         <View style={{ marginBottom: 50 }}>
           <Input
-            style={styles.input}
             placeholder='Title'
             value={title}
             onChangeText={(title: string) => setTitle(title)}
           />
           <Input
-            style={styles.input}
             placeholder='Description'
             value={description}
             onChangeText={(description: string) => setDescription(description)}

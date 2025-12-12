@@ -2,16 +2,16 @@ import { useSectionMutation } from '@/hooks/useSectionMutation'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
 
-export interface Section {
+export interface SectionProps {
   name: string
   id: number
   role: 'owner' | 'editor' | 'viewer'
 }
 
 interface SectionContextValue {
-  sections: Section[] | undefined
-  activeSection: Section | null
-  setActiveSection: (section: Section | null) => void
+  sections: SectionProps[] | undefined
+  activeSection: SectionProps | null
+  setActiveSection: (section: SectionProps | null) => void
   isLoading: boolean
   addSection: (name: string, options?: any) => void
 }
@@ -25,10 +25,10 @@ export default function SectionProvider({ children }: { children: ReactNode }) {
 
   const activeSection = useMemo(() => {
     if (!sections || activeSectionId === null) return null
-    return sections.find((s: Section) => s.id === activeSectionId) ?? null
+    return sections.find((s: SectionProps) => s.id === activeSectionId) ?? null
   }, [sections, activeSectionId])
 
-  const setActiveSection = (section: Section | null) => {
+  const setActiveSection = (section: SectionProps | null) => {
     setActiveSectionId(section?.id ?? null)
   }
 
