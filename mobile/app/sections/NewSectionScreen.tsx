@@ -1,9 +1,32 @@
 import { useSections } from '@/context/section/SectionContext'
 import { useState } from 'react'
-import { Button, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import styles from '@/app/styles'
 import { useNavigation } from '@react-navigation/native'
 import { Input } from '@/components/ui/Input'
+import { colors, typography } from '@/styles/theme'
+
+const localStyles = StyleSheet.create({
+  primaryButton: {
+    height: 50,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  primaryButtonText: {
+    ...typography.button,
+    color: '#fff',
+  },
+
+  disabledButton: {
+    backgroundColor: '#e5e5ea',
+  },
+  disabledButtonText: {
+    color: '#8e8e93',
+  },
+})
 
 const NewSectionScreen = () => {
   const [name, setName] = useState('')
@@ -21,19 +44,35 @@ const NewSectionScreen = () => {
     })
     setName('')
   }
+
+  const isValid = name.length > 3
   return (
     <View style={styles.screenContainer}>
       <View style={{ marginTop: 20 }}>
         <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>Create a new section</Text>
+          <Text style={styles.headerText}>Create new section</Text>
         </View>
         <Input
-          style={styles.input}
           placeholder='Section Name'
           value={name}
           onChangeText={(name: string) => setName(name)}
         />
-        <Button title={'Button'} onPress={() => handleAddSection(name)} />
+        <Pressable
+          style={[
+            localStyles.primaryButton,
+            !isValid && localStyles.disabledButton,
+          ]}
+          onPress={() => handleAddSection(name)}
+        >
+          <Text
+            style={[
+              localStyles.primaryButtonText,
+              !isValid && localStyles.disabledButtonText,
+            ]}
+          >
+            Create Section
+          </Text>
+        </Pressable>
       </View>
     </View>
   )

@@ -1,7 +1,6 @@
 import { FlatList, Pressable, Text, View } from 'react-native'
 import styles from '../styles'
 import { Stack } from 'expo-router'
-import NavigationHeader from '@/components/ui/NavigationHeader'
 import { useSections } from '@/context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
 
@@ -14,7 +13,7 @@ const SectionListScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Sections' }} />
-      <NavigationHeader secondaryBtn='newSection' />
+
       <View style={[{ marginTop: 20 }, styles.tasksContainer]}>
         <View style={{ marginBottom: 20 }}>
           <Text style={{ fontSize: 22, fontWeight: 700, textAlign: 'center' }}>

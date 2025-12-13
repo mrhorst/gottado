@@ -1,8 +1,8 @@
 import { Text, View } from 'react-native'
 import { useLoggedUser } from '@/context/user/UserContext'
-import styles from '../styles'
+
 import { Stack } from 'expo-router'
-import NavigationHeader from '@/components/ui/NavigationHeader'
+import styles from '../styles'
 
 const ProfileScreen = () => {
   const { user } = useLoggedUser()
@@ -14,7 +14,6 @@ const ProfileScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <Stack.Screen options={{ title: 'Profile' }} />
-      <NavigationHeader secondaryBtn='logout' />
       <View style={{ marginTop: 50, gap: 30 }}>
         <View style={{ flexDirection: 'row', gap: 30 }}>
           <Text style={{ fontWeight: 600, flex: 1 }}>Name:</Text>

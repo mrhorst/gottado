@@ -35,7 +35,6 @@ const SignupScreen = () => {
         value={name}
         onChangeText={setName}
         autoCapitalize='none'
-        style={styles.input}
         placeholder='Name'
       />
       <Input
@@ -43,14 +42,12 @@ const SignupScreen = () => {
         onChangeText={setEmail}
         autoCapitalize='none'
         keyboardType='email-address'
-        style={styles.input}
         placeholder='Email'
       />
       <Input
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        style={styles.input}
         placeholder='Password'
       />
       <Button title='Create account' onPress={onSubmit} />

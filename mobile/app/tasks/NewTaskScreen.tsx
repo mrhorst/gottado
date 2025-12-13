@@ -1,5 +1,4 @@
 import {
-  Button,
   Modal,
   Pressable,
   ScrollView,
@@ -11,8 +10,6 @@ import {
 import { Stack } from 'expo-router'
 import { useState } from 'react'
 import { useLoggedUser } from '@/context/user/UserContext'
-
-import NavigationHeader from '@/components/ui/NavigationHeader'
 import { SectionProps, useSections } from '@/context/section/SectionContext'
 import { useNavigation } from '@react-navigation/native'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
@@ -200,7 +197,6 @@ const NewTaskScreen = () => {
         </View>
       </Modal>
       <Stack.Screen options={{ title: 'Create Task' }} />
-      <NavigationHeader secondaryBtn='newSection' />
       <View style={{ marginTop: 20 }}>
         <View style={{ marginBottom: 50 }}>
           <View style={styles.inputGroup}>

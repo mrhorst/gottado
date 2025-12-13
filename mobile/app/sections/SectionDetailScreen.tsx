@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native'
 
-import NavigationHeader from '@/components/ui/NavigationHeader'
 import {
   MembershipRoles,
   SectionMembers,
@@ -56,7 +55,6 @@ const SectionDetailScreen = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <NavigationHeader secondaryBtn='newSection' />
       <Modal
         animationType='fade'
         transparent

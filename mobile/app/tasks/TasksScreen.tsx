@@ -1,7 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
-import { Stack } from 'expo-router'
-import NavigationHeader from '@/components/ui/NavigationHeader'
 import { SectionProps, useSections } from '@/context/section/SectionContext'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
@@ -73,7 +71,6 @@ const TasksScreen = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <NavigationHeader secondaryBtn='newTask' />
       <View style={styles.container}>
         <Text style={styles.heading}>TASKS</Text>
       </View>

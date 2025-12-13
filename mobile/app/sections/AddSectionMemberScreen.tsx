@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import NavigationHeader from '@/components/ui/NavigationHeader'
 import styles from '@/app/styles'
 import { useState } from 'react'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -66,7 +65,6 @@ const AddSectionMemberScreen = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <NavigationHeader secondaryBtn='newSection' />
       <Modal
         animationType='fade'
         transparent
@@ -107,7 +105,6 @@ const AddSectionMemberScreen = () => {
         <View style={{ marginTop: 20, padding: 20, gap: 30 }}>
           <Input
             placeholder='non member name...'
-            style={styles.input}
             value={searchName}
             onChangeText={(name: string) => setSearchName(name)}
           />

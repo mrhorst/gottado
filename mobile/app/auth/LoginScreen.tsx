@@ -30,14 +30,12 @@ const LoginScreen = () => {
           onChangeText={setEmail}
           autoCapitalize='none'
           keyboardType='email-address'
-          style={styles.input}
           placeholder='Email'
         />
         <Input
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={styles.input}
           placeholder='Password'
         />
         <Button title='Sign in' onPress={onSubmit} />
