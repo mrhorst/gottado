@@ -17,45 +17,54 @@ const styles = StyleSheet.create({
   },
   container: { padding: spacing.sm, justifyContent: 'center', gap: 20 },
   heading: { ...typography.h1, textAlign: 'center' },
-  sectionContainer: { padding: spacing.sm, borderRadius: 8, borderWidth: 1 },
-  tasksContainer: { padding: spacing.md, borderRadius: 8 },
+  sectionContainer: { marginBottom: spacing.xl, padding: spacing.sm },
+  tasksContainer: { padding: spacing.md },
   taskCard: {
-    padding: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f7',
+    backgroundColor: colors.background,
   },
   toggleCompleteTask: {
-    borderWidth: 3,
-    width: 30,
-    height: 30,
-    borderRadius: 10,
+    borderWidth: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: '#888',
+    borderColor: '#c6c6c8',
+    backgroundColor: 'transparent',
   },
   completedTaskButton: {
-    height: 18,
-    width: 18,
-    backgroundColor: '#333',
-    borderRadius: 5,
+    height: 16,
+    width: 16,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
   },
   pendingTaskTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '400',
+    color: colors.text,
+    flex: 1,
   },
   completedTaskTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '400',
+    color: '#aeaeb2',
     textDecorationLine: 'line-through',
+    flex: 1,
   },
   sectionHeadingPending: {
-    ...typography.h2,
-    textAlign: 'center',
-  },
-  sectionHeadingCompleted: {
-    ...typography.h2,
-    textAlign: 'center',
-    textDecorationLine: 'line-through',
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#8e8e93',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.sm,
   },
 })
 
@@ -78,110 +87,83 @@ const TasksScreen = () => {
 }
 
 const Section = ({ section }: { section: SectionProps }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
-
   const { sectionPendingTasks, sectionCompletedTasks, sectionTotalTasks } =
     useTasksQuery()
+  const { toggleComplete } = useTasksMutation()
+
+  const completed = sectionCompletedTasks(section)
+  const pending = sectionPendingTasks(section)
+  const total = sectionTotalTasks(section)
+
+  const hasPendingTasks = sectionPendingTasks(section).length > 0
+  const [isExpanded, setIsExpanded] = useState(hasPendingTasks)
+
   const onHeaderTap = () => {
     setIsExpanded((prev) => !prev)
   }
 
-  const isEmptySection = (section: SectionProps) => {
-    if (
-      sectionPendingTasks(section).length === 0 &&
-      sectionCompletedTasks(section).length === 0
-    ) {
-      return true
-    }
-    return false
+  const handleToggle = (task: UserTasks) => {
+    toggleComplete({ id: task.id, complete: !task.complete })
   }
 
-  if (isEmptySection(section)) return null
+  if (total === 0) return null
 
-  // If the section is not a section without tasks..
   return (
     <View style={styles.sectionContainer}>
       <View>
         <Pressable onPress={onHeaderTap}>
           <Text style={styles.sectionHeadingPending}>
-            {section.name} {sectionCompletedTasks(section).length}/
-            {sectionTotalTasks(section)} {isExpanded ? '↓' : '↑'}
+            {section.name} {completed.length}/{total} {isExpanded ? '↓' : '↑'}
           </Text>
         </Pressable>
       </View>
-      <Tasks isExpanded={isExpanded} section={section} />
-    </View>
-  )
-}
-
-const Tasks = ({
-  isExpanded,
-  section,
-}: {
-  isExpanded: boolean
-  section: SectionProps
-}) => {
-  const { toggleComplete } = useTasksMutation()
-  const { sectionPendingTasks, sectionCompletedTasks } = useTasksQuery()
-
-  const handleToggleComplete = (task: UserTasks) => {
-    toggleComplete({ id: task.id, complete: !task.complete })
-  }
-
-  return (
-    <View>
       {isExpanded && (
-        <PendingTasks
-          tasks={sectionPendingTasks(section)}
-          handleToggleComplete={handleToggleComplete}
-        />
-      )}
-      {isExpanded && (
-        <CompletedTasks
-          tasks={sectionCompletedTasks(section)}
-          handleToggleComplete={handleToggleComplete}
-        />
-      )}
-    </View>
-  )
-}
-
-const PendingTasks = ({
-  tasks,
-  handleToggleComplete,
-}: {
-  tasks: UserTasks[]
-  handleToggleComplete: (t: UserTasks) => void
-}) => {
-  return (
-    <View>
-      {tasks.map((t) => (
-        <View style={styles.taskCard} key={t.id}>
-          <Text style={styles.pendingTaskTitle}>{t.title}</Text>
-          <Pressable onPress={() => handleToggleComplete(t)}>
-            <View style={styles.toggleCompleteTask}></View>
-          </Pressable>
+        <View>
+          <TaskList tasks={pending} onToggle={handleToggle} variant='pending' />
+          <TaskList
+            tasks={completed}
+            onToggle={handleToggle}
+            variant='completed'
+          />
         </View>
-      ))}
+      )}
     </View>
   )
 }
 
-const CompletedTasks = ({
+const TaskList = ({
   tasks,
-  handleToggleComplete,
+  onToggle,
+  variant,
 }: {
   tasks: UserTasks[]
-  handleToggleComplete: (t: UserTasks) => void
+  onToggle: (t: UserTasks) => void
+  variant: 'pending' | 'completed'
 }) => {
   return (
     <View>
       {tasks.map((t) => (
         <View style={styles.taskCard} key={t.id}>
-          <Text style={styles.completedTaskTitle}>{t.title}</Text>
-          <Pressable onPress={() => handleToggleComplete(t)}>
-            <View style={styles.toggleCompleteTask}>
-              <View style={styles.completedTaskButton}></View>
+          <Text
+            style={
+              variant === 'pending'
+                ? styles.pendingTaskTitle
+                : styles.completedTaskTitle
+            }
+          >
+            {t.title}
+          </Text>
+          <Pressable onPress={() => onToggle(t)}>
+            <View
+              style={
+                variant === 'completed'
+                  ? [styles.toggleCompleteTask, { borderColor: colors.primary }]
+                  : styles.toggleCompleteTask
+              }
+            >
+              {variant === 'completed' && (
+                <View style={styles.completedTaskButton}></View>
+              )}
             </View>
           </Pressable>
         </View>
@@ -189,4 +171,5 @@ const CompletedTasks = ({
     </View>
   )
 }
+
 export default TasksScreen
