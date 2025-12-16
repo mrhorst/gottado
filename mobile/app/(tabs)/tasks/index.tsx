@@ -1,11 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
 import { SectionProps, useSections } from '@/context/section/SectionContext'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { UserTasks } from '@/services/taskService'
 import { colors, spacing, typography } from '@/styles/theme'
-import { Stack, useRouter } from 'expo-router'
 
 const styles = StyleSheet.create({
   screenContainer: {
@@ -72,11 +71,13 @@ const TasksScreen = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <View style={[styles.container, { gap: 30 }]}>
-        {sections?.map((s) => (
-          <Section key={s.id} section={s} />
-        ))}
-      </View>
+      <ScrollView>
+        <View style={[styles.container, { gap: 30 }]}>
+          {sections?.map((s) => (
+            <Section key={s.id} section={s} />
+          ))}
+        </View>
+      </ScrollView>
     </View>
   )
 }

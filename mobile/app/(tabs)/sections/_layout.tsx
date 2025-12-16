@@ -15,7 +15,7 @@ const SectionsScreenLayout = () => {
     <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen
         name='index'
-        options={{ title: 'Sections', headerRight: NewSection }}
+        options={{ title: 'Sections', headerRight: () => <NewSection /> }}
       />
     </Stack>
   )

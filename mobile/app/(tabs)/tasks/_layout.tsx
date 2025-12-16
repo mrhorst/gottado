@@ -16,11 +16,11 @@ const TasksScreenLayout = () => {
     <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen
         name='index'
-        options={{ title: 'Tasks', headerRight: NewTask }}
+        options={{ title: 'Tasks', headerRight: () => <NewTask /> }}
       />
       <Stack.Screen
         name='new'
-        options={{ title: 'New Task', headerRight: NewSection }}
+        options={{ title: 'New Task', headerRight: () => <NewSection /> }}
       />
     </Stack>
   )

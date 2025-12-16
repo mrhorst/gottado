@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
 
 const Dashboard = () => {
   const { user } = useLoggedUser()
-  const { logout } = useAuth()
 
   if (!user) return null
 
@@ -41,10 +40,6 @@ const Dashboard = () => {
         <View>
           <DashboardHeader user={user} />
           <DashboardPendingTasks user={user} />
-        </View>
-
-        <View>
-          <Button title='Logout' onPress={logout}></Button>
         </View>
       </View>
     </View>

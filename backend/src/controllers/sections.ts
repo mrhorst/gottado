@@ -86,7 +86,7 @@ const getSectionInfo = async (
 
   try {
     const requesterRole = await getUserSectionRole(loggedUser, sectionId)
-    if (requesterRole !== 'owner') {
+    if (requesterRole !== 'owner' && requesterRole !== 'editor') {
       return res
         .status(403)
         .send({ error: 'only owners can see the section info' })
