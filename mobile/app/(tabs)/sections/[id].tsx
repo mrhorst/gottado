@@ -26,7 +26,7 @@ const SectionDetailScreen = () => {
   const sectionId = Number(id)
 
   const { sections } = useSectionQuery()
-  const { sectionMembersResponse, isLoading } = useMembershipQuery()
+  const { sectionMembersResponse, isLoading, isError } = useMembershipQuery()
   const { unsubscribeMember, updateMember } = useMembershipMutation()
 
   const section = sections?.find((s) => s.id === sectionId)
@@ -51,9 +51,13 @@ const SectionDetailScreen = () => {
 
   if (isLoading) return <Text>Loading...</Text>
 
+  if (isError) {
+    router.navigate('/(tabs)/sections')
+  }
+
   return (
     <View style={styles.screenContainer}>
-      <Stack.Screen options={{ title: section.name }} />
+      <Stack.Screen options={{ title: section?.name }} />
       <Modal
         animationType='fade'
         transparent

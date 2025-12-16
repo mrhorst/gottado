@@ -1,4 +1,5 @@
 import {
+  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -12,7 +13,11 @@ import { colors, spacing } from '@/styles/theme'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 
 const styles = StyleSheet.create({
-  container: { padding: spacing.sm, justifyContent: 'center', gap: 20 },
+  container: {
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    gap: 20,
+  },
   sectionCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -56,6 +61,21 @@ const SectionListScreen = () => {
   const sectionTasks = (item: SectionProps) =>
     tasks.filter((t) => t.sectionName === item.name).length
 
+  const canSeeSectionInfo = (item: SectionProps) => {
+    if (item.role === 'viewer') {
+      Alert.prompt(
+        'No Access',
+        'You do not have permission to see this section',
+        [],
+        'default'
+      )
+    } else {
+      router.push(`/sections/${item.id}`)
+    }
+  }
+
+  sections?.sort((a, b) => sectionTasks(b) - sectionTasks(a))
+
   if (isLoading) return <Text>Loading...</Text>
   return (
     <View style={styles.container}>
@@ -63,7 +83,7 @@ const SectionListScreen = () => {
         data={sections}
         renderItem={({ item }) => (
           <ScrollView>
-            <Pressable onPress={() => router.push(`/sections/${item.id}`)}>
+            <Pressable onPress={() => canSeeSectionInfo(item)}>
               <View style={styles.sectionCard}>
                 <View
                   style={{
