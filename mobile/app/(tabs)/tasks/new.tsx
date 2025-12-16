@@ -173,17 +173,19 @@ const NewTaskScreen = () => {
             </Text>
             <ScrollView style={{ maxHeight: 300 }}>
               <View style={styles.sectionsButtonContainer}>
-                {sections?.map((s) => (
-                  <TouchableOpacity
-                    key={s.id}
-                    style={styles.sectionButton}
-                    onPress={() => handleSelectSection(s)}
-                  >
-                    <Text style={styles.sectionButtonText}>
-                      {s.name.toUpperCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {sections?.map((s) =>
+                  s.role !== 'viewer' ? (
+                    <TouchableOpacity
+                      key={s.id}
+                      style={styles.sectionButton}
+                      onPress={() => handleSelectSection(s)}
+                    >
+                      <Text style={styles.sectionButtonText}>
+                        {s.name.toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null
+                )}
               </View>
             </ScrollView>
             <Pressable
