@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SectionProps, useSections } from '@/context/section/SectionContext'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
@@ -102,14 +102,27 @@ const Section = ({ section }: { section: SectionProps }) => {
     toggleComplete({ id: task.id, complete: !task.complete })
   }
 
+  useEffect(() => {
+    if (pending.length === 0) {
+      setIsExpanded(false)
+    }
+  }, [pending.length])
+
   if (total === 0) return null
 
   return (
     <View style={styles.sectionContainer}>
       <View>
         <Pressable onPress={onHeaderTap}>
-          <Text style={styles.sectionHeadingPending}>
-            {section.name} {completed.length}/{total} {isExpanded ? '↓' : '↑'}
+          <Text
+            style={[
+              completed.length === total && styles.completedTaskTitle,
+              styles.sectionHeadingPending,
+            ]}
+          >
+            {section.name} {completed.length}/{total}{' '}
+            {completed.length === total ? '(completed)' : ''}{' '}
+            {isExpanded ? '↓' : '↑'}
           </Text>
         </Pressable>
       </View>
