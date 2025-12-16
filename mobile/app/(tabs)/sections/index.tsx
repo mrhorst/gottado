@@ -1,33 +1,21 @@
 import { FlatList, Pressable, Text, View } from 'react-native'
-import styles from '../styles'
-import { Stack } from 'expo-router'
+import styles from '../../styles'
 import { useSections } from '@/context/section/SectionContext'
-import { useNavigation } from '@react-navigation/native'
+import { useRouter } from 'expo-router'
 
 const SectionListScreen = () => {
   const { sections, isLoading } = useSections()
-  const navigation = useNavigation<any>()
+  const router = useRouter()
 
   if (isLoading) return <Text>Loading...</Text>
 
   return (
     <View style={styles.screenContainer}>
-      <Stack.Screen options={{ title: 'Sections' }} />
-
       <View style={[{ marginTop: 20 }, styles.tasksContainer]}>
-        <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 22, fontWeight: 700, textAlign: 'center' }}>
-            Sections
-          </Text>
-        </View>
         <FlatList
           data={sections}
           renderItem={({ item }) => (
-            <Pressable
-              onPress={() =>
-                navigation.navigate('SectionDetails', { id: item.id })
-              }
-            >
+            <Pressable onPress={() => router.push(`/sections/${item.id}`)}>
               <Text style={{ fontSize: 18, fontWeight: 700, margin: 10 }}>
                 {item.name} ({item.role})
               </Text>

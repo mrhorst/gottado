@@ -51,7 +51,6 @@ const SignupScreen = () => {
         placeholder='Password'
       />
       <Button title='Create account' onPress={onSubmit} />
-      <Stack.Screen options={{ title: 'Sign up' }} />
     </View>
   )
 }

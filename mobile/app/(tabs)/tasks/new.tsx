@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { Stack } from 'expo-router'
 import { useState } from 'react'
 import { useLoggedUser } from '@/context/user/UserContext'
 import { SectionProps, useSections } from '@/context/section/SectionContext'
@@ -196,7 +195,6 @@ const NewTaskScreen = () => {
           </View>
         </View>
       </Modal>
-      <Stack.Screen options={{ title: 'Create Task' }} />
       <View style={{ marginTop: 20 }}>
         <View style={{ marginBottom: 50 }}>
           <View style={styles.inputGroup}>

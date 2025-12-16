@@ -49,9 +49,6 @@ const NewSectionScreen = () => {
   return (
     <View style={styles.screenContainer}>
       <View style={{ marginTop: 20 }}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>Create new section</Text>
-        </View>
         <Input
           placeholder='Section Name'
           value={name}

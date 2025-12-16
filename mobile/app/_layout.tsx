@@ -1,12 +1,13 @@
 import AuthProvider from '@/context/auth/AuthContext'
-import UserProvider from '@/context/user/UserContext'
+import UserProvider, { useLoggedUser } from '@/context/user/UserContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SectionProvider from '@/context/section/SectionContext'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { Stack } from 'expo-router'
+import { Stack, useRouter, useSegments } from 'expo-router'
 
 import { colors } from '@/styles/theme'
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
+import { useEffect } from 'react'
 
 const AppTheme = {
   ...DefaultTheme,
@@ -18,6 +19,38 @@ const AppTheme = {
 
 const client = new QueryClient()
 
+const RootLayoutNav = () => {
+  const { user } = useLoggedUser()
+  const segments = useSegments()
+  const router = useRouter()
+
+  useEffect(() => {
+    const inAuthGroup = segments[0] === '(auth)'
+
+    if (!user && !inAuthGroup) {
+      router.replace('/(auth)/login')
+    } else if (user && inAuthGroup) {
+      router.replace('/(tabs)/dashboard')
+    }
+  }, [user, segments, router])
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name='(tabs)' />
+      <Stack.Screen name='(auth)' />
+
+      <Stack.Screen
+        name='create-section'
+        options={{
+          presentation: 'modal',
+          headerShown: true,
+          title: 'Create New Section',
+        }}
+      />
+    </Stack>
+  )
+}
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
@@ -26,11 +59,7 @@ export default function RootLayout() {
           <UserProvider>
             <SectionProvider>
               <ThemeProvider value={AppTheme}>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                />
+                <RootLayoutNav />
               </ThemeProvider>
             </SectionProvider>
           </UserProvider>

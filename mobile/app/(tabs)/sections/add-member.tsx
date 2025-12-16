@@ -15,20 +15,19 @@ import {
 } from 'react-native'
 import styles from '@/app/styles'
 import { useState } from 'react'
-import { useNavigation, useRoute } from '@react-navigation/native'
 import { useMembershipMutation } from '@/hooks/useMembershipMutation'
 import { Input } from '@/components/ui/Input'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 
 const AddSectionMemberScreen = () => {
-  const route = useRoute<any>()
-  const { id } = route.params || {}
+  const { id } = useLocalSearchParams()
   const sectionId = Number(id)
-  const navigation = useNavigation()
+  const router = useRouter()
 
   const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading } = useMembershipQuery()
   const { subscribeMember } = useMembershipMutation()
-  const section = sections?.find((s) => s.id === sectionId)
+  const section = sections?.find((s) => s.id === id)
 
   const nonSectionMembers = sectionMembersResponse?.nonMembers
 
@@ -59,7 +58,7 @@ const AddSectionMemberScreen = () => {
     subscribeMember({ userId: selectedUser.id, sectionId, role })
 
     setSelectedUser(null)
-    navigation.goBack()
+    router.back()
   }
   const ROLES: MembershipRoles[] = ['editor', 'viewer']
 

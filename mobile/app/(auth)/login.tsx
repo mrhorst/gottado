@@ -39,7 +39,6 @@ const LoginScreen = () => {
           placeholder='Password'
         />
         <Button title='Sign in' onPress={onSubmit} />
-        <Stack.Screen options={{ title: 'Login' }} />
         <View>
           <Text>Not a user yet? </Text>
           <Pressable onPress={() => navigation.navigate('SignUp')}>

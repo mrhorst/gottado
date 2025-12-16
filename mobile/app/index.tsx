@@ -1,5 +1,5 @@
-import AppRouter from '@/router/AppRouter'
+import RootLayout from './_layout'
 
 export default function Index() {
-  return <AppRouter />
+  return <RootLayout />
 }

@@ -15,15 +15,13 @@ import {
   useMembershipQuery,
 } from '@/hooks/useMembershipQuery'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
-import styles from '../styles'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import styles from '../../styles'
 import { useMembershipMutation } from '@/hooks/useMembershipMutation'
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 
 const SectionDetailScreen = () => {
-  const route = useRoute<any>()
-
-  const { id } = route.params || {}
-  const navigation = useNavigation<any>()
+  const { id } = useLocalSearchParams()
+  const router = useRouter()
 
   const sectionId = Number(id)
 
@@ -55,6 +53,7 @@ const SectionDetailScreen = () => {
 
   return (
     <View style={styles.screenContainer}>
+      <Stack.Screen options={{ title: section.name }} />
       <Modal
         animationType='fade'
         transparent
@@ -97,11 +96,6 @@ const SectionDetailScreen = () => {
         </View>
       </Modal>
       <View>
-        <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
-          {section?.name}
-        </Text>
-      </View>
-      <View>
         <View style={{ marginTop: 20 }}>
           <Text style={{ fontWeight: 600, fontSize: 20, textAlign: 'center' }}>
             Users subscribed
@@ -113,11 +107,11 @@ const SectionDetailScreen = () => {
             renderItem={({ item }) => (
               <Pressable
                 style={{
-                  borderWidth: 1,
-                  padding: 5,
-                  borderRadius: 10,
                   marginBottom: 10,
-                  backgroundColor: '#a4a4cc',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#e5e5ea',
+                  paddingVertical: 15,
+                  width: '100%',
                 }}
                 onPress={() => setSelectedUser(item)}
               >
@@ -132,7 +126,10 @@ const SectionDetailScreen = () => {
           <Button
             title='Add Member'
             onPress={() =>
-              navigation.navigate('AddSectionMember', { id: sectionId })
+              router.push({
+                pathname: '/sections/add-member',
+                params: { id: sectionId },
+              })
             }
           />
         </View>

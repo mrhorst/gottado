@@ -37,7 +37,6 @@ const Dashboard = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <Stack.Screen options={{ title: 'Dashboard' }} />
       <View style={styles.container}>
         <View>
           <DashboardHeader user={user} />
