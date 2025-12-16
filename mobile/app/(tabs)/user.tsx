@@ -1,4 +1,11 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { useLoggedUser } from '@/context/user/UserContext'
 import { useAuth } from '@/context/auth/AuthContext'
 import { useRouter } from 'expo-router'
@@ -68,23 +75,31 @@ const ProfileScreen = () => {
 
   const date = new Date(user.iat * 1000).toLocaleString()
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: async () => {
-            await logout()
-            router.replace('/(auth)/login')
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Are you sure you want to log out?')
+
+      if (confirmed) {
+        await logout()
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Log Out',
+            style: 'destructive',
+            onPress: async () => {
+              await logout()
+              router.replace('/(auth)/login')
+            },
           },
-        },
-      ],
-      { cancelable: true }
-    )
+        ],
+        { cancelable: true }
+      )
+    }
   }
 
   return (
