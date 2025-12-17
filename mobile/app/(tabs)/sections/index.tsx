@@ -121,7 +121,7 @@ const SectionListScreen = () => {
         []
       )
     } else {
-      router.push(`/sections/${item.id}`)
+      router.push(`/(tabs)/sections/${item.id}`)
     }
   }
 

@@ -27,7 +27,7 @@ const AddSectionMemberScreen = () => {
   const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading } = useMembershipQuery()
   const { subscribeMember } = useMembershipMutation()
-  const section = sections?.find((s) => s.id === id)
+  const section = sections?.find((s) => s.id.toString() === id)
 
   const nonSectionMembers = sectionMembersResponse?.nonMembers
 

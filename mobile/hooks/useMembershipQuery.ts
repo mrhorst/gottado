@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLoggedUser } from '../context/user/UserContext'
 import { getSectionMembers } from '../services/sectionService'
-import { useRoute } from '@react-navigation/native'
 import { useLocalSearchParams } from 'expo-router'
 
 export interface SectionMembers {
