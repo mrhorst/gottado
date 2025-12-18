@@ -11,8 +11,10 @@ import { SectionProps, useSections } from '@/context/section/SectionContext'
 import { useRouter } from 'expo-router'
 import { colors, spacing } from '@/styles/theme'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { Ionicons } from '@expo/vector-icons'
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
+import { useSectionMutation } from '@/hooks/useSectionMutation'
 
 const styles = StyleSheet.create({
   container: {
@@ -82,11 +84,36 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  rightAction: {
+    backgroundColor: '#FF9500',
+    width: 80,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  archivedAction: {
+    width: 160,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionIcon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
 })
 
 const SectionListScreen = () => {
-  const { sections, isLoading } = useSections()
+  const { sections, archivedSections, isLoading } = useSections()
   const { tasks } = useTasksQuery()
+  const { archiveSection, unarchiveSection, deleteSection } =
+    useSectionMutation()
 
   const router = useRouter()
 
@@ -131,6 +158,7 @@ const SectionListScreen = () => {
       owner: [] as SectionProps[],
       editor: [] as SectionProps[],
       viewer: [] as SectionProps[],
+      archived: [] as SectionProps[],
     }
 
     sections.forEach((section) => {
@@ -138,6 +166,10 @@ const SectionListScreen = () => {
       if (groups[role]) {
         groups[role].push(section)
       }
+    })
+
+    archivedSections?.forEach((section) => {
+      groups['archived'].push(section)
     })
 
     const sortByTasks = (list: SectionProps[]) =>
@@ -163,15 +195,61 @@ const SectionListScreen = () => {
         data: sortByTasks(groups.viewer),
       })
     }
+    if (groups.archived.length > 0) {
+      result.push({
+        title: 'Archived',
+        data: groups.archived,
+      })
+    }
 
     return result
-  }, [sections, sectionTasksLength])
+  }, [sections, sectionTasksLength, archivedSections])
 
   if (isLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center' }]}>
         <ActivityIndicator size='large' color={colors.primary} />
       </View>
+    )
+  }
+
+  const onArchive = (item: SectionProps) => {
+    Alert.prompt(
+      'Archive',
+      `Would you like to archive "${item.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Archive',
+          onPress: () => {
+            archiveSection(item.id)
+          },
+          style: 'default',
+        },
+      ],
+      'default'
+    )
+  }
+
+  const onUnarchive = (item: SectionProps) => {
+    unarchiveSection(item.id)
+  }
+
+  const onDelete = (item: SectionProps) => {
+    Alert.prompt(
+      'DELETE',
+      `You are about to delete "${item.name}". This will also delete ALL tasks associated with this section. Are you sure?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'DELETE',
+          onPress: () => {
+            deleteSection(item.id)
+          },
+          style: 'destructive',
+        },
+      ],
+      'default'
     )
   }
 
@@ -186,38 +264,165 @@ const SectionListScreen = () => {
             <Text style={styles.sectionHeaderText}>{title}</Text>
           </View>
         )}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => canSeeSectionInfo(item)}
-            style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-            disabled={isViewer(item)}
+        renderItem={({ item, section }) => (
+          <SwipeableItem
+            sectionTitle={section.title}
+            onArchive={() => onArchive(item)}
+            onUnarchive={() => {
+              onUnarchive(item)
+            }}
+            onDelete={() => onDelete(item)}
           >
-            <View style={styles.sectionCard}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 15,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={styles.sectionName}>{item.name}</Text>
-                <View style={styles.metaContainer}>
-                  <Text style={[styles.roleBadge, getRoleStyle(item.role)]}>
-                    {item.role}
-                  </Text>
-                  <Text style={styles.taskCount}>
-                    • {sectionTasksLength(item)} Tasks
-                  </Text>
+            <Pressable
+              onPress={() => canSeeSectionInfo(item)}
+              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+              disabled={isViewer(item)}
+            >
+              <View style={styles.sectionCard}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 15,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={styles.sectionName}>{item.name}</Text>
+                  <View style={styles.metaContainer}>
+                    <Text style={[styles.roleBadge, getRoleStyle(item.role)]}>
+                      {item.role}
+                    </Text>
+                    <Text style={styles.taskCount}>
+                      • {sectionTasksLength(item)} Tasks
+                    </Text>
+                  </View>
                 </View>
+                {!isViewer(item) && (
+                  <Ionicons name='chevron-forward' size={20} color='#c7c7cc' />
+                )}
               </View>
-              {!isViewer(item) && (
-                <Ionicons name='chevron-forward' size={20} color='#c7c7cc' />
-              )}
-            </View>
-          </Pressable>
+            </Pressable>
+          </SwipeableItem>
         )}
       />
     </View>
   )
 }
+
+interface SwipeableItemProps {
+  children: React.ReactNode
+  sectionTitle: string
+  onArchive: () => void
+  onUnarchive: () => void
+  onDelete: () => void
+}
+
+const SwipeActionButton = ({
+  text,
+  color,
+  icon,
+  onPress,
+  width = 80,
+}: {
+  text: string
+  color: string
+  icon: keyof typeof Ionicons.glyphMap
+  onPress: () => void
+  width?: number
+}) => {
+  return (
+    <Pressable
+      onPress={() => {
+        close()
+        onPress()
+      }}
+      style={{
+        backgroundColor: color,
+        width: width,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Ionicons name={icon} size={24} color='white' />
+      <Text
+        style={{
+          color: 'white',
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 4,
+        }}
+      >
+        {text}
+      </Text>
+    </Pressable>
+  )
+}
+
+export const SwipeableItem = ({
+  children,
+  sectionTitle,
+  onArchive,
+  onUnarchive,
+  onDelete,
+}: SwipeableItemProps) => {
+  const swipeableRef =
+    useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null)
+
+  const close = () => {
+    swipeableRef.current?.close()
+  }
+
+  const renderRightActions = useCallback(() => {
+    if (sectionTitle === 'Archived') {
+      return (
+        <View style={{ width: 160, flexDirection: 'row' }}>
+          <SwipeActionButton
+            text='Restore'
+            color='#007AFF'
+            icon='arrow-undo'
+            onPress={() => {
+              close()
+              onUnarchive()
+            }}
+          />
+          <SwipeActionButton
+            text='Delete'
+            color='#ff3b30'
+            icon='trash'
+            onPress={() => {
+              close()
+              onDelete()
+            }}
+          />
+        </View>
+      )
+    }
+    return (
+      <View style={{ width: 80 }}>
+        <SwipeActionButton
+          text='Archive'
+          color='#FF9500'
+          icon='archive'
+          onPress={() => {
+            close()
+            onArchive()
+          }}
+        />
+      </View>
+    )
+  }, [sectionTitle, onArchive, onUnarchive, onDelete])
+
+  return (
+    <ReanimatedSwipeable
+      ref={swipeableRef}
+      friction={2}
+      enableTrackpadTwoFingerGesture
+      rightThreshold={40}
+      renderRightActions={renderRightActions} // Passing stable function reference
+    >
+      {children}
+    </ReanimatedSwipeable>
+  )
+}
+
 export default SectionListScreen

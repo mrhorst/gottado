@@ -3,11 +3,11 @@ import {
   listSections,
   createSection,
   updateSection,
-  deleteSection,
   getSectionInfo,
   addMember,
   updateMemberRole,
   unsubscribeMember,
+  deleteSection,
 } from '../controllers/sections.ts'
 
 const router = Router()

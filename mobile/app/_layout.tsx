@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SectionProvider from '@/context/section/SectionContext'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Stack, useRouter, useSegments } from 'expo-router'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 import { colors } from '@/styles/theme'
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
@@ -53,18 +54,20 @@ const RootLayoutNav = () => {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={client}>
-        <AuthProvider>
-          <UserProvider>
-            <SectionProvider>
-              <ThemeProvider value={AppTheme}>
-                <RootLayoutNav />
-              </ThemeProvider>
-            </SectionProvider>
-          </UserProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView>
+      <SafeAreaProvider>
+        <QueryClientProvider client={client}>
+          <AuthProvider>
+            <UserProvider>
+              <SectionProvider>
+                <ThemeProvider value={AppTheme}>
+                  <RootLayoutNav />
+                </ThemeProvider>
+              </SectionProvider>
+            </UserProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   )
 }

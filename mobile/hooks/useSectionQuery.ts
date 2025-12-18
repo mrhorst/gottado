@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLoggedUser } from '../context/user/UserContext'
 import { getSections } from '../services/sectionService'
-import { SectionProps } from '../context/section/SectionContext'
+import { SectionResponseProps } from '../context/section/SectionContext'
 
 export const useSectionQuery = () => {
   const { user } = useLoggedUser()
@@ -9,11 +9,14 @@ export const useSectionQuery = () => {
   const {
     data,
     isLoading,
-  }: { data: SectionProps[] | undefined; isLoading: boolean } = useQuery({
+  }: { data: SectionResponseProps | undefined; isLoading: boolean } = useQuery({
     queryKey: ['sections', user?.sub],
     queryFn: getSections,
     enabled: !!user,
   })
 
-  return { sections: data, isLoading }
+  const active = data?.active
+  const inactive = data?.inactive
+
+  return { sections: active, archivedSections: inactive, isLoading }
 }

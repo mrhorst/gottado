@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from 'express'
-import { section, sectionMember } from '@/db/schema.ts'
+import { NextFunction, Response } from 'express'
+import { section, sectionMember, task } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { and, eq } from 'drizzle-orm'
 import {
@@ -16,7 +16,7 @@ const listSections = async (
 ) => {
   const userId = Number(req.user!.sub)
   try {
-    const subscribed = await db
+    const active = await db
       .select({
         id: section.id,
         name: section.name,
@@ -27,7 +27,18 @@ const listSections = async (
       .where(and(eq(sectionMember.userId, userId), eq(section.active, true)))
       .leftJoin(section, eq(sectionMember.sectionId, section.id))
 
-    res.status(200).send(subscribed)
+    const inactive = await db
+      .select({
+        id: section.id,
+        name: section.name,
+        createdAt: section.createdAt,
+        role: sectionMember.role,
+      })
+      .from(sectionMember)
+      .where(and(eq(sectionMember.userId, userId), eq(section.active, false)))
+      .leftJoin(section, eq(sectionMember.sectionId, section.id))
+
+    res.status(200).send({ active, inactive })
   } catch (error) {
     next(error)
   }
@@ -68,11 +79,54 @@ const createSection = async (
     next(error)
   }
 }
-const updateSection = (_req: Request, res: Response) => {
-  res.status(501).send('TODO')
+const updateSection = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const loggedUser = Number(req.user?.sub)
+  const sectionId = Number(req.params.id)
+  try {
+    const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+    if (requesterRole !== 'owner') {
+      return res.status(403).send({ error: 'you are not the owner' })
+    }
+    await db.update(section).set(req.body).where(eq(section.id, sectionId))
+    res.send(200)
+  } catch (e) {
+    next(e)
+  }
 }
-const deleteSection = (_req: Request, res: Response) => {
-  res.status(501).send('TODO')
+
+const deleteSection = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const loggedUser = Number(req.user?.sub)
+  const sectionId = Number(req.params.id)
+
+  try {
+    const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+    if (requesterRole !== 'owner') {
+      return res.status(403).send({ error: 'you are not the owner' })
+    }
+
+    // wrap in transaction to make sure it's only executed if all passes
+    await db.transaction(async (tx) => {
+      // remove membership associatons
+      await tx
+        .delete(sectionMember)
+        .where(eq(sectionMember.sectionId, sectionId))
+      // remove tasks that belong to this section
+      await tx.delete(task).where(eq(task.sectionId, sectionId))
+      // then, remove the section
+      await tx.delete(section).where(eq(section.id, sectionId))
+    })
+    res.sendStatus(200)
+  } catch (e) {
+    next(e)
+  }
 }
 
 const getSectionInfo = async (

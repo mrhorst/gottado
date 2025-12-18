@@ -2,6 +2,11 @@ import { useSectionMutation } from '@/hooks/useSectionMutation'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
 
+export interface SectionResponseProps {
+  active: SectionProps[]
+  inactive: SectionProps[]
+}
+
 export interface SectionProps {
   name: string
   id: number
@@ -10,6 +15,7 @@ export interface SectionProps {
 
 interface SectionContextValue {
   sections: SectionProps[] | undefined
+  archivedSections: SectionProps[] | undefined
   activeSection: SectionProps | null
   setActiveSection: (section: SectionProps | null) => void
   isLoading: boolean
@@ -19,7 +25,7 @@ interface SectionContextValue {
 const SectionContext = createContext<SectionContextValue | undefined>(undefined)
 
 export default function SectionProvider({ children }: { children: ReactNode }) {
-  const { sections, isLoading } = useSectionQuery()
+  const { sections, archivedSections, isLoading } = useSectionQuery()
   const { addSection } = useSectionMutation()
   const [activeSectionId, setActiveSectionId] = useState<number | null>(null)
 
@@ -34,6 +40,7 @@ export default function SectionProvider({ children }: { children: ReactNode }) {
 
   const value: SectionContextValue = {
     sections,
+    archivedSections,
     activeSection,
     setActiveSection,
     isLoading,
