@@ -301,6 +301,7 @@ const SectionListScreen = () => {
             }}
             onDelete={() => onDelete(item)}
             onPress={() => canSeeSectionInfo(item)}
+            enabled={!isViewer(item)}
           >
             <View style={styles.sectionCard}>
               <View style={styles.cardContent}>
@@ -332,6 +333,7 @@ interface SwipeableItemProps {
   onUnarchive: () => void
   onDelete: () => void
   onPress: () => void
+  enabled?: boolean
 }
 
 const SwipeActionButton = ({
@@ -350,7 +352,6 @@ const SwipeActionButton = ({
   return (
     <Pressable
       onPress={() => {
-        close()
         onPress()
       }}
       style={[styles.swipeBtn, { backgroundColor: color, width }]}
@@ -367,7 +368,7 @@ export const SwipeableItem = ({
   onArchive,
   onUnarchive,
   onDelete,
-  onPress,
+  enabled = true,
 }: SwipeableItemProps) => {
   const swipeableRef =
     useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null)
@@ -421,6 +422,7 @@ export const SwipeableItem = ({
       ref={swipeableRef}
       friction={2}
       enableTrackpadTwoFingerGesture
+      enabled={enabled}
       rightThreshold={40}
       renderRightActions={renderRightActions} // Passing stable function reference
     >
