@@ -1,7 +1,6 @@
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   SectionList,
   StyleSheet,
   Text,
@@ -15,12 +14,15 @@ import { useCallback, useMemo, useRef } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { useSectionMutation } from '@/hooks/useSectionMutation'
+import { Pressable } from 'react-native-gesture-handler'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
+  loadingContainer: {
+    justifyContent: 'center',
+  },
   sectionCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -30,6 +32,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f2f2f7',
     backgroundColor: colors.background,
+  },
+  // New style for the inner row of the card
+  cardContent: {
+    flexDirection: 'row',
+    gap: 15,
+    alignItems: 'center',
   },
   sectionName: {
     fontSize: 17,
@@ -83,6 +91,26 @@ const styles = StyleSheet.create({
     color: '#666',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  // New styles for the Swipe Action Buttons
+  swipeBtn: {
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swipeBtnText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  // Containers for the swipe actions
+  archivedActionsWrapper: {
+    width: 160,
+    flexDirection: 'row',
+  },
+  activeActionWrapper: {
+    width: 80,
   },
   rightAction: {
     backgroundColor: '#FF9500',
@@ -207,7 +235,7 @@ const SectionListScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center' }]}>
+      <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size='large' color={colors.primary} />
       </View>
     )
@@ -272,35 +300,24 @@ const SectionListScreen = () => {
               onUnarchive(item)
             }}
             onDelete={() => onDelete(item)}
+            onPress={() => canSeeSectionInfo(item)}
           >
-            <Pressable
-              onPress={() => canSeeSectionInfo(item)}
-              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-              disabled={isViewer(item)}
-            >
-              <View style={styles.sectionCard}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    gap: 15,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={styles.sectionName}>{item.name}</Text>
-                  <View style={styles.metaContainer}>
-                    <Text style={[styles.roleBadge, getRoleStyle(item.role)]}>
-                      {item.role}
-                    </Text>
-                    <Text style={styles.taskCount}>
-                      • {sectionTasksLength(item)} Tasks
-                    </Text>
-                  </View>
+            <View style={styles.sectionCard}>
+              <View style={styles.cardContent}>
+                <Text style={styles.sectionName}>{item.name}</Text>
+                <View style={styles.metaContainer}>
+                  <Text style={[styles.roleBadge, getRoleStyle(item.role)]}>
+                    {item.role}
+                  </Text>
+                  <Text style={styles.taskCount}>
+                    • {sectionTasksLength(item)} Tasks
+                  </Text>
                 </View>
-                {!isViewer(item) && (
-                  <Ionicons name='chevron-forward' size={20} color='#c7c7cc' />
-                )}
               </View>
-            </Pressable>
+              {!isViewer(item) && (
+                <Ionicons name='chevron-forward' size={20} color='#c7c7cc' />
+              )}
+            </View>
           </SwipeableItem>
         )}
       />
@@ -314,6 +331,7 @@ interface SwipeableItemProps {
   onArchive: () => void
   onUnarchive: () => void
   onDelete: () => void
+  onPress: () => void
 }
 
 const SwipeActionButton = ({
@@ -335,25 +353,10 @@ const SwipeActionButton = ({
         close()
         onPress()
       }}
-      style={{
-        backgroundColor: color,
-        width: width,
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
+      style={[styles.swipeBtn, { backgroundColor: color, width }]}
     >
       <Ionicons name={icon} size={24} color='white' />
-      <Text
-        style={{
-          color: 'white',
-          fontSize: 12,
-          fontWeight: '600',
-          marginTop: 4,
-        }}
-      >
-        {text}
-      </Text>
+      <Text style={styles.swipeBtnText}>{text}</Text>
     </Pressable>
   )
 }
@@ -364,6 +367,7 @@ export const SwipeableItem = ({
   onArchive,
   onUnarchive,
   onDelete,
+  onPress,
 }: SwipeableItemProps) => {
   const swipeableRef =
     useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null)
@@ -375,7 +379,7 @@ export const SwipeableItem = ({
   const renderRightActions = useCallback(() => {
     if (sectionTitle === 'Archived') {
       return (
-        <View style={{ width: 160, flexDirection: 'row' }}>
+        <View style={styles.archivedActionsWrapper}>
           <SwipeActionButton
             text='Restore'
             color='#007AFF'
@@ -398,7 +402,7 @@ export const SwipeableItem = ({
       )
     }
     return (
-      <View style={{ width: 80 }}>
+      <View style={styles.activeActionWrapper}>
         <SwipeActionButton
           text='Archive'
           color='#FF9500'
