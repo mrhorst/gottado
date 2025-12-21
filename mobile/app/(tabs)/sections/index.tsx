@@ -242,21 +242,16 @@ const SectionListScreen = () => {
   }
 
   const onArchive = (item: SectionProps) => {
-    Alert.prompt(
-      'Archive',
-      `Would you like to archive "${item.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Archive',
-          onPress: () => {
-            archiveSection(item.id)
-          },
-          style: 'default',
+    Alert.alert('Archive', `Would you like to archive "${item.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Archive',
+        onPress: () => {
+          archiveSection(item.id)
         },
-      ],
-      'default'
-    )
+        style: 'default',
+      },
+    ])
   }
 
   const onUnarchive = (item: SectionProps) => {
@@ -369,6 +364,7 @@ export const SwipeableItem = ({
   onUnarchive,
   onDelete,
   enabled = true,
+  onPress,
 }: SwipeableItemProps) => {
   const swipeableRef =
     useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null)
@@ -423,10 +419,10 @@ export const SwipeableItem = ({
       friction={2}
       enableTrackpadTwoFingerGesture
       enabled={enabled}
-      rightThreshold={40}
+      rightThreshold={1}
       renderRightActions={renderRightActions} // Passing stable function reference
     >
-      {children}
+      <Pressable onPress={() => onPress()}>{children}</Pressable>
     </ReanimatedSwipeable>
   )
 }
