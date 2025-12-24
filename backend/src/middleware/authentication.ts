@@ -23,10 +23,11 @@ const authenticateUser = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.token
+  const { token } = req
   if (!token) {
     return res.status(401).send({ error: 'no token provided' })
   }
+
   try {
     const decodedUser = jwt.verify(token, JWT_SECRET) as UserPayload
     if (!decodedUser)
@@ -41,4 +42,4 @@ const authenticateUser = async (
   }
 }
 
-export { tokenExtractor, authenticateUser }
+export const protect = [tokenExtractor, authenticateUser]
