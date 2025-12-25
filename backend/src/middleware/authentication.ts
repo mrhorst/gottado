@@ -2,6 +2,7 @@ import { AuthenticatedRequest, UserPayload } from '@/types/index.ts'
 import { JWT_SECRET } from '../utils/config.ts'
 import { NextFunction, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import als from '@/utils/context.ts'
 
 const tokenExtractor = async (
   req: AuthenticatedRequest,
@@ -42,4 +43,23 @@ const authenticateUser = async (
   }
 }
 
+const setOrgHeader = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const orgId = Number(req.header('x-org-id'))
+    if (!orgId) {
+      return res.status(400).send({ error: 'org header not present' })
+    }
+
+    const authObj = { orgId }
+    als.run(authObj, () => next())
+  } catch (e) {
+    next(e)
+  }
+}
+
 export const protect = [tokenExtractor, authenticateUser]
+export const setOrg = [setOrgHeader]

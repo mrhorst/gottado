@@ -1,6 +1,6 @@
 import db from '../utils/db.ts'
 import { Request, Response, NextFunction } from 'express'
-import { user } from '../db/schema.ts'
+import { organization, orgMember, user } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
 import * as bcrypt from 'bcrypt'
 import { AuthenticatedRequest } from '@/types/index.ts'
@@ -66,9 +66,36 @@ const me = async (
   res: Response,
   next: NextFunction
 ) => {
+  const userId = Number(req.user?.sub)
   try {
-    const user = req.user
-    res.send(user)
+    const data = await db
+      .select({
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        orgId: organization.id,
+        orgName: organization.name,
+        role: orgMember.role,
+      })
+      .from(user)
+      .leftJoin(orgMember, eq(user.id, orgMember.userId))
+      .leftJoin(organization, eq(orgMember.orgId, organization.id))
+      .where(eq(user.id, userId))
+    if (data.length === 0) {
+      return res.status(404).send({ error: 'user not found' })
+    }
+
+    const result = {
+      id: data[0].userId,
+      name: data[0].userName,
+      email: data[0].userEmail,
+      organizations: data
+        .filter((d) => d.orgId !== null)
+        .map((d) => {
+          return { id: d.orgId, name: d.orgName, role: d.role }
+        }),
+    }
+    res.send(result)
   } catch (err) {
     next(err)
   }

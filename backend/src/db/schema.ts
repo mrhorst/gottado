@@ -85,3 +85,44 @@ export const sectionMember = pgTable(
       .where(sql`${table.role} = 'owner'`),
   ]
 )
+
+export const organization = pgTable('organizations', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  active: boolean().notNull().default(true),
+  deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
+})
+
+export const orgMember = pgTable(
+  'organization_members',
+  {
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: integer('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    role: varchar({ length: 20 })
+      .notNull()
+      .default('viewer')
+      .$type<'owner' | 'editor' | 'viewer'>(),
+    joinedAt: timestamp('joined_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.orgId, table.userId] }),
+    index('org_members_user_id_idx').on(table.userId),
+    index('org_members_org_id_idx').on(table.orgId),
+    index('org_members_role_idx').on(table.role),
+    uniqueIndex('one_owner_per_org_idx')
+      .on(table.orgId)
+      .where(sql`${table.role} = 'owner'`),
+  ]
+)
