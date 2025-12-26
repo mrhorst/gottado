@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { useLoggedUser } from '../context/user/UserContext'
+
 import { getSectionMembers } from '../services/sectionService'
 import { useLocalSearchParams } from 'expo-router'
+import { useAuth } from '@/context/auth/AuthContext'
 
 export interface SectionMembers {
   userId: number
@@ -25,7 +26,7 @@ export interface SectionMembersResponse {
 }
 
 export const useMembershipQuery = () => {
-  const { user } = useLoggedUser()
+  const { user } = useAuth()
   const { id } = useLocalSearchParams()
 
   const {
@@ -37,7 +38,7 @@ export const useMembershipQuery = () => {
     isLoading: boolean
     isError: boolean
   } = useQuery({
-    queryKey: ['sectionMembers', user?.sub],
+    queryKey: ['sectionMembers', user?.id],
     enabled: !!user,
     queryFn: () => getSectionMembers(Number(id)),
     retry: 1,

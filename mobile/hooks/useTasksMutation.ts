@@ -4,13 +4,14 @@ import {
   setTaskCompleted,
   UserTasks,
 } from '../services/taskService'
-import { useLoggedUser } from '../context/user/UserContext'
+
 import { sortTasks } from '../utils/taskHelpers'
+import { useAuth } from '@/context/auth/AuthContext'
 
 export const useTasksMutation = () => {
-  const { user } = useLoggedUser()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
-  const queryKey = ['tasks', user?.sub]
+  const queryKey = ['tasks', user?.id]
 
   const toggleCompleteMutation = useMutation({
     mutationFn: ({ id, complete }: { id: number; complete: boolean }) =>
@@ -51,7 +52,7 @@ export const useTasksMutation = () => {
       userId: number
     }) => createNewTask(title, description, sectionId, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', user?.sub] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] })
     },
   })
 

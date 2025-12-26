@@ -1,7 +1,5 @@
-import AuthProvider from '@/context/auth/AuthContext'
-import UserProvider, { useLoggedUser } from '@/context/user/UserContext'
+import AuthProvider, { useAuth } from '@/context/auth/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import SectionProvider from '@/context/section/SectionContext'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -21,7 +19,7 @@ const AppTheme = {
 const client = new QueryClient()
 
 const RootLayoutNav = () => {
-  const { user } = useLoggedUser()
+  const { user } = useAuth()
   const segments = useSegments()
   const router = useRouter()
 
@@ -58,13 +56,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={client}>
           <AuthProvider>
-            <UserProvider>
-              <SectionProvider>
-                <ThemeProvider value={AppTheme}>
-                  <RootLayoutNav />
-                </ThemeProvider>
-              </SectionProvider>
-            </UserProvider>
+            <ThemeProvider value={AppTheme}>
+              <RootLayoutNav />
+            </ThemeProvider>
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

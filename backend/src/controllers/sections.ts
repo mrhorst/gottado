@@ -103,11 +103,11 @@ const deleteSection = async (
   res: Response,
   next: NextFunction
 ) => {
-  const loggedUser = Number(req.user?.sub)
+  const loggedUserId = Number(req.user?.sub)
   const sectionId = Number(req.params.id)
 
   try {
-    const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+    const requesterRole = await getUserSectionRole(loggedUserId, sectionId)
     if (requesterRole !== 'owner') {
       return res.status(403).send({ error: 'you are not the owner' })
     }

@@ -4,8 +4,9 @@ import {
   removeMember,
   updateMemberRole,
 } from '../services/sectionService'
-import { useLoggedUser } from '../context/user/UserContext'
+
 import { MembershipRoles } from './useMembershipQuery'
+import { useAuth } from '@/context/auth/AuthContext'
 
 interface MembershipKeys {
   userId: number
@@ -18,8 +19,8 @@ interface MembershipPayload extends MembershipKeys {
 
 export const useMembershipMutation = () => {
   const queryClient = useQueryClient()
-  const { user } = useLoggedUser()
-  const queryKey = ['sectionMembers', user?.sub]
+  const { user } = useAuth()
+  const queryKey = ['sectionMembers', user?.id]
 
   const subscribeMember = useMutation({
     mutationFn: ({ userId, sectionId, role }: MembershipPayload) =>

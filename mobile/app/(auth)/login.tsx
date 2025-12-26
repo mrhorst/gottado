@@ -5,6 +5,7 @@ import api from '@/services/api'
 import { Input } from '@/components/ui/Input'
 import { useRouter } from 'expo-router'
 import { colors, typography } from '@/styles/theme'
+import { login } from '@/services/userService'
 
 const styles = StyleSheet.create({
   headerText: {
@@ -45,12 +46,12 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const { login } = useAuth()
+  const { startSession } = useAuth()
   const router = useRouter()
 
   const onSubmit = async () => {
-    const { data } = await api.post('/login', { email, password }) // need to refactor this
-    await login(data.token)
+    const { token } = await login(email, password)
+    await startSession(token)
   }
 
   return (

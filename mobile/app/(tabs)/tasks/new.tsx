@@ -8,12 +8,13 @@ import {
   View,
 } from 'react-native'
 import { useState } from 'react'
-import { useLoggedUser } from '@/context/user/UserContext'
-import { SectionProps, useSections } from '@/context/section/SectionContext'
+import { SectionProps } from '@/types/section'
 import { useNavigation } from '@react-navigation/native'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { Input } from '@/components/ui/Input'
 import { colors, spacing, typography } from '@/styles/theme'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
+import { useAuth } from '@/context/auth/AuthContext'
 
 const styles = StyleSheet.create({
   selectorTrigger: {
@@ -128,8 +129,8 @@ const NewTaskScreen = () => {
   )
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
 
-  const { user } = useLoggedUser()
-  const { sections } = useSections()
+  const { user } = useAuth()
+  const { sections } = useSectionQuery()
   const navigation = useNavigation()
 
   const { createTask } = useTasksMutation()
@@ -146,7 +147,7 @@ const NewTaskScreen = () => {
       title,
       description,
       sectionId: selectedSection.id,
-      userId: user?.sub,
+      userId: user?.id,
     })
     navigation.goBack()
   }

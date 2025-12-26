@@ -5,35 +5,35 @@ import {
   deleteSection,
   unarchiveSection,
 } from '../services/sectionService'
-import { useLoggedUser } from '../context/user/UserContext'
+import { useAuth } from '@/context/auth/AuthContext'
 
 export const useSectionMutation = () => {
   const queryClient = useQueryClient()
-  const { user } = useLoggedUser()
-  const userId = Number(user?.sub)
+  const { user } = useAuth()
+  const userId = Number(user?.id)
 
   const create = useMutation({
     mutationFn: (name: string) => createSection(name, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', user?.sub] })
+      queryClient.invalidateQueries({ queryKey: ['sections', user?.id] })
     },
   })
   const archive = useMutation({
     mutationFn: (sectionId: number) => archiveSection(sectionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', user?.sub] })
+      queryClient.invalidateQueries({ queryKey: ['sections', user?.id] })
     },
   })
   const unarchive = useMutation({
     mutationFn: (sectionId: number) => unarchiveSection(sectionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', user?.sub] })
+      queryClient.invalidateQueries({ queryKey: ['sections', user?.id] })
     },
   })
   const remove = useMutation({
     mutationFn: (sectionId: number) => deleteSection(sectionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', user?.sub] })
+      queryClient.invalidateQueries({ queryKey: ['sections', user?.id] })
     },
   })
 

@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { SectionProps, useSections } from '@/context/section/SectionContext'
+import { SectionProps } from '@/types/section'
 import { useRouter } from 'expo-router'
 import { colors, spacing } from '@/styles/theme'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
@@ -16,6 +16,7 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import { useSectionMutation } from '@/hooks/useSectionMutation'
 import { Pressable } from 'react-native-gesture-handler'
 import { SharedValue } from 'react-native-reanimated'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
 
 const styles = StyleSheet.create({
   container: {
@@ -139,10 +140,10 @@ const styles = StyleSheet.create({
 })
 
 const SectionListScreen = () => {
-  const { sections, archivedSections, isLoading } = useSections()
-  const { tasks } = useTasksQuery()
+  const { sections, archivedSections, isLoading } = useSectionQuery()
   const { archiveSection, unarchiveSection, deleteSection } =
     useSectionMutation()
+  const { tasks } = useTasksQuery()
 
   const router = useRouter()
 

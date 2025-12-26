@@ -1,10 +1,11 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useEffect, useState } from 'react'
-import { SectionProps, useSections } from '@/context/section/SectionContext'
+import { SectionProps } from '@/types/section'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { UserTasks } from '@/services/taskService'
 import { colors, spacing, typography } from '@/styles/theme'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
 
 const styles = StyleSheet.create({
   screenContainer: {
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
 })
 
 const TasksScreen = () => {
-  const { sections } = useSections()
+  const { sections } = useSectionQuery()
 
   return (
     <View style={styles.screenContainer}>

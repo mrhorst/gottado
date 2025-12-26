@@ -31,15 +31,12 @@ const authenticateUser = async (
 
   try {
     const decodedUser = jwt.verify(token, JWT_SECRET) as UserPayload
-    if (!decodedUser)
-      return res
-        .status(400)
-        .send({ error: 'blocked by middleware: token invalid' })
-
     req.user = decodedUser
     next()
   } catch (error) {
-    return res.status(400).send({ error })
+    return res
+      .status(401)
+      .send({ error: 'blocked by middleware: token invalid' })
   }
 }
 

@@ -1,10 +1,10 @@
 import { useAuth } from '@/context/auth/AuthContext'
-import { LoggedUser, useLoggedUser } from '@/context/user/UserContext'
 import { getTasks } from '@/services/taskService'
 import { useQuery } from '@tanstack/react-query'
-import { Stack } from 'expo-router'
-import { Button, StyleSheet, Text, View } from 'react-native'
+
+import { StyleSheet, Text, View } from 'react-native'
 import { colors, spacing, typography } from '@/styles/theme'
+import { UserProfile } from '@/types/user'
 
 const styles = StyleSheet.create({
   screenContainer: {
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
 })
 
 const Dashboard = () => {
-  const { user } = useLoggedUser()
+  const { user } = useAuth()
 
   if (!user) return null
 
@@ -46,7 +46,7 @@ const Dashboard = () => {
   )
 }
 
-const DashboardHeader = ({ user }: { user: LoggedUser }) => {
+const DashboardHeader = ({ user }: { user: UserProfile }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome, {user?.name}!</Text>
@@ -54,9 +54,9 @@ const DashboardHeader = ({ user }: { user: LoggedUser }) => {
   )
 }
 
-const DashboardPendingTasks = ({ user }: { user: LoggedUser }) => {
+const DashboardPendingTasks = ({ user }: { user: UserProfile }) => {
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ['tasks', user?.sub],
+    queryKey: ['tasks', user?.id],
     queryFn: getTasks,
     enabled: !!user,
   })

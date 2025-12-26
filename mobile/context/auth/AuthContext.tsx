@@ -7,46 +7,74 @@ import {
   useState,
 } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { UserProfile } from '@/types/user'
+import { AuthStatus } from '@/types/auth'
+import { fetchLoggedUser } from '@/services/userService'
 
 type AuthContextType = {
   token: string | null
-  login: (newToken: string) => Promise<void>
-  logout: () => Promise<void>
+  user: UserProfile | null
+  startSession: (newToken: string) => Promise<void>
+  endSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
-  const [ready, setReady] = useState<boolean>(false)
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [status, setStatus] = useState<AuthStatus>('idle')
 
   useEffect(() => {
-    const loadToken = async () => {
-      try {
-        const storedToken = await AsyncStorage.getItem('auth_token')
-        setToken(storedToken)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setReady(true)
-      }
+    try {
+      setStatus('loading')
+      loadToken()
+      loadUser()
+    } catch (error) {
+      console.error(error)
+      setStatus('unauthenticated')
+    } finally {
+      setStatus('authenticated')
     }
-    loadToken()
   }, [])
 
-  const login = async (newToken: string) => {
+  const loadToken = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem('auth_token')
+      setToken(storedToken)
+    } catch (err) {
+      console.error(err)
+      setStatus('unauthenticated')
+    }
+  }
+
+  const loadUser = async () => {
+    try {
+      const u = await fetchLoggedUser()
+      console.log(u)
+      setUser(u)
+    } catch (err) {
+      setUser(null)
+      console.warn(err)
+    }
+  }
+
+  const startSession = async (newToken: string) => {
     await AsyncStorage.setItem('auth_token', newToken)
     setToken(newToken)
   }
 
-  const logout = async () => {
+  const endSession = async () => {
     await AsyncStorage.removeItem('auth_token')
     setToken(null)
   }
 
-  const value = useMemo(() => ({ token, login, logout }), [token])
+  const value = useMemo(
+    () => ({ token, user, startSession, endSession }),
+    [token, user]
+  )
 
-  if (!ready) return null
+  if (status !== 'authenticated') return null
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

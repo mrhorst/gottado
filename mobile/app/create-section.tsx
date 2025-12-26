@@ -1,10 +1,10 @@
-import { useSections } from '@/context/section/SectionContext'
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import styles from '@/app/styles'
 import { useNavigation } from '@react-navigation/native'
 import { Input } from '@/components/ui/Input'
 import { colors, typography } from '@/styles/theme'
+import { useSectionMutation } from '@/hooks/useSectionMutation'
 
 const localStyles = StyleSheet.create({
   primaryButton: {
@@ -30,7 +30,7 @@ const localStyles = StyleSheet.create({
 
 const NewSectionScreen = () => {
   const [name, setName] = useState('')
-  const { addSection } = useSections()
+  const { addSection } = useSectionMutation()
   const navigation = useNavigation()
 
   const handleAddSection = (name: string) => {

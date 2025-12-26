@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { useLoggedUser } from '@/context/user/UserContext'
+
 import { useAuth } from '@/context/auth/AuthContext'
 import { useRouter } from 'expo-router'
 
@@ -67,20 +67,20 @@ const styles = StyleSheet.create({
 })
 
 const ProfileScreen = () => {
-  const { user } = useLoggedUser()
-  const { logout } = useAuth()
+  const { user, endSession } = useAuth()
+
   const router = useRouter()
 
   if (!user) return null
 
-  const date = new Date(user.iat * 1000).toLocaleString()
+  // const date = new Date(user.iat * 1000).toLocaleString()
 
   const handleLogout = async () => {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('Are you sure you want to log out?')
 
       if (confirmed) {
-        await logout()
+        await endSession()
       }
     } else {
       Alert.alert(
@@ -92,7 +92,7 @@ const ProfileScreen = () => {
             text: 'Log Out',
             style: 'destructive',
             onPress: async () => {
-              await logout()
+              await endSession()
               router.replace('/(auth)/login')
             },
           },
@@ -113,7 +113,7 @@ const ProfileScreen = () => {
         <View style={styles.header}>
           <Text style={styles.name}>{user?.name}</Text>
           <Text style={styles.email}>{user?.email}</Text>
-          <Text>Last login: {date}</Text>
+          {/* <Text>Last login: {date}</Text> */}
         </View>
       </View>
       <View style={styles.footer}>
