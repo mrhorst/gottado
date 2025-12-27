@@ -1,4 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { useEffect, useState } from 'react'
 import { SectionProps } from '@/types/section'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
@@ -68,8 +75,21 @@ const styles = StyleSheet.create({
 })
 
 const TasksScreen = () => {
-  const { sections } = useSectionQuery()
+  const { sections, isLoading, isError, error } = useSectionQuery()
 
+  if (isLoading)
+    return (
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <ActivityIndicator size='large' color={colors.primary} />
+      </View>
+    )
+
+  if (isError)
+    return (
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <Text>Tasks error: {error?.message}</Text>
+      </View>
+    )
   return (
     <View style={styles.screenContainer}>
       <ScrollView>

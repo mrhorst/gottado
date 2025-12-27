@@ -17,8 +17,12 @@ api.interceptors.request.use(
   async (config) => {
     try {
       const token = await AsyncStorage.getItem('auth_token')
+      const orgId = await AsyncStorage.getItem('activeOrgId') //need to refactor this
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+      }
+      if (orgId) {
+        config.headers['x-org-id'] = orgId
       }
     } catch (err) {
       console.log('api interceptor request:', err)

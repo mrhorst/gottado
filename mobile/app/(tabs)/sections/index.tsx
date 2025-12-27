@@ -140,7 +140,8 @@ const styles = StyleSheet.create({
 })
 
 const SectionListScreen = () => {
-  const { sections, archivedSections, isLoading } = useSectionQuery()
+  const { sections, archivedSections, isLoading, isError, error } =
+    useSectionQuery()
   const { archiveSection, unarchiveSection, deleteSection } =
     useSectionMutation()
   const { tasks } = useTasksQuery()
@@ -239,6 +240,14 @@ const SectionListScreen = () => {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size='large' color={colors.primary} />
+      </View>
+    )
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Text>Section Error: {error?.message}</Text>
       </View>
     )
   }

@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express'
-import { section, sectionMember, task } from '@/db/schema.ts'
+import { orgMember, section, sectionMember, task } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { and, eq } from 'drizzle-orm'
 import {
@@ -22,10 +22,18 @@ const listSections = async (
         name: section.name,
         createdAt: section.createdAt,
         role: sectionMember.role,
+        organization: orgMember.orgId,
       })
       .from(sectionMember)
-      .where(and(eq(sectionMember.userId, userId), eq(section.active, true)))
+      .where(
+        and(
+          eq(sectionMember.userId, userId),
+          eq(section.active, true),
+          eq(orgMember.userId, userId)
+        )
+      )
       .leftJoin(section, eq(sectionMember.sectionId, section.id))
+      .leftJoin(orgMember, eq(orgMember.userId, userId))
 
     const inactive = await db
       .select({
@@ -35,8 +43,15 @@ const listSections = async (
         role: sectionMember.role,
       })
       .from(sectionMember)
-      .where(and(eq(sectionMember.userId, userId), eq(section.active, false)))
+      .where(
+        and(
+          eq(sectionMember.userId, userId),
+          eq(section.active, false),
+          eq(orgMember.userId, userId)
+        )
+      )
       .leftJoin(section, eq(sectionMember.sectionId, section.id))
+      .leftJoin(orgMember, eq(orgMember.userId, userId))
 
     res.status(200).send({ active, inactive })
   } catch (error) {

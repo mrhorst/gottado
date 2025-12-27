@@ -2,7 +2,7 @@ import { useAuth } from '@/context/auth/AuthContext'
 import { getTasks } from '@/services/taskService'
 import { useQuery } from '@tanstack/react-query'
 
-import { StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { colors, spacing, typography } from '@/styles/theme'
 import { UserProfile } from '@/types/user'
 
@@ -55,13 +55,27 @@ const DashboardHeader = ({ user }: { user: UserProfile }) => {
 }
 
 const DashboardPendingTasks = ({ user }: { user: UserProfile }) => {
-  const { data: tasks = [], isLoading } = useQuery({
+  const {
+    data: tasks = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['tasks', user?.id],
     queryFn: getTasks,
     enabled: !!user,
   })
 
-  if (isLoading) return <Text>Loading...</Text>
+  if (isLoading)
+    return (
+      <View style={{ marginTop: 10, flex: 1, justifyContent: 'center' }}>
+        <ActivityIndicator size='large' color={colors.primary} />
+      </View>
+    )
+
+  if (isError) {
+    return <Text>Failed to fetch tasks... {error.message}</Text> // Need to fix this later..
+  }
 
   const pendingTasks = tasks.filter((t) => t.complete === false)
 

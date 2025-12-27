@@ -10,7 +10,14 @@ export const useSectionQuery = () => {
   const {
     data,
     isLoading,
-  }: { data: SectionResponseProps | undefined; isLoading: boolean } = useQuery({
+    isError,
+    error,
+  }: {
+    data: SectionResponseProps | undefined
+    isLoading: boolean
+    isError: boolean
+    error: Error | null
+  } = useQuery({
     queryKey: ['sections', user?.id],
     queryFn: getSections,
     enabled: !!user,
@@ -19,5 +26,11 @@ export const useSectionQuery = () => {
   const active = data?.active
   const inactive = data?.inactive
 
-  return { sections: active, archivedSections: inactive, isLoading }
+  return {
+    sections: active,
+    archivedSections: inactive,
+    isLoading,
+    isError,
+    error,
+  }
 }

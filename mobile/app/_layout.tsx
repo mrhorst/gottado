@@ -7,6 +7,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { colors } from '@/styles/theme'
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useEffect } from 'react'
+import WorkspaceProvider, {
+  useWorkspace,
+} from '@/context/workspace/WorkspaceContext'
 
 const AppTheme = {
   ...DefaultTheme,
@@ -20,23 +23,35 @@ const client = new QueryClient()
 
 const RootLayoutNav = () => {
   const { user } = useAuth()
+  const { activeOrgId } = useWorkspace()
   const segments = useSegments()
   const router = useRouter()
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)'
+    const inOrgSelector = segments[0] === 'select-org'
 
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
-    } else if (user && inAuthGroup) {
+    } else if (user && !activeOrgId && !inOrgSelector) {
+      router.replace('/select-org')
+    } else if (user && activeOrgId && (inAuthGroup || inOrgSelector)) {
       router.replace('/(tabs)/dashboard')
     }
-  }, [user, segments, router])
+  }, [user, segments, router, activeOrgId])
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name='(tabs)' />
       <Stack.Screen name='(auth)' />
+      <Stack.Screen
+        name='select-org'
+        options={{
+          presentation: 'card',
+          headerShown: true,
+          title: 'Select Organization',
+        }}
+      />
 
       <Stack.Screen
         name='create-section'
@@ -56,9 +71,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={client}>
           <AuthProvider>
-            <ThemeProvider value={AppTheme}>
-              <RootLayoutNav />
-            </ThemeProvider>
+            <WorkspaceProvider>
+              <ThemeProvider value={AppTheme}>
+                <RootLayoutNav />
+              </ThemeProvider>
+            </WorkspaceProvider>
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
