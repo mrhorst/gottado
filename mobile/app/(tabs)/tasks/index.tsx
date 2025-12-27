@@ -13,13 +13,15 @@ import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { UserTasks } from '@/services/taskService'
 import { colors, spacing, typography } from '@/styles/theme'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
+import { useWorkspace } from '@/context/workspace/WorkspaceContext'
 
 const styles = StyleSheet.create({
   screenContainer: {
-    flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
     backgroundColor: colors.background,
+    justifyContent: 'center',
+    flex: 1,
   },
   container: { padding: spacing.sm, justifyContent: 'center', gap: 20 },
   heading: { ...typography.h1, textAlign: 'center' },
@@ -72,28 +74,83 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     marginLeft: spacing.sm,
   },
+  noSectionText: {},
+  noTasksText: {
+    ...typography.h2,
+  },
+  card: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    borderRadius: 16,
+    padding: spacing.lg,
+    // iOS Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    // Android Shadow
+    elevation: 4,
+  },
+  orgBadge: {
+    backgroundColor: colors.primary + '15', // 15% opacity version of your primary
+    padding: spacing.sm,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: spacing.sm,
+  },
+  orgText: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
 })
 
 const TasksScreen = () => {
   const { sections, isLoading, isError, error } = useSectionQuery()
+  const { tasks } = useTasksQuery()
+  const { org } = useWorkspace()
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <ActivityIndicator size='large' color={colors.primary} />
       </View>
     )
+  }
 
-  if (isError)
+  if (isError) {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Text>Tasks error: {error?.message}</Text>
       </View>
     )
+  }
+
+  if (!sections || sections.length === 0) {
+    return (
+      <View style={styles.screenContainer}>
+        <View>
+          <Text style={styles.noSectionText}>No sections yet! {org?.name}</Text>
+        </View>
+      </View>
+    )
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <View style={[styles.screenContainer]}>
+        <View style={styles.card}>
+          <Text style={styles.noTasksText}>No tasks yet!</Text>
+        </View>
+      </View>
+    )
+  }
   return (
     <View style={styles.screenContainer}>
       <ScrollView>
-        <View style={[styles.container, { gap: 30 }]}>
+        <View style={styles.container}>
           {sections?.map((s) => (
             <Section key={s.id} section={s} />
           ))}

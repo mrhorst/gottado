@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
+    marginVertical: spacing.xl,
   },
   orgBadge: {
     backgroundColor: colors.primary + '15', // 15% opacity version of your primary
@@ -37,6 +37,10 @@ const styles = StyleSheet.create({
     flex: 0,
   },
   welcomeText: {
+    ...typography.h1,
+    color: colors.text,
+  },
+  titleText: {
     ...typography.h1,
     color: colors.text,
   },
@@ -76,13 +80,20 @@ const Dashboard = () => {
     <View style={styles.screenContainer}>
       {/* Begin Header section */}
       <View style={styles.section}>
-        <View style={styles.orgBadge}>
-          <Text style={styles.orgText}>{org?.name}</Text>
+        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+          <View>
+            <Text style={styles.titleText}>Dashboard</Text>
+          </View>
+          <View style={styles.orgBadge}>
+            <Text style={styles.orgText}>{org?.name}</Text>
+          </View>
         </View>
         {/* End Header section */}
-        <Text style={styles.welcomeText}>
-          Welcome, {user?.name.split(' ')[0]}!
-        </Text>
+        <View style={{ marginTop: 48 }}>
+          <Text style={styles.welcomeText}>
+            Welcome, {user?.name.split(' ')[0]}!
+          </Text>
+        </View>
       </View>
       <View style={styles.section}>
         <Pressable
