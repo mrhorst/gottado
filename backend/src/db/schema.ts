@@ -49,6 +49,9 @@ export const section = pgTable(
     ownerId: integer('owner_id')
       .references((): AnyPgColumn => user.id)
       .notNull(),
+    orgId: integer('org_id')
+      .references(() => organization.id)
+      .notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),

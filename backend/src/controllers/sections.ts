@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express'
-import { orgMember, section, sectionMember, task } from '@/db/schema.ts'
+import { section, sectionMember, task } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { and, eq } from 'drizzle-orm'
 import {
@@ -8,6 +8,8 @@ import {
   getUserSectionRole,
 } from '@/utils/controllerHelpers.ts'
 import { AuthenticatedRequest } from '@/types/index.ts'
+import { getScopedSectionQuery } from '@/utils/queryHelper.ts'
+import als from '@/utils/context.ts'
 
 const listSections = async (
   req: AuthenticatedRequest,
@@ -15,43 +17,22 @@ const listSections = async (
   next: NextFunction
 ) => {
   const userId = Number(req.user!.sub)
+  const orgId = Number(req.headers['x-org-id'])
+  // console.log(als.getStore())
+  const securityFilters = [
+    eq(sectionMember.userId, userId),
+    eq(section.orgId, orgId),
+  ]
   try {
-    const active = await db
-      .select({
-        id: section.id,
-        name: section.name,
-        createdAt: section.createdAt,
-        role: sectionMember.role,
-        organization: orgMember.orgId,
-      })
-      .from(sectionMember)
-      .where(
-        and(
-          eq(sectionMember.userId, userId),
-          eq(section.active, true),
-          eq(orgMember.userId, userId)
-        )
-      )
-      .leftJoin(section, eq(sectionMember.sectionId, section.id))
-      .leftJoin(orgMember, eq(orgMember.userId, userId))
+    const scopedQuery = getScopedSectionQuery(userId, orgId)
 
-    const inactive = await db
-      .select({
-        id: section.id,
-        name: section.name,
-        createdAt: section.createdAt,
-        role: sectionMember.role,
-      })
-      .from(sectionMember)
-      .where(
-        and(
-          eq(sectionMember.userId, userId),
-          eq(section.active, false),
-          eq(orgMember.userId, userId)
-        )
-      )
-      .leftJoin(section, eq(sectionMember.sectionId, section.id))
-      .leftJoin(orgMember, eq(orgMember.userId, userId))
+    const active = await scopedQuery.where(
+      and(...securityFilters, eq(section.active, true))
+    )
+
+    const inactive = await scopedQuery.where(
+      and(...securityFilters, eq(section.active, false))
+    )
 
     res.status(200).send({ active, inactive })
   } catch (error) {
@@ -66,7 +47,9 @@ const createSection = async (
 ) => {
   const { name } = req.body
   const ownerId = Number(req.user!.sub)
-  const newSection = { name, ownerId }
+  const orgId = Number(req.headers['x-org-id']) // manually adding it here to fix bug
+
+  const newSection = { name, ownerId, orgId }
 
   try {
     const [addedSection, addedSectionMember] = await db.transaction(
