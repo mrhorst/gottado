@@ -4,15 +4,33 @@ import { useQuery } from '@tanstack/react-query'
 
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { colors, spacing, typography } from '@/styles/theme'
-import { UserOrgs, UserProfile } from '@/types/user'
+import { UserProfile } from '@/types/user'
 import { useWorkspace } from '@/context/workspace/WorkspaceContext'
+import { Pressable } from 'react-native-gesture-handler'
+import { router } from 'expo-router'
 
 const styles = StyleSheet.create({
   screenContainer: {
-    padding: spacing.md,
+    paddingTop: spacing.xl,
     flex: 1,
-    justifyContent: 'space-around',
     backgroundColor: colors.background,
+  },
+  section: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  orgBadge: {
+    backgroundColor: colors.primary + '15', // 15% opacity version of your primary
+    padding: spacing.sm,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: spacing.sm,
+  },
+  orgText: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   container: {
     padding: spacing.md,
@@ -20,13 +38,26 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     ...typography.h1,
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  orgText: {
-    ...typography.h1,
     color: colors.text,
-    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 16,
+    padding: spacing.lg,
+    // iOS Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    // Android Shadow
+    elevation: 4,
+  },
+  countText: {
+    fontSize: 48,
+    color: colors.primary,
   },
   subtitle: {
     ...typography.h3,
@@ -43,29 +74,24 @@ const Dashboard = () => {
 
   return (
     <View style={styles.screenContainer}>
-      <DashboardOrgHeader org={org} />
-      <View style={styles.container}>
-        <View>
-          <DashboardHeader user={user} />
-          <DashboardPendingTasks user={user} />
+      {/* Begin Header section */}
+      <View style={styles.section}>
+        <View style={styles.orgBadge}>
+          <Text style={styles.orgText}>{org?.name}</Text>
         </View>
+        {/* End Header section */}
+        <Text style={styles.welcomeText}>
+          Welcome, {user?.name.split(' ')[0]}!
+        </Text>
       </View>
-    </View>
-  )
-}
-
-const DashboardOrgHeader = ({ org }: { org: UserOrgs }) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.orgText}>Workspace: {org?.name}</Text>
-    </View>
-  )
-}
-
-const DashboardHeader = ({ user }: { user: UserProfile }) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.welcomeText}>Welcome, {user?.name}!</Text>
+      <View style={styles.section}>
+        <Pressable
+          style={({ pressed }) => [pressed ? { opacity: 0.6 } : {}]}
+          onPress={() => router.push('/(tabs)/tasks')}
+        >
+          <DashboardPendingTasks user={user} />
+        </Pressable>
+      </View>
     </View>
   )
 }
@@ -93,13 +119,13 @@ const DashboardPendingTasks = ({ user }: { user: UserProfile }) => {
     return <Text>Failed to fetch tasks... {error.message}</Text> // Need to fix this later..
   }
 
-  const pendingTasks = tasks.filter((t) => t.complete === false)
+  const pendingCount = tasks.filter((t) => !t.complete).length
 
   return (
-    <View style={styles.container}>
+    <View style={styles.card}>
+      <Text style={styles.countText}>{pendingCount}</Text>
       <Text style={styles.subtitle}>
-        You currently have {pendingTasks.length}
-        {pendingTasks.length === 1 ? ' task' : ' tasks'} pending.
+        {pendingCount === 1 ? 'Task' : 'Tasks'} pending for today
       </Text>
     </View>
   )
