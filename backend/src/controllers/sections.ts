@@ -23,6 +23,7 @@ const listSections = async (
     eq(sectionMember.userId, userId),
     eq(section.orgId, orgId),
   ]
+
   try {
     const scopedQuery = getScopedSectionQuery(userId, orgId)
 
@@ -86,6 +87,7 @@ const updateSection = async (
   const sectionId = Number(req.params.id)
   try {
     const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+
     if (requesterRole !== 'owner') {
       return res.status(403).send({ error: 'you are not the owner' })
     }

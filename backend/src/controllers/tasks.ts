@@ -11,6 +11,9 @@ const listTasks = async (
   res: Response,
   next: NextFunction
 ) => {
+  const userId = Number(req.user?.sub)
+  const orgId = Number(req.headers['x-org-id'])
+
   try {
     const tasks = await db
       .select({
@@ -24,7 +27,7 @@ const listTasks = async (
       .from(task)
       .innerJoin(section, eq(task.sectionId, section.id))
       .innerJoin(sectionMember, eq(section.id, sectionMember.sectionId))
-      .where(eq(sectionMember.userId, Number(req.user?.sub)))
+      .where(and(eq(section.orgId, orgId), eq(sectionMember.userId, userId)))
 
     res.send(tasks)
   } catch (err) {

@@ -9,6 +9,8 @@ import {
 
 import { useAuth } from '@/context/auth/AuthContext'
 import { useRouter } from 'expo-router'
+import { useWorkspace } from '@/context/workspace/WorkspaceContext'
+import { colors } from '@/styles/theme'
 
 const styles = StyleSheet.create({
   container: {
@@ -57,10 +59,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ff3b30', // iOS Red
+    borderColor: colors.iOSred, // iOS Red
+  },
+  changeOrgButton: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   logoutText: {
-    color: '#ff3b30',
+    color: colors.iOSred,
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  changeOrgText: {
+    color: colors.primary,
     fontSize: 17,
     fontWeight: '600',
   },
@@ -68,13 +83,16 @@ const styles = StyleSheet.create({
 
 const ProfileScreen = () => {
   const { user, endSession } = useAuth()
+  const { clearOrganization } = useWorkspace()
 
   const router = useRouter()
 
   if (!user) return null
 
   // const date = new Date(user.iat * 1000).toLocaleString()
-
+  const changeOrganization = async () => {
+    clearOrganization()
+  }
   const handleLogout = async () => {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('Are you sure you want to log out?')
@@ -117,6 +135,15 @@ const ProfileScreen = () => {
         </View>
       </View>
       <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.changeOrgButton,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => changeOrganization()}
+        >
+          <Text style={styles.changeOrgText}>Change Organization</Text>
+        </Pressable>
         <Pressable
           style={({ pressed }) => [
             styles.logoutButton,

@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#ff3b30',
+    color: colors.iOSred,
     fontSize: 16,
     fontWeight: 600,
   },

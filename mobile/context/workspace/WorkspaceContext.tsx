@@ -15,6 +15,9 @@ interface WorkspaceProviderProps {
   activeOrgId: number | null
   handleSelectOrganization: (item: UserOrgs) => void
   organizations: UserOrgs[] | undefined
+  isWorkspaceLoading: boolean
+  org: UserOrgs | undefined
+  clearOrganization: () => void
 }
 
 const WorkspaceContext = createContext<WorkspaceProviderProps | null>(null)
@@ -27,7 +30,9 @@ export default function WorkspaceProvider({
   const { user } = useAuth()
   const [activeOrgId, setActiveOrgId] = useState<number | null>(null)
   const [isWorkspaceLoading, setIsWorkspaceLoading] = useState<boolean>(true)
-  const { setItem, getItem } = useAsyncStorage('activeOrgId')
+  const { setItem, getItem, removeItem } = useAsyncStorage('activeOrgId')
+
+  const org = user?.organizations.find((org) => org.id === activeOrgId)
 
   useEffect(() => {
     const initialize = async () => {
@@ -55,18 +60,27 @@ export default function WorkspaceProvider({
     [setItem]
   )
 
+  const clearOrganization = useCallback(async () => {
+    await removeItem()
+    setActiveOrgId(null)
+  }, [removeItem])
+
   const value = useMemo(
     () => ({
       activeOrgId,
       handleSelectOrganization,
+      clearOrganization,
       organizations: user?.organizations,
       isWorkspaceLoading,
+      org,
     }),
     [
+      org,
       activeOrgId,
       user?.organizations,
       handleSelectOrganization,
       isWorkspaceLoading,
+      clearOrganization,
     ]
   )
 

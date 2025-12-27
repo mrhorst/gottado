@@ -4,13 +4,14 @@ import { useQuery } from '@tanstack/react-query'
 
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { colors, spacing, typography } from '@/styles/theme'
-import { UserProfile } from '@/types/user'
+import { UserOrgs, UserProfile } from '@/types/user'
+import { useWorkspace } from '@/context/workspace/WorkspaceContext'
 
 const styles = StyleSheet.create({
   screenContainer: {
     padding: spacing.md,
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     backgroundColor: colors.background,
   },
   container: {
@@ -22,6 +23,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textAlign: 'center',
   },
+  orgText: {
+    ...typography.h1,
+    color: colors.text,
+    textAlign: 'center',
+  },
   subtitle: {
     ...typography.h3,
     color: colors.text,
@@ -31,17 +37,27 @@ const styles = StyleSheet.create({
 
 const Dashboard = () => {
   const { user } = useAuth()
+  const { org } = useWorkspace()
 
-  if (!user) return null
+  if (!user || !org) return null
 
   return (
     <View style={styles.screenContainer}>
+      <DashboardOrgHeader org={org} />
       <View style={styles.container}>
         <View>
           <DashboardHeader user={user} />
           <DashboardPendingTasks user={user} />
         </View>
       </View>
+    </View>
+  )
+}
+
+const DashboardOrgHeader = ({ org }: { org: UserOrgs }) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.orgText}>Workspace: {org?.name}</Text>
     </View>
   )
 }

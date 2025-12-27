@@ -3,7 +3,8 @@ export const colors = {
   secondary: 'rgba(88, 86, 214, 1)',
   background: '#Fff',
   text: '#000000',
-  error: '#FF3B30',
+  iOSred: '#FF3B30',
+
   border: '#C6C6C8',
 }
 

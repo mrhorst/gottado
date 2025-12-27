@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   sectionViewerRole: {
     fontWeight: '800',
-    color: colors.error,
+    color: colors.iOSred,
   },
   metaContainer: {
     flexDirection: 'row',

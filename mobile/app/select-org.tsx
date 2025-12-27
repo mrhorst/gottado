@@ -1,6 +1,6 @@
 import { useAuth } from '@/context/auth/AuthContext'
 import { useWorkspace } from '@/context/workspace/WorkspaceContext'
-import { router } from 'expo-router'
+import { colors, spacing } from '@/styles/theme'
 import {
   Alert,
   FlatList,
@@ -23,12 +23,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ff3b30', // iOS Red
+    borderColor: colors.iOSred, // iOS Red
+  },
+  selectButton: {
+    backgroundColor: '#fff',
+    paddingVertical: spacing.lg,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f1f9',
   },
   logoutText: {
-    color: '#ff3b30',
+    color: colors.iOSred,
     fontSize: 17,
     fontWeight: '600',
+  },
+  footer: {
+    marginBottom: 30,
   },
 })
 
@@ -66,23 +77,30 @@ const OrgSelectorScreen = () => {
     <View style={styles.container}>
       <FlatList
         data={organizations}
+        contentContainerStyle={{ gap: 15 }}
         renderItem={({ item }) => (
-          <View style={{ padding: 15, borderWidth: 1 }}>
-            <Pressable onPress={() => handleSelectOrganization(item)}>
-              <Text>{item.name}</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.selectButton,
+              pressed && { opacity: 0.6 },
+            ]}
+            onPress={() => handleSelectOrganization(item)}
+          >
+            <Text style={{ fontSize: 24, fontWeight: '700' }}>{item.name}</Text>
+          </Pressable>
         )}
       />
-      <Pressable
-        style={({ pressed }) => [
-          styles.logoutButton,
-          pressed && { opacity: 0.7 },
-        ]}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutText}>Log Out</Text>
-      </Pressable>
+      <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.logoutButton,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>Log Out</Text>
+        </Pressable>
+      </View>
     </View>
   )
 }

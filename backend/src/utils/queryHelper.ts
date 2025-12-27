@@ -2,7 +2,7 @@ import { orgMember, section, sectionMember } from '@/db/schema.ts'
 import db from './db.ts'
 import { and, eq } from 'drizzle-orm'
 
-export const getScopedSectionQuery = (userId: number, orgId: number) => {
+export const getScopedSectionQuery = (userId: number) => {
   return db
     .select({
       id: section.id,
