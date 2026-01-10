@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
 
 const Dashboard = () => {
   const { user } = useAuth()
-  const { org } = useWorkspace()
+  const { org, clearOrganization } = useWorkspace()
 
   if (!user || !org) return null
 
@@ -85,7 +85,10 @@ const Dashboard = () => {
             <Text style={styles.titleText}>Dashboard</Text>
           </View>
           <View style={styles.orgBadge}>
-            <Text style={styles.orgText}>{org?.name}</Text>
+            <Pressable onPress={() => clearOrganization()}>
+              {/* Need to optimize this later */}
+              <Text style={styles.orgText}>{org?.name}</Text>
+            </Pressable>
           </View>
         </View>
         {/* End Header section */}
