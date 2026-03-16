@@ -166,6 +166,8 @@ export interface PromoteActionPayload {
   title?: string
   description?: string
   dueDate?: string
+  deadlineTime?: string
+  recurrence?: Recurrence | null
   measurableCriteria?: string
 }
 

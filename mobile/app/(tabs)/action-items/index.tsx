@@ -13,12 +13,13 @@ import {
   useWindowDimensions,
 } from 'react-native'
 import { useCallback, useRef, useState } from 'react'
+import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/styles/theme'
 import { useActionItemsQuery } from '@/hooks/useActionItemsQuery'
 import { useActionItemsMutation } from '@/hooks/useActionItemsMutation'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
-import type { ActionItem, Severity } from '@/types/audit'
+import type { ActionItem, Recurrence, Severity } from '@/types/audit'
 import type { SectionProps } from '@/types/section'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { SharedValue } from 'react-native-reanimated'
@@ -35,6 +36,15 @@ const PRIORITY_LABELS: Record<Severity, string> = {
   medium: 'Medium',
   high: 'High',
   critical: 'Critical',
+}
+
+const RECURRENCE_LABELS: Record<string, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  semi_annual: 'Semi-Annual',
+  yearly: 'Yearly',
 }
 
 const ActionItemsScreen = () => {
@@ -178,6 +188,12 @@ const SwipeableActionItem = ({
               <Text style={s.metaText}>{item.auditName}</Text>
             </View>
             <Text style={s.metaText}>{auditDate}</Text>
+            {item.recurrence && (
+              <View style={s.recurrenceBadge}>
+                <Ionicons name='repeat-outline' size={11} color={colors.primary} />
+                <Text style={s.recurrenceText}>{RECURRENCE_LABELS[item.recurrence]}</Text>
+              </View>
+            )}
             {item.assignedUserName && (
               <View style={s.assigneeBadge}>
                 <Ionicons name='person-outline' size={11} color='#8e8e93' />
@@ -203,30 +219,43 @@ const PromoteModal = ({
   item: ActionItem
   onClose: () => void
 }) => {
+  const router = useRouter()
   const { sections } = useSectionQuery()
   const { promote } = useActionItemsMutation()
   const [selectedSection, setSelectedSection] = useState<SectionProps | null>(null)
   const [title, setTitle] = useState(item.title)
   const [description, setDescription] = useState(item.description || '')
   const [dueDate, setDueDate] = useState('')
+  const [deadlineTime, setDeadlineTime] = useState('')
+  const [recurrence, setRecurrence] = useState<Recurrence | null>(item.recurrence ?? null)
+  const [createdTaskId, setCreatedTaskId] = useState<number | null>(null)
 
   const writableSections = sections?.filter((s) => s.role !== 'viewer') ?? []
 
   const handlePromote = async () => {
     if (!selectedSection) return
     try {
-      await promote.mutateAsync({
+      const result = await promote.mutateAsync({
         actionId: item.id,
         payload: {
           sectionId: selectedSection.id,
           title: title.trim() || undefined,
           description: description.trim() || undefined,
           dueDate: dueDate || undefined,
+          deadlineTime: deadlineTime || undefined,
+          recurrence,
         },
       })
-      onClose()
+      setCreatedTaskId(result.task.id)
     } catch {
       Alert.alert('Error', 'Failed to promote action to task.')
+    }
+  }
+
+  const handleViewTask = () => {
+    onClose()
+    if (createdTaskId) {
+      router.push(`/(tabs)/tasks/${createdTaskId}`)
     }
   }
 
@@ -245,6 +274,23 @@ const PromoteModal = ({
           </Pressable>
         </View>
 
+        {createdTaskId ? (
+          <View style={s.successContainer}>
+            <Ionicons name='checkmark-circle' size={56} color='#34C759' />
+            <Text style={s.successTitle}>Task Created</Text>
+            <Text style={s.successSubtext}>
+              "{title}" has been added to your tasks
+              {recurrence ? ` as a ${RECURRENCE_LABELS[recurrence].toLowerCase()} task` : ''}.
+            </Text>
+            <Pressable style={s.viewTaskBtn} onPress={handleViewTask}>
+              <Ionicons name='open-outline' size={18} color='#fff' />
+              <Text style={s.viewTaskBtnText}>View Task</Text>
+            </Pressable>
+            <Pressable onPress={onClose}>
+              <Text style={s.dismissLink}>Dismiss</Text>
+            </Pressable>
+          </View>
+        ) : (
         <ScrollView contentContainerStyle={s.modalContent} keyboardShouldPersistTaps='handled'>
           {/* Source info */}
           <View style={s.sourceCard}>
@@ -292,6 +338,47 @@ const PromoteModal = ({
             />
           </View>
 
+          {/* Deadline Time */}
+          <View style={s.fieldGroup}>
+            <Text style={s.label}>Deadline Time (optional)</Text>
+            <TextInput
+              style={s.input}
+              value={deadlineTime}
+              onChangeText={setDeadlineTime}
+              placeholder='HH:MM'
+              placeholderTextColor='#c7c7cc'
+            />
+          </View>
+
+          {/* Recurrence */}
+          <View style={s.fieldGroup}>
+            <Text style={s.label}>Recurrence</Text>
+            <View style={s.recurrenceOptions}>
+              <Pressable
+                style={[s.recurrenceChip, !recurrence && s.recurrenceChipSelected]}
+                onPress={() => setRecurrence(null)}
+              >
+                <Text style={[s.recurrenceChipText, !recurrence && s.recurrenceChipTextSelected]}>
+                  One-time
+                </Text>
+              </Pressable>
+              {Object.entries(RECURRENCE_LABELS).map(([key, label]) => {
+                const isSelected = recurrence === key
+                return (
+                  <Pressable
+                    key={key}
+                    style={[s.recurrenceChip, isSelected && s.recurrenceChipSelected]}
+                    onPress={() => setRecurrence(key as Recurrence)}
+                  >
+                    <Text style={[s.recurrenceChipText, isSelected && s.recurrenceChipTextSelected]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                )
+              })}
+            </View>
+          </View>
+
           {/* Section picker */}
           <View style={s.fieldGroup}>
             <Text style={s.label}>Assign to Section</Text>
@@ -323,6 +410,7 @@ const PromoteModal = ({
             )}
           </View>
         </ScrollView>
+        )}
       </View>
     </Modal>
   )
@@ -412,6 +500,20 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+  },
+  recurrenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: colors.primary + '12',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  recurrenceText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.primary,
   },
   metaText: {
     fontSize: 11,
@@ -522,6 +624,71 @@ const s = StyleSheet.create({
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  recurrenceOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  recurrenceChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  recurrenceChipSelected: {
+    backgroundColor: colors.primary + '15',
+    borderColor: colors.primary,
+  },
+  recurrenceChipText: {
+    fontSize: 14,
+    color: '#8e8e93',
+    fontWeight: '500',
+  },
+  recurrenceChipTextSelected: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+    gap: 12,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  successSubtext: {
+    fontSize: 15,
+    color: '#8e8e93',
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  viewTaskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  viewTaskBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  dismissLink: {
+    fontSize: 15,
+    color: '#8e8e93',
+    marginTop: 4,
   },
   sectionList: {
     backgroundColor: '#fff',

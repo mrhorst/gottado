@@ -204,7 +204,7 @@ const updateAction = async (
 const promoteAction = async (
   id: number,
   payload: PromoteActionPayload
-): Promise<{ action: AuditAction; task: unknown }> => {
+): Promise<{ action: AuditAction; task: { id: number } }> => {
   const { data } = await api.post(`/audits/actions/${id}/promote`, payload)
   return data
 }

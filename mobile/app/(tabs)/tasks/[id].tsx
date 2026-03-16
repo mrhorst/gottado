@@ -386,6 +386,17 @@ const EditTaskScreen = () => {
           </View>
         </View>
 
+        {/* Audit Source */}
+        {task.relevanceTag && (
+          <View style={s.fieldGroup}>
+            <Text style={s.label}>Audit Source</Text>
+            <View style={s.readOnlyField}>
+              <Ionicons name='clipboard-outline' size={18} color='#AF52DE' />
+              <Text style={[s.readOnlyText, { color: '#AF52DE' }]}>{task.relevanceTag}</Text>
+            </View>
+          </View>
+        )}
+
         {/* Activity History */}
         {activities && activities.length > 0 && (
           <View style={s.fieldGroup}>
