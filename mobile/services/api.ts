@@ -1,93 +1,148 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
-const api: AxiosInstance = axios.create({
-  baseURL: API_URL + '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
 
-interface CustomAxiosConfig extends AxiosRequestConfig {
+interface ApiResponse<T = unknown> {
+  data: T
+  status: number
+  statusText: string
+}
+
+interface RequestConfig {
+  headers?: Record<string, string>
   _retry?: boolean
 }
 
-api.interceptors.request.use(
-  async (config) => {
-    try {
-      const token = await AsyncStorage.getItem('auth_token')
-      const orgId = await AsyncStorage.getItem('activeOrgId') //need to refactor this
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-      if (orgId) {
-        config.headers['x-org-id'] = orgId
-      }
-    } catch (err) {
-      console.log('api interceptor request:', err)
+class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  try {
+    const token = await AsyncStorage.getItem('auth_token')
+    const orgId = await AsyncStorage.getItem('activeOrgId')
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
     }
-    // Let React Native set the multipart boundary automatically for FormData
-    if (config.data instanceof FormData) {
-      delete config.headers['Content-Type']
+    if (orgId) {
+      headers['x-org-id'] = orgId
     }
-    return config
-  },
-  (err) => Promise.reject(err)
-)
+  } catch (err) {
+    console.log('getAuthHeaders error:', err)
+  }
 
-api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  async (error) => {
-    const originalRequest = error.config as CustomAxiosConfig
+  return headers
+}
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
+async function request<T>(
+  method: string,
+  endpoint: string,
+  body?: unknown,
+  config: RequestConfig = {}
+): Promise<ApiResponse<T>> {
+  const url = `${API_URL}/api${endpoint}`
+  const authHeaders = await getAuthHeaders()
 
+  // Merge headers - config.headers takes precedence
+  const headers: Record<string, string> = { ...authHeaders, ...config.headers }
+
+  // For FormData, let the browser/React Native set the Content-Type with boundary
+  if (body instanceof FormData) {
+    delete headers['Content-Type']
+  }
+
+  const options: RequestInit = {
+    method,
+    headers,
+  }
+
+  if (body && !(body instanceof FormData)) {
+    options.body = JSON.stringify(body)
+  } else if (body) {
+    options.body = body as FormData
+  }
+
+  try {
+    const response = await fetch(url, options)
+
+    // Handle 401 Unauthorized
+    if (response.status === 401 && !config._retry) {
       await AsyncStorage.removeItem('auth_token')
-
-      return Promise.reject(new Error('token expired'))
+      throw new ApiError('token expired', 401)
     }
-    if (error.response) {
-      const { status, data } = error.response
+
+    // Parse response body
+    let data: T
+    const contentType = response.headers.get('content-type')
+    if (contentType?.includes('application/json')) {
+      data = await response.json()
+    } else {
+      const text = await response.text()
+      data = text as T
+    }
+
+    // Handle non-2xx responses
+    if (!response.ok) {
       const serverMsg =
         (data && typeof data === 'object' && (data as any).message) ||
         (data && typeof data === 'object' && (data as any).error) ||
-        (typeof data === 'string' ? data : null)
+        `Request failed (HTTP ${response.status})`
 
       if (__DEV__) {
-        console.warn('HTTP error:', { status, data })
+        console.warn('HTTP error:', { status: response.status, data })
       }
 
-      return Promise.reject(
-        new Error(
-          serverMsg
-            ? `${serverMsg} (HTTP ${status})`
-            : `Request failed (HTTP ${status})`
-        )
-      )
+      throw new ApiError(serverMsg, response.status)
     }
 
-    // No response (network/timeout)
-    if (error.request) {
-      const isTimeout = (error as any).code === 'ECONNABORTED'
-      const msg = isTimeout
-        ? 'Request timed out. Please check your connection and try again.'
-        : 'No response from server. Check your connection or the server status.'
+    return {
+      data,
+      status: response.status,
+      statusText: response.statusText,
+    }
+  } catch (error) {
+    // Re-throw ApiErrors
+    if (error instanceof ApiError) {
+      throw error
+    }
+
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      const msg = 'No response from server. Check your connection or the server status.'
       if (__DEV__) {
-        console.warn('Network error:', {
-          code: (error as any).code,
-          message: error.message,
-        })
+        console.warn('Network error:', error)
       }
-      return Promise.reject(new Error(msg))
+      throw new Error(msg)
     }
 
-    // Setup error
-    return Promise.reject(
-      new Error(error.message || 'Unexpected error occurred.')
-    )
+    // Other errors
+    throw new Error(error instanceof Error ? error.message : 'Unexpected error occurred.')
   }
-)
+}
+
+const api = {
+  get: <T>(endpoint: string, config?: RequestConfig) =>
+    request<T>('GET', endpoint, undefined, config),
+
+  post: <T>(endpoint: string, body?: unknown, config?: RequestConfig) =>
+    request<T>('POST', endpoint, body, config),
+
+  put: <T>(endpoint: string, body?: unknown, config?: RequestConfig) =>
+    request<T>('PUT', endpoint, body, config),
+
+  delete: <T>(endpoint: string, config?: RequestConfig) =>
+    request<T>('DELETE', endpoint, undefined, config),
+}
 
 export default api
+export { ApiError }

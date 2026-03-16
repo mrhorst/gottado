@@ -275,6 +275,121 @@ const getActionItems = async (status?: string): Promise<ActionItem[]> => {
   return data
 }
 
+// Photos
+export interface AuditPhoto {
+  id: number
+  findingId: number
+  originalFilename: string
+  mimeType: string
+  fileSize: number
+  url: string
+  createdAt: string
+  createdBy: number
+}
+
+const getPhotos = async (
+  runId: number,
+  findingId: number
+): Promise<AuditPhoto[]> => {
+  const { data } = await api.get(
+    `/audits/runs/${runId}/findings/${findingId}/photos`
+  )
+  return data
+}
+
+const uploadPhoto = async (
+  runId: number,
+  findingId: number,
+  uri: string,
+  filename: string
+): Promise<AuditPhoto> => {
+  const formData = new FormData()
+  formData.append('photo', {
+    uri,
+    name: filename,
+    type: 'image/jpeg',
+  } as unknown as Blob)
+
+  const { data } = await api.post(
+    `/audits/runs/${runId}/findings/${findingId}/photos`,
+    formData
+  )
+  return data
+}
+
+const deletePhoto = async (photoId: number): Promise<void> => {
+  await api.delete(`/audits/photos/${photoId}`)
+}
+
+// Partner Reports
+export interface PartnerReportData {
+  period: {
+    start: string
+    end: string
+  }
+  summary: {
+    totalAudits: number
+    averageScore: number
+    trending: 'up' | 'down' | 'stable'
+    criticalFindings: number
+    openActions: number
+  }
+  zoneBreakdown: Record<string, {
+    score: number
+    previousScore: number
+    topIssues: Array<{ id: number; label: string; count: number }>
+  }>
+  actionItems: {
+    total: number
+    byStatus: {
+      proposed: number
+      approved: number
+      promoted: number
+      dismissed: number
+    }
+    byPriority: {
+      critical: number
+      high: number
+      medium: number
+      low: number
+    }
+    highImpact: Array<{
+      id: number
+      title: string
+      priority: string
+      status: string
+      zone: string
+      createdAt: string
+    }>
+  }
+  completedTasks: {
+    total: number
+    onTime: number
+    late: number
+  }
+}
+
+const getPartnerSummary = async (
+  startDate?: string,
+  endDate?: string
+): Promise<PartnerReportData> => {
+  const params = new URLSearchParams()
+  if (startDate) params.append('startDate', startDate)
+  if (endDate) params.append('endDate', endDate)
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const { data } = await api.get(`/audits/reports/partner-summary${query}`)
+  return data
+}
+
+const exportPartnerCSV = async (startDate?: string, endDate?: string): Promise<string> => {
+  const params = new URLSearchParams()
+  if (startDate) params.append('startDate', startDate)
+  if (endDate) params.append('endDate', endDate)
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const { data } = await api.get<string>(`/audits/reports/partner-summary.csv${query}`)
+  return data
+}
+
 export {
   getTemplates,
   getTemplate,
@@ -305,4 +420,10 @@ export {
   getActionItems,
   seedPrestoTemplate,
   addAdHocFinding,
+  getPhotos,
+  uploadPhoto,
+  deletePhoto,
+  getPartnerSummary,
+  exportPartnerCSV,
+  type PartnerReportData,
 }

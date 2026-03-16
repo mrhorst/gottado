@@ -236,10 +236,24 @@ export default function AuditsHome() {
 
       {/* Quick Actions */}
       <Pressable
+        style={[styles.button, { backgroundColor: '#34C759' }]}
+        onPress={() => router.push('/(tabs)/audits/quick')}
+      >
+        <Text style={styles.buttonText}>⚡ Quick Audit (5 min)</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.button, { backgroundColor: '#5856D6' }]}
+        onPress={() => router.push('/(tabs)/audits/reports')}
+      >
+        <Text style={styles.buttonText}>📊 Partner Report</Text>
+      </Pressable>
+
+      <Pressable
         style={styles.button}
         onPress={() => router.push('/(tabs)/audits/templates')}
       >
-        <Text style={styles.buttonText}>Start New Audit</Text>
+        <Text style={styles.buttonText}>Start Full Audit</Text>
       </Pressable>
 
       <Pressable
