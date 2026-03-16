@@ -44,6 +44,10 @@ const removeMember = async (userId: number, sectionId: number) => {
   return await api.delete(`/sections/${sectionId}/members/${userId}`)
 }
 
+const renameSection = async (sectionId: number, name: string) => {
+  return await api.put(`/sections/${sectionId}`, { name })
+}
+
 const archiveSection = async (sectionId: number) => {
   return await api.put(`/sections/${sectionId}`, { active: false })
 }
@@ -63,6 +67,7 @@ export {
   addMember,
   updateMemberRole,
   removeMember,
+  renameSection,
   archiveSection,
   unarchiveSection,
   deleteSection,

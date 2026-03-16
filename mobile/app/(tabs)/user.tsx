@@ -10,12 +10,13 @@ import {
 import { useAuth } from '@/context/auth/AuthContext'
 import { useRouter } from 'expo-router'
 import { useWorkspace } from '@/context/workspace/WorkspaceContext'
+import { useQueryClient } from '@tanstack/react-query'
 import { colors } from '@/styles/theme'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f7', // Light gray iOS background
+    backgroundColor: '#f2f2f7',
     padding: 20,
   },
   header: {
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.iOSred, // iOS Red
+    borderColor: colors.iOSred,
   },
   changeOrgButton: {
     backgroundColor: '#fff',
@@ -84,21 +85,27 @@ const styles = StyleSheet.create({
 const ProfileScreen = () => {
   const { user, endSession } = useAuth()
   const { clearOrganization } = useWorkspace()
+  const queryClient = useQueryClient()
 
   const router = useRouter()
 
   if (!user) return null
 
-  // const date = new Date(user.iat * 1000).toLocaleString()
   const changeOrganization = async () => {
     clearOrganization()
   }
+
   const handleLogout = async () => {
+    const performLogout = async () => {
+      queryClient.clear()
+      await endSession()
+      router.replace('/(auth)/login')
+    }
+
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('Are you sure you want to log out?')
-
       if (confirmed) {
-        await endSession()
+        await performLogout()
       }
     } else {
       Alert.alert(
@@ -109,10 +116,7 @@ const ProfileScreen = () => {
           {
             text: 'Log Out',
             style: 'destructive',
-            onPress: async () => {
-              await endSession()
-              router.replace('/(auth)/login')
-            },
+            onPress: performLogout,
           },
         ],
         { cancelable: true }
@@ -131,7 +135,6 @@ const ProfileScreen = () => {
         <View style={styles.header}>
           <Text style={styles.name}>{user?.name}</Text>
           <Text style={styles.email}>{user?.email}</Text>
-          {/* <Text>Last login: {date}</Text> */}
         </View>
       </View>
       <View style={styles.footer}>

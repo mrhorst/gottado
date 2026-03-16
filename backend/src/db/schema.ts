@@ -39,7 +39,72 @@ export const task = pgTable('tasks', {
   sectionId: integer('section_id')
     .references((): AnyPgColumn => section.id)
     .notNull(),
+  measurableCriteria: text('measurable_criteria'),
+  relevanceTag: varchar('relevance_tag', { length: 100 }),
+  recurrence: varchar({ length: 20 }).$type<
+    'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly'
+  >(),
+  lastCompletedAt: timestamp('last_completed_at', { withTimezone: true }),
+  deadlineTime: varchar('deadline_time', { length: 5 }), // HH:MM format, e.g. "16:00"
+  requiresPicture: boolean('requires_picture').notNull().default(false),
 })
+
+export const taskCompletion = pgTable(
+  'task_completions',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    taskId: integer('task_id')
+      .references(() => task.id, { onDelete: 'cascade' })
+      .notNull(),
+    completedBy: integer('completed_by')
+      .references(() => user.id)
+      .notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    dueDate: date('due_date'),
+    deadlineTime: varchar('deadline_time', { length: 5 }),
+    onTime: boolean('on_time'),
+    pictureUrl: varchar('picture_url', { length: 500 }),
+    notes: text(),
+  },
+  (table) => [
+    index('completions_task_id_idx').on(table.taskId),
+    index('completions_completed_by_idx').on(table.completedBy),
+    index('completions_completed_at_idx').on(table.completedAt),
+  ]
+)
+
+export const taskActivity = pgTable(
+  'task_activities',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    taskId: integer('task_id')
+      .references(() => task.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: integer('user_id')
+      .references(() => user.id)
+      .notNull(),
+    action: varchar({ length: 30 })
+      .notNull()
+      .$type<
+        | 'created'
+        | 'completed'
+        | 'uncompleted'
+        | 'edited'
+        | 'deleted'
+      >(),
+    details: text(), // JSON string with changed fields
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('task_activities_task_id_idx').on(table.taskId),
+    index('task_activities_user_id_idx').on(table.userId),
+    index('task_activities_created_at_idx').on(table.createdAt),
+  ]
+)
 
 export const section = pgTable(
   'sections',
@@ -128,4 +193,174 @@ export const orgMember = pgTable(
       .on(table.orgId)
       .where(sql`${table.role} = 'owner'`),
   ]
+)
+
+// ── Audit Module ────────────────────────────────────────────────────────
+
+export const auditTemplate = pgTable('audit_templates', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  orgId: integer('org_id')
+    .references(() => organization.id)
+    .notNull(),
+  name: varchar({ length: 255 }).notNull(),
+  description: text(),
+  frameworkTag: varchar('framework_tag', { length: 50 }),
+  createdBy: integer('created_by')
+    .references(() => user.id)
+    .notNull(),
+  active: boolean().notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+})
+
+export const auditCheckpoint = pgTable(
+  'audit_checkpoints',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    templateId: integer('template_id')
+      .references(() => auditTemplate.id, { onDelete: 'cascade' })
+      .notNull(),
+    zone: varchar({ length: 100 }).notNull(),
+    label: varchar({ length: 255 }).notNull(),
+    description: text(),
+    scoringType: varchar('scoring_type', { length: 20 })
+      .notNull()
+      .default('score')
+      .$type<'score' | 'pass_fail'>(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    active: boolean().notNull().default(true),
+  },
+  (table) => [
+    index('checkpoints_template_zone_idx').on(
+      table.templateId,
+      table.zone,
+      table.sortOrder
+    ),
+  ]
+)
+
+export const auditRun = pgTable(
+  'audit_runs',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    templateId: integer('template_id')
+      .references(() => auditTemplate.id)
+      .notNull(),
+    orgId: integer('org_id')
+      .references(() => organization.id)
+      .notNull(),
+    conductedBy: integer('conducted_by')
+      .references(() => user.id)
+      .notNull(),
+    status: varchar({ length: 20 })
+      .notNull()
+      .default('in_progress')
+      .$type<'in_progress' | 'completed' | 'cancelled'>(),
+    overallScore: integer('overall_score'),
+    totalCheckpoints: integer('total_checkpoints'),
+    notes: text(),
+    startedAt: timestamp('started_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('runs_org_id_idx').on(table.orgId),
+    index('runs_template_id_idx').on(table.templateId),
+    index('runs_conducted_by_idx').on(table.conductedBy),
+  ]
+)
+
+export const auditFinding = pgTable(
+  'audit_findings',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    runId: integer('run_id')
+      .references(() => auditRun.id, { onDelete: 'cascade' })
+      .notNull(),
+    checkpointId: integer('checkpoint_id')
+      .references(() => auditCheckpoint.id)
+      .notNull(),
+    score: integer(),
+    passed: boolean(),
+    severity: varchar({ length: 20 }).$type<
+      'low' | 'medium' | 'high' | 'critical'
+    >(),
+    notes: text(),
+    flagged: boolean().notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('findings_run_id_idx').on(table.runId),
+    index('findings_checkpoint_id_idx').on(table.checkpointId),
+  ]
+)
+
+export const auditAction = pgTable(
+  'audit_actions',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    findingId: integer('finding_id')
+      .references(() => auditFinding.id, { onDelete: 'cascade' })
+      .notNull(),
+    runId: integer('run_id')
+      .references(() => auditRun.id, { onDelete: 'cascade' })
+      .notNull(),
+    title: varchar({ length: 255 }).notNull(),
+    description: text(),
+    assignedTo: integer('assigned_to').references(() => user.id),
+    priority: varchar({ length: 20 })
+      .notNull()
+      .default('medium')
+      .$type<'low' | 'medium' | 'high' | 'critical'>(),
+    recurrence: varchar({ length: 20 }).$type<
+      'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'yearly'
+    >(),
+    status: varchar({ length: 20 })
+      .notNull()
+      .default('proposed')
+      .$type<'proposed' | 'approved' | 'promoted' | 'dismissed'>(),
+    taskId: integer('task_id').references((): AnyPgColumn => task.id),
+    sectionId: integer('section_id').references(() => section.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('actions_run_id_idx').on(table.runId),
+    index('actions_finding_id_idx').on(table.findingId),
+    index('actions_status_idx').on(table.status),
+  ]
+)
+
+export const auditFollowUp = pgTable(
+  'audit_follow_ups',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    runId: integer('run_id')
+      .references(() => auditRun.id, { onDelete: 'cascade' })
+      .notNull(),
+    scheduledDate: date('scheduled_date').notNull(),
+    status: varchar({ length: 20 })
+      .notNull()
+      .default('scheduled')
+      .$type<'scheduled' | 'completed' | 'skipped'>(),
+    conductedBy: integer('conducted_by').references(() => user.id),
+    notes: text(),
+    score: integer(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [index('follow_ups_run_id_idx').on(table.runId)]
 )

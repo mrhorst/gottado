@@ -1,5 +1,13 @@
 import api from './api'
 
+export type Recurrence =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'semi_annual'
+  | 'yearly'
+
 export interface UserTasks {
   description: string
   dueDate: string
@@ -7,6 +15,36 @@ export interface UserTasks {
   title: string
   complete: boolean
   sectionName: string
+  recurrence: Recurrence | null
+  lastCompletedAt: string | null
+  deadlineTime: string | null
+  requiresPicture: boolean
+}
+
+export interface TaskCompletion {
+  id: number
+  taskId: number
+  completedAt: string
+  dueDate: string | null
+  deadlineTime: string | null
+  onTime: boolean | null
+}
+
+export interface DailySnapshot {
+  date: string
+  completions: Array<
+    TaskCompletion & {
+      taskTitle: string
+      sectionName: string
+      recurrence: Recurrence | null
+    }
+  >
+  summary: {
+    total: number
+    onTime: number
+    late: number
+    noDeadline: number
+  }
 }
 
 const getTasks = async (): Promise<UserTasks[]> => {
@@ -19,15 +57,102 @@ const setTaskCompleted = async (id: number, complete: boolean) => {
   return data
 }
 
-const createNewTask = async (
-  title: string,
-  description: string,
-  sectionId: number,
+interface CreateTaskPayload {
+  title: string
+  description?: string
+  sectionId: number
   userId: number
-) => {
-  const newTask = { title, description, sectionId, userId }
-  const { data } = await api.post('/tasks', newTask)
+  dueDate?: string
+  deadlineTime?: string
+  recurrence?: Recurrence
+  requiresPicture?: boolean
+}
+
+const createNewTask = async (payload: CreateTaskPayload) => {
+  const { data } = await api.post('/tasks', payload)
   return data
 }
 
-export { getTasks, setTaskCompleted, createNewTask }
+const getTaskHistory = async (taskId: number): Promise<TaskCompletion[]> => {
+  const { data } = await api.get(`/tasks/${taskId}/history`)
+  return data
+}
+
+const getDailySnapshot = async (date?: string): Promise<DailySnapshot> => {
+  const params = date ? `?date=${date}` : ''
+  const { data } = await api.get(`/tasks/snapshot${params}`)
+  return data
+}
+
+export interface CompletionsByUserResponse {
+  days: number
+  users: Array<{
+    userId: number
+    userName: string
+    count: number
+  }>
+}
+
+const getCompletionsByUser = async (days = 7): Promise<CompletionsByUserResponse> => {
+  const { data } = await api.get(`/tasks/completions-by-user?days=${days}`)
+  return data
+}
+
+interface UpdateTaskPayload {
+  title?: string
+  description?: string
+  dueDate?: string | null
+  deadlineTime?: string | null
+  recurrence?: Recurrence | null
+  requiresPicture?: boolean
+}
+
+const updateTask = async (id: number, payload: UpdateTaskPayload) => {
+  const { data } = await api.put(`/tasks/${id}`, payload)
+  return data
+}
+
+const deleteTask = async (id: number) => {
+  await api.delete(`/tasks/${id}`)
+}
+
+export interface TaskActivity {
+  id: number
+  taskId: number
+  userId: number
+  userName: string
+  action: 'created' | 'completed' | 'uncompleted' | 'edited' | 'deleted'
+  details: string | null
+  createdAt: string
+}
+
+const getTaskActivities = async (taskId: number): Promise<TaskActivity[]> => {
+  const { data } = await api.get(`/tasks/${taskId}/activities`)
+  return data
+}
+
+const completeTaskWithPicture = async (id: number, pictureUrl: string) => {
+  const { data } = await api.put(`/tasks/${id}`, { complete: true, pictureUrl })
+  return data
+}
+
+const uploadImage = async (uri: string): Promise<string> => {
+  const formData = new FormData()
+  const filename = uri.split('/').pop() || 'photo.jpg'
+  const ext = filename.split('.').pop()?.toLowerCase() || 'jpg'
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg'
+
+  formData.append('image', {
+    uri,
+    name: filename,
+    type: mimeType,
+  } as unknown as Blob)
+
+  const { data } = await api.post('/uploads', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data.url
+}
+
+export { getTasks, setTaskCompleted, createNewTask, getTaskHistory, getDailySnapshot, getCompletionsByUser, updateTask, deleteTask, getTaskActivities, completeTaskWithPicture, uploadImage }
+export type { UpdateTaskPayload }

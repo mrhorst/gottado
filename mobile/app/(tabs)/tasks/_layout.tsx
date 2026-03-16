@@ -1,4 +1,5 @@
 import { colors } from '@/styles/theme'
+import { Ionicons } from '@expo/vector-icons'
 import { Link, Stack } from 'expo-router'
 import { Pressable, StyleSheet, Text } from 'react-native'
 import { NewSection } from '../sections/_layout'
@@ -16,11 +17,25 @@ const TasksScreenLayout = () => {
     <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen
         name='index'
-        options={{ title: 'Tasks', headerRight: () => <NewTask /> }}
+        options={{
+          title: 'Tasks',
+          headerLargeTitle: true,
+          gestureEnabled: false,
+          headerLeft: () => <SnapshotLink />,
+          headerRight: () => <NewTask />,
+        }}
       />
       <Stack.Screen
         name='new'
         options={{ title: 'New Task', headerRight: () => <NewSection /> }}
+      />
+      <Stack.Screen
+        name='[id]'
+        options={{ title: 'Edit Task' }}
+      />
+      <Stack.Screen
+        name='snapshot'
+        options={{ title: 'Daily Snapshot' }}
       />
     </Stack>
   )
@@ -31,6 +46,16 @@ const NewTask = () => {
     <Link href='/tasks/new' asChild>
       <Pressable>
         <Text style={styles.headerLink}>New Task</Text>
+      </Pressable>
+    </Link>
+  )
+}
+
+const SnapshotLink = () => {
+  return (
+    <Link href='/tasks/snapshot' asChild>
+      <Pressable>
+        <Ionicons name='calendar-outline' size={22} color={colors.primary} />
       </Pressable>
     </Link>
   )
