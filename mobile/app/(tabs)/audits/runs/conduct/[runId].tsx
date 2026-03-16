@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -14,12 +15,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useAuditRunDetailQuery } from '@/hooks/useAuditRunsQuery'
 import { useAuditRunsMutation } from '@/hooks/useAuditRunsMutation'
 import { useAuditFindingsMutation } from '@/hooks/useAuditFindingsMutation'
-import { addAdHocFinding } from '@/services/auditService'
+import { addAdHocFinding, uploadPhoto, deletePhoto, getPhotos, type AuditPhoto } from '@/services/auditService'
 import { colors, spacing, typography } from '@/styles/theme'
 import type { AuditFinding, Severity } from '@/types/audit'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import * as ImagePicker from 'expo-image-picker'
 
 const SCORE_OPTIONS = [0, 1, 2, 3, 4, 5]
 const SEVERITY_OPTIONS: Severity[] = ['low', 'medium', 'high', 'critical']
@@ -38,6 +40,213 @@ const getZoneSortKey = (zoneName: string) => {
   const idx = PRESTO_ZONE_ORDER.indexOf(zoneName)
   return idx >= 0 ? idx : 999
 }
+
+// Photo gallery component for findings
+const FindingPhotos = ({
+  runId,
+  findingId,
+}: {
+  runId: number
+  findingId: number
+}) => {
+  const [photos, setPhotos] = useState<AuditPhoto[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    loadPhotos()
+  }, [findingId])
+
+  const loadPhotos = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getPhotos(runId, findingId)
+      setPhotos(data)
+    } catch {
+      // Silently fail - photos are optional
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleTakePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Camera access is required to take photos')
+        return
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      })
+
+      if (!result.canceled && result.assets[0]) {
+        await handleUpload(result.assets[0].uri)
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to take photo')
+    }
+  }
+
+  const handlePickPhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Photo library access is required')
+        return
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      })
+
+      if (!result.canceled && result.assets[0]) {
+        await handleUpload(result.assets[0].uri)
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to select photo')
+    }
+  }
+
+  const handleUpload = async (uri: string) => {
+    setIsUploading(true)
+    try {
+      const filename = uri.split('/').pop() || 'photo.jpg'
+      const newPhoto = await uploadPhoto(runId, findingId, uri, filename)
+      setPhotos((prev) => [...prev, newPhoto])
+    } catch (err) {
+      Alert.alert('Error', 'Failed to upload photo')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDelete = (photoId: number) => {
+    Alert.alert('Delete Photo', 'Remove this photo?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePhoto(photoId)
+            setPhotos((prev) => prev.filter((p) => p.id !== photoId))
+          } catch {
+            Alert.alert('Error', 'Failed to delete photo')
+          }
+        },
+      },
+    ])
+  }
+
+  return (
+    <View style={photoStyles.container}>
+      {/* Photo grid */}
+      {photos.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={photoStyles.photoScroll}
+        >
+          {photos.map((photo) => (
+            <Pressable
+              key={photo.id}
+              style={photoStyles.photoWrapper}
+              onLongPress={() => handleDelete(photo.id)}
+            >
+              <Image
+                source={{ uri: photo.url }}
+                style={photoStyles.photo}
+                resizeMode="cover"
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Add photo buttons */}
+      <View style={photoStyles.buttonRow}>
+        <Pressable
+          style={[photoStyles.button, isUploading && photoStyles.buttonDisabled]}
+          onPress={handleTakePhoto}
+          disabled={isUploading}
+        >
+          <Ionicons name="camera-outline" size={18} color={colors.primary} />
+          <Text style={photoStyles.buttonText}>
+            {isUploading ? 'Uploading...' : 'Take Photo'}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[photoStyles.button, isUploading && photoStyles.buttonDisabled]}
+          onPress={handlePickPhoto}
+          disabled={isUploading}
+        >
+          <Ionicons name="images-outline" size={18} color={colors.primary} />
+          <Text style={photoStyles.buttonText}>Gallery</Text>
+        </Pressable>
+      </View>
+
+      {photos.length > 0 && (
+        <Text style={photoStyles.hint}>Long-press photo to delete</Text>
+      )}
+    </View>
+  )
+}
+
+const photoStyles = StyleSheet.create({
+  container: {
+    marginTop: spacing.sm,
+  },
+  photoScroll: {
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+  },
+  photoWrapper: {
+    marginRight: spacing.sm,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  photo: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: colors.primary + '10',
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  hint: {
+    fontSize: 11,
+    color: '#8e8e93',
+    marginTop: 4,
+  },
+})
 
 const confirm = (title: string, message: string, onConfirm: () => void) => {
   if (Platform.OS === 'web') {
@@ -406,6 +615,7 @@ export default function ConductAuditScreen() {
             finding={finding}
             local={localFindings[finding.id] || {}}
             onUpdate={(updates) => updateLocal(finding.id, updates)}
+            runId={numericRunId}
           />
         ))}
 
@@ -465,10 +675,12 @@ const FindingCard = ({
   finding,
   local,
   onUpdate,
+  runId,
 }: {
   finding: AuditFinding
   local: Partial<AuditFinding>
   onUpdate: (updates: Partial<AuditFinding>) => void
+  runId: number
 }) => {
   const isFailed =
     finding.scoringType === 'pass_fail'
@@ -558,9 +770,12 @@ const FindingCard = ({
         </View>
       )}
 
-      {/* Show severity + notes + flag only when assessed and failed */}
+      {/* Show severity + notes + flag + photos only when assessed and failed */}
       {isAssessed && isFailed && (
         <View style={s.detailSection}>
+          <Text style={s.inputLabel}>Photos</Text>
+          <FindingPhotos runId={runId} findingId={finding.id} />
+
           <Text style={s.inputLabel}>Severity</Text>
           <View style={s.severityRow}>
             {SEVERITY_OPTIONS.map((sev) => {
