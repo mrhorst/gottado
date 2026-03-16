@@ -11,6 +11,16 @@ const headerActionStyle = {
   justifyContent: 'center' as const,
 }
 
+const headerActionMutedStyle = {
+  ...headerActionStyle,
+  backgroundColor: '#f2f2f7',
+}
+
+const headerActionPrimaryStyle = {
+  ...headerActionStyle,
+  backgroundColor: colors.primary,
+}
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -33,7 +43,7 @@ export default function TabLayout() {
             <Link href='/select-org' asChild>
               <Pressable
                 hitSlop={8}
-                style={[headerActionStyle, { backgroundColor: '#f2f2f7' }]}
+                style={headerActionMutedStyle}
               >
                 <Ionicons name='business-outline' size={16} color={colors.text} />
               </Pressable>
@@ -43,7 +53,7 @@ export default function TabLayout() {
             <Link href='/(tabs)/tasks/new' asChild>
               <Pressable
                 hitSlop={8}
-                style={[headerActionStyle, { backgroundColor: colors.primary }]}
+                style={headerActionPrimaryStyle}
               >
                 <Ionicons name='add' size={18} color='#fff' />
               </Pressable>
