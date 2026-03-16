@@ -1,4 +1,7 @@
 import { Router } from 'express'
+import multer from 'multer'
+import path from 'path'
+import os from 'os'
 import {
   listTemplates,
   getTemplate,
@@ -39,7 +42,13 @@ import {
   updateFollowUp,
   completeFollowUp,
 } from '@/controllers/auditFollowUps.ts'
+import {
+  uploadPhoto,
+  getPhotosByFinding,
+  deletePhoto,
+} from '@/controllers/auditPhotos.ts'
 import { getAuditDashboard } from '@/controllers/auditDashboard.ts'
+import { getPartnerSummary, exportPartnerCSV } from '@/controllers/auditReports.ts'
 import { validate } from '@/middleware/validate.ts'
 import {
   createTemplateSchema,
@@ -59,6 +68,26 @@ import {
   completeFollowUpSchema,
   addAdHocFindingSchema,
 } from '@/validation/schemas.ts'
+
+// Multer setup for audit photos - store to temp first
+const photoUpload = multer({
+  storage: multer.diskStorage({
+    destination: os.tmpdir(),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname)
+      cb(null, `audit-photo-${Date.now()}${ext}`)
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only JPEG, PNG, and WebP images are allowed'))
+    }
+  },
+})
 
 const auditsRouter = Router()
 
@@ -108,5 +137,14 @@ auditsRouter.get('/runs/:runId/follow-ups', listFollowUps)
 auditsRouter.post('/runs/:runId/follow-ups', validate(scheduleFollowUpSchema), scheduleFollowUp)
 auditsRouter.put('/follow-ups/:id', validate(updateFollowUpSchema), updateFollowUp)
 auditsRouter.post('/follow-ups/:id/complete', validate(completeFollowUpSchema), completeFollowUp)
+
+// Photos
+auditsRouter.get('/runs/:runId/findings/:findingId/photos', getPhotosByFinding)
+auditsRouter.post('/runs/:runId/findings/:findingId/photos', photoUpload.single('photo'), uploadPhoto)
+auditsRouter.delete('/photos/:photoId', deletePhoto)
+
+// Partner Reports
+auditsRouter.get('/reports/partner-summary', getPartnerSummary)
+auditsRouter.get('/reports/partner-summary.csv', exportPartnerCSV)
 
 export default auditsRouter

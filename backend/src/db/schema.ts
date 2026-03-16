@@ -364,3 +364,28 @@ export const auditFollowUp = pgTable(
   },
   (table) => [index('follow_ups_run_id_idx').on(table.runId)]
 )
+
+export const auditPhoto = pgTable(
+  'audit_photos',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    findingId: integer('finding_id')
+      .references(() => auditFinding.id, { onDelete: 'cascade' })
+      .notNull(),
+    storagePath: text('storage_path').notNull(),
+    originalFilename: varchar('original_filename', { length: 255 }).notNull(),
+    mimeType: varchar('mime_type', { length: 50 }).notNull(),
+    fileSize: integer('file_size').notNull(),
+    thumbnailPath: text('thumbnail_path'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    createdBy: integer('created_by')
+      .references(() => user.id)
+      .notNull(),
+  },
+  (table) => [
+    index('photos_finding_id_idx').on(table.findingId),
+    index('photos_created_by_idx').on(table.createdBy),
+  ]
+)
