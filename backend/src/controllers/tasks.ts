@@ -41,6 +41,7 @@ const listTasks = async (
         lastCompletedAt: task.lastCompletedAt,
         deadlineTime: task.deadlineTime,
         requiresPicture: task.requiresPicture,
+        relevanceTag: task.relevanceTag,
       })
       .from(task)
       .innerJoin(section, eq(task.sectionId, section.id))

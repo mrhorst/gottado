@@ -358,6 +358,12 @@ const TaskItem = ({
               <Text style={s.metaText}>Photo</Text>
             </View>
           )}
+          {task.relevanceTag && (
+            <View style={s.auditSourcePill}>
+              <Ionicons name='clipboard-outline' size={11} color='#AF52DE' />
+              <Text style={s.auditSourceText}>{task.relevanceTag}</Text>
+            </View>
+          )}
           {task.lastCompletedAt && (
             <Text style={s.metaText}>
               Last:{' '}
@@ -534,6 +540,20 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+  },
+  auditSourcePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#AF52DE12',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  auditSourceText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#AF52DE',
   },
   metaText: {
     fontSize: 11,
