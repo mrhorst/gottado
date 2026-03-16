@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native'
 import { useCallback, useRef, useState } from 'react'
+import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/styles/theme'
 import { useActionItemsQuery } from '@/hooks/useActionItemsQuery'
@@ -218,6 +219,7 @@ const PromoteModal = ({
   item: ActionItem
   onClose: () => void
 }) => {
+  const router = useRouter()
   const { sections } = useSectionQuery()
   const { promote } = useActionItemsMutation()
   const [selectedSection, setSelectedSection] = useState<SectionProps | null>(null)
@@ -226,13 +228,14 @@ const PromoteModal = ({
   const [dueDate, setDueDate] = useState('')
   const [deadlineTime, setDeadlineTime] = useState('')
   const [recurrence, setRecurrence] = useState<Recurrence | null>(item.recurrence ?? null)
+  const [createdTaskId, setCreatedTaskId] = useState<number | null>(null)
 
   const writableSections = sections?.filter((s) => s.role !== 'viewer') ?? []
 
   const handlePromote = async () => {
     if (!selectedSection) return
     try {
-      await promote.mutateAsync({
+      const result = await promote.mutateAsync({
         actionId: item.id,
         payload: {
           sectionId: selectedSection.id,
@@ -243,9 +246,16 @@ const PromoteModal = ({
           recurrence,
         },
       })
-      onClose()
+      setCreatedTaskId(result.task.id)
     } catch {
       Alert.alert('Error', 'Failed to promote action to task.')
+    }
+  }
+
+  const handleViewTask = () => {
+    onClose()
+    if (createdTaskId) {
+      router.push(`/(tabs)/tasks/${createdTaskId}`)
     }
   }
 
@@ -264,6 +274,23 @@ const PromoteModal = ({
           </Pressable>
         </View>
 
+        {createdTaskId ? (
+          <View style={s.successContainer}>
+            <Ionicons name='checkmark-circle' size={56} color='#34C759' />
+            <Text style={s.successTitle}>Task Created</Text>
+            <Text style={s.successSubtext}>
+              "{title}" has been added to your tasks
+              {recurrence ? ` as a ${RECURRENCE_LABELS[recurrence].toLowerCase()} task` : ''}.
+            </Text>
+            <Pressable style={s.viewTaskBtn} onPress={handleViewTask}>
+              <Ionicons name='open-outline' size={18} color='#fff' />
+              <Text style={s.viewTaskBtnText}>View Task</Text>
+            </Pressable>
+            <Pressable onPress={onClose}>
+              <Text style={s.dismissLink}>Dismiss</Text>
+            </Pressable>
+          </View>
+        ) : (
         <ScrollView contentContainerStyle={s.modalContent} keyboardShouldPersistTaps='handled'>
           {/* Source info */}
           <View style={s.sourceCard}>
@@ -383,6 +410,7 @@ const PromoteModal = ({
             )}
           </View>
         </ScrollView>
+        )}
       </View>
     </Modal>
   )
@@ -622,6 +650,45 @@ const s = StyleSheet.create({
   recurrenceChipTextSelected: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+    gap: 12,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  successSubtext: {
+    fontSize: 15,
+    color: '#8e8e93',
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  viewTaskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  viewTaskBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  dismissLink: {
+    fontSize: 15,
+    color: '#8e8e93',
+    marginTop: 4,
   },
   sectionList: {
     backgroundColor: '#fff',
