@@ -143,6 +143,24 @@ export interface AuditDashboardData {
   previousZoneScores: Record<string, number> | null
 }
 
+export interface ActionItem {
+  id: number
+  title: string
+  description: string | null
+  priority: Severity
+  status: ActionStatus
+  recurrence: Recurrence | null
+  assignedTo: number | null
+  assignedUserName: string | null
+  runId: number
+  auditName: string
+  auditDate: string
+  findingId: number
+  taskId: number | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface PromoteActionPayload {
   sectionId: number
   title?: string
