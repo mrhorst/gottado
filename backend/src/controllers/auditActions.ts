@@ -1,7 +1,7 @@
 import { NextFunction, Response } from 'express'
 import db from '@/utils/db.ts'
-import { auditAction, auditFinding, auditCheckpoint, task } from '@/db/schema.ts'
-import { and, eq } from 'drizzle-orm'
+import { auditAction, auditFinding, auditCheckpoint, auditRun, auditTemplate, user, task } from '@/db/schema.ts'
+import { and, eq, inArray, desc } from 'drizzle-orm'
 import { AuthenticatedRequest } from '@/types/index.ts'
 import { AppError } from '@/utils/AppError.ts'
 
@@ -187,4 +187,57 @@ const dismissAction = async (
   }
 }
 
-export { listActions, createAction, updateAction, promoteAction, dismissAction }
+/**
+ * Org-wide pending action items — returns all proposed/approved actions
+ * across all audit runs for the current org, enriched with audit context.
+ */
+const listActionItems = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const orgId = Number(req.headers['x-org-id'])
+  const statusFilter = req.query.status as string | undefined
+
+  try {
+    const allowedStatuses = statusFilter
+      ? [statusFilter as 'proposed' | 'approved' | 'promoted' | 'dismissed']
+      : ['proposed', 'approved'] as const
+
+    const items = await db
+      .select({
+        id: auditAction.id,
+        title: auditAction.title,
+        description: auditAction.description,
+        priority: auditAction.priority,
+        status: auditAction.status,
+        recurrence: auditAction.recurrence,
+        assignedTo: auditAction.assignedTo,
+        assignedUserName: user.name,
+        runId: auditAction.runId,
+        auditName: auditTemplate.name,
+        auditDate: auditRun.startedAt,
+        findingId: auditAction.findingId,
+        taskId: auditAction.taskId,
+        createdAt: auditAction.createdAt,
+        updatedAt: auditAction.updatedAt,
+      })
+      .from(auditAction)
+      .innerJoin(auditRun, eq(auditAction.runId, auditRun.id))
+      .innerJoin(auditTemplate, eq(auditRun.templateId, auditTemplate.id))
+      .leftJoin(user, eq(auditAction.assignedTo, user.id))
+      .where(
+        and(
+          eq(auditRun.orgId, orgId),
+          inArray(auditAction.status, [...allowedStatuses])
+        )
+      )
+      .orderBy(desc(auditAction.createdAt))
+
+    res.send(items)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export { listActions, createAction, updateAction, promoteAction, dismissAction, listActionItems }
