@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { useRouter, Stack } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { colors, spacing, typography } from '@/styles/theme'
 import { useSectionMutation } from '@/hooks/useSectionMutation'
 import { Ionicons } from '@expo/vector-icons'
@@ -29,13 +29,11 @@ const NewSectionScreen = () => {
   const isValid = name.trim().length > 0
 
   return (
-    <>
-      <Stack.Screen options={{ title: 'New Section' }} />
-      <KeyboardAvoidingView
-        style={s.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={100}
-      >
+    <KeyboardAvoidingView
+      style={s.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={100}
+    >
         <View style={s.content}>
           <View style={s.iconContainer}>
             <View style={s.iconBg}>
@@ -45,8 +43,8 @@ const NewSectionScreen = () => {
 
           <Text style={s.heading}>Create a Section</Text>
           <Text style={s.subheading}>
-            Sections help you organize tasks into categories like "Kitchen",
-            "Front of House", or "Admin".
+            Sections help you organize tasks into categories like &quot;Kitchen&quot;,
+            &quot;Front of House&quot;, or &quot;Admin&quot;.
           </Text>
 
           <View style={s.fieldGroup}>
@@ -86,7 +84,6 @@ const NewSectionScreen = () => {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </>
   )
 }
 

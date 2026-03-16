@@ -1,4 +1,5 @@
 import { colors } from '@/styles/theme'
+import { baseStackScreenOptions } from '@/styles/navigation'
 import { Ionicons } from '@expo/vector-icons'
 import { Link, Stack } from 'expo-router'
 import { Pressable, StyleSheet, Text } from 'react-native'
@@ -10,11 +11,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '400',
   },
+  headerButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
 })
 
 const TasksScreenLayout = () => {
   return (
-    <Stack screenOptions={{ headerShown: true }}>
+    <Stack screenOptions={{ ...baseStackScreenOptions, headerShown: true }}>
       <Stack.Screen
         name='index'
         options={{
@@ -34,6 +39,10 @@ const TasksScreenLayout = () => {
         options={{ title: 'Edit Task' }}
       />
       <Stack.Screen
+        name='details/[id]'
+        options={{ title: 'Task Details' }}
+      />
+      <Stack.Screen
         name='snapshot'
         options={{ title: 'Daily Snapshot' }}
       />
@@ -44,7 +53,7 @@ const TasksScreenLayout = () => {
 const NewTask = () => {
   return (
     <Link href='/tasks/new' asChild>
-      <Pressable>
+      <Pressable style={styles.headerButton} hitSlop={8}>
         <Text style={styles.headerLink}>New Task</Text>
       </Pressable>
     </Link>
@@ -54,7 +63,7 @@ const NewTask = () => {
 const SnapshotLink = () => {
   return (
     <Link href='/tasks/snapshot' asChild>
-      <Pressable>
+      <Pressable style={styles.headerButton} hitSlop={8}>
         <Ionicons name='calendar-outline' size={22} color={colors.primary} />
       </Pressable>
     </Link>
