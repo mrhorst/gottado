@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -45,6 +45,12 @@ const SectionDetailScreen = () => {
   const { unsubscribeMember, updateMember } = useMembershipMutation()
 
   const [editingUser, setEditingUser] = useState<SectionMembers | null>(null)
+  const [isInteractionLocked, setIsInteractionLocked] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsInteractionLocked(false), 250)
+    return () => clearTimeout(timer)
+  }, [sectionId])
 
   const handleUpdateRole = (role: MembershipRoles) => {
     if (!editingUser) return
@@ -130,7 +136,7 @@ const SectionDetailScreen = () => {
               <Pressable
                 style={[s.memberCard, isEditing && s.memberCardActive]}
                 onPress={() => !isOwner && setEditingUser(member)}
-                disabled={isOwner}
+                disabled={isOwner || isInteractionLocked}
               >
                 <View style={s.memberAvatar}>
                   <Text style={s.memberAvatarText}>
@@ -153,7 +159,13 @@ const SectionDetailScreen = () => {
           }
 
           const nonMember = item as SectionNonMembers
-          return <NonMemberRow user={nonMember} sectionId={sectionId} />
+          return (
+            <NonMemberRow
+              user={nonMember}
+              sectionId={sectionId}
+              disabled={isInteractionLocked}
+            />
+          )
         }}
         ListFooterComponent={
           <View style={s.footerHint}>
@@ -225,9 +237,11 @@ const EditMemberPanel = ({
 const NonMemberRow = ({
   user,
   sectionId,
+  disabled,
 }: {
   user: SectionNonMembers
   sectionId: number
+  disabled?: boolean
 }) => {
   const { subscribeMember } = useMembershipMutation()
   const [expanded, setExpanded] = useState(false)
@@ -242,6 +256,7 @@ const NonMemberRow = ({
       <Pressable
         style={s.memberCard}
         onPress={() => setExpanded(!expanded)}
+        disabled={disabled}
       >
         <View style={[s.memberAvatar, s.memberAvatarInactive]}>
           <Text style={[s.memberAvatarText, { color: '#8e8e93' }]}>
@@ -274,6 +289,7 @@ const NonMemberRow = ({
                 key={role}
                 style={s.assignRoleCard}
                 onPress={() => handleAssign(role)}
+                disabled={disabled}
               >
                 <View style={s.assignRoleIconWrap}>
                   <Ionicons
@@ -294,6 +310,7 @@ const NonMemberRow = ({
           <Pressable
             style={s.assignCancelBtn}
             onPress={() => setExpanded(false)}
+            disabled={disabled}
           >
             <Text style={s.assignCancelText}>Cancel</Text>
           </Pressable>
