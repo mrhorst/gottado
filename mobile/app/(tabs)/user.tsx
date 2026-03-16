@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router'
 import { useWorkspace } from '@/context/workspace/WorkspaceContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { colors } from '@/styles/theme'
+import ScreenMotion from '@/components/ui/ScreenMotion'
 
 const styles = StyleSheet.create({
   container: {
@@ -125,39 +126,41 @@ const ProfileScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
-          </Text>
-        </View>
+    <ScreenMotion>
+      <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.name}>{user?.name}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
+          <View style={styles.avatarPlaceholder}>
+            <Text style={styles.avatarText}>
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </Text>
+          </View>
+          <View style={styles.header}>
+            <Text style={styles.name}>{user?.name}</Text>
+            <Text style={styles.email}>{user?.email}</Text>
+          </View>
+        </View>
+        <View style={styles.footer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.changeOrgButton,
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={() => changeOrganization()}
+          >
+            <Text style={styles.changeOrgText}>Change Organization</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.logoutButton,
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutText}>Log Out</Text>
+          </Pressable>
         </View>
       </View>
-      <View style={styles.footer}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.changeOrgButton,
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={() => changeOrganization()}
-        >
-          <Text style={styles.changeOrgText}>Change Organization</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.logoutButton,
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutText}>Log Out</Text>
-        </Pressable>
-      </View>
-    </View>
+    </ScreenMotion>
   )
 }
 export default ProfileScreen

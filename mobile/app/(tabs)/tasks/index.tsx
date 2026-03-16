@@ -21,6 +21,7 @@ import { useRouter } from 'expo-router'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { SharedValue } from 'react-native-reanimated'
 import * as ImagePicker from 'expo-image-picker'
+import ScreenMotion from '@/components/ui/ScreenMotion'
 
 const formatTime12h = (time24: string) => {
   const [h, m] = time24.split(':').map(Number)
@@ -72,9 +73,11 @@ const TasksScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={[s.container, { justifyContent: 'center' }]}>
-        <ActivityIndicator size='large' color={colors.primary} />
-      </View>
+      <ScreenMotion>
+        <View style={[s.container, { justifyContent: 'center' }]}>
+          <ActivityIndicator size='large' color={colors.primary} />
+        </View>
+      </ScreenMotion>
     )
   }
 
@@ -85,22 +88,25 @@ const TasksScreen = () => {
 
   if (!sections || sections.length === 0 || totalTasks === 0) {
     return (
-      <View style={s.container}>
-        <View style={s.emptyContainer}>
-          <Ionicons name='checkmark-done-outline' size={48} color='#d1d1d6' />
-          <Text style={s.emptyText}>
-            {totalTasks === 0 ? 'No tasks yet' : 'No sections yet'}
-          </Text>
-          <Text style={s.emptySubtext}>
-            Tasks will appear here once created
-          </Text>
+      <ScreenMotion>
+        <View style={s.container}>
+          <View style={s.emptyContainer}>
+            <Ionicons name='checkmark-done-outline' size={48} color='#d1d1d6' />
+            <Text style={s.emptyText}>
+              {totalTasks === 0 ? 'No tasks yet' : 'No sections yet'}
+            </Text>
+            <Text style={s.emptySubtext}>
+              Tasks will appear here once created
+            </Text>
+          </View>
         </View>
-      </View>
+      </ScreenMotion>
     )
   }
 
   return (
-    <View style={s.container}>
+    <ScreenMotion>
+      <View style={s.container}>
       {/* Progress summary */}
       <View style={s.summaryBar}>
         <Text style={s.summaryText}>
@@ -125,14 +131,15 @@ const TasksScreen = () => {
         ]}
         renderItem={({ item }) => <SectionGroup section={item} />}
       />
-    </View>
+      </View>
+    </ScreenMotion>
   )
 }
 
 const SectionGroup = ({ section }: { section: SectionProps }) => {
   const { sectionPendingTasks, sectionCompletedTasks, sectionTotalTasks } =
     useTasksQuery()
-  const { toggleComplete, deleteTask, completeWithPicture, isUploadingPicture } = useTasksMutation()
+  const { toggleComplete, deleteTask, completeWithPicture } = useTasksMutation()
   const router = useRouter()
 
   const completed = sectionCompletedTasks(section)
@@ -149,7 +156,9 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
     }
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
-      quality: 0.7,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
     })
     if (!result.canceled && result.assets[0]) {
       try {
@@ -176,6 +185,13 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
   const handleEdit = useCallback(
     (task: UserTasks) => {
       router.push(`/(tabs)/tasks/${task.id}`)
+    },
+    [router]
+  )
+
+  const handleOpenDetails = useCallback(
+    (task: UserTasks) => {
+      router.push(`/(tabs)/tasks/details/${task.id}`)
     },
     [router]
   )
@@ -216,6 +232,7 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
           key={task.id}
           task={task}
           onToggle={handleToggle}
+          onOpenDetails={handleOpenDetails}
           onEdit={handleEdit}
           onDelete={handleDelete}
           done={false}
@@ -244,6 +261,7 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
             key={task.id}
             task={task}
             onToggle={handleToggle}
+            onOpenDetails={handleOpenDetails}
             onEdit={handleEdit}
             onDelete={handleDelete}
             done
@@ -256,12 +274,14 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
 const SwipeableTaskItem = ({
   task,
   onToggle,
+  onOpenDetails,
   onEdit,
   onDelete,
   done,
 }: {
   task: UserTasks
   onToggle: (t: UserTasks) => void
+  onOpenDetails: (t: UserTasks) => void
   onEdit: (t: UserTasks) => void
   onDelete: (t: UserTasks) => void
   done: boolean
@@ -306,7 +326,7 @@ const SwipeableTaskItem = ({
       renderRightActions={renderRightActions}
       containerStyle={s.swipeableContainer}
     >
-      <TaskItem task={task} onToggle={onToggle} done={done} />
+      <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
     </ReanimatedSwipeable>
   )
 }
@@ -323,10 +343,12 @@ const RECURRENCE_LABELS: Record<string, string> = {
 const TaskItem = ({
   task,
   onToggle,
+  onOpenDetails,
   done,
 }: {
   task: UserTasks
   onToggle: (t: UserTasks) => void
+  onOpenDetails: (t: UserTasks) => void
   done: boolean
 }) => {
   const status = getTaskStatus(task)
@@ -334,14 +356,14 @@ const TaskItem = ({
   const isDueToday = status === 'due_today'
 
   return (
-    <Pressable
-      style={[s.taskRow, isLate && s.taskRowLate]}
-      onPress={() => onToggle(task)}
-    >
-      <View style={[s.checkbox, done && s.checkboxDone, isLate && !done && s.checkboxLate]}>
+    <View style={[s.taskRow, isLate && s.taskRowLate]}>
+      <Pressable
+        style={[s.checkbox, done && s.checkboxDone, isLate && !done && s.checkboxLate]}
+        onPress={() => onToggle(task)}
+      >
         {done && <Ionicons name='checkmark' size={14} color='#fff' />}
-      </View>
-      <View style={{ flex: 1 }}>
+      </Pressable>
+      <Pressable style={s.taskContent} onPress={() => onOpenDetails(task)}>
         <Text style={done ? s.taskTitleDone : s.taskTitle}>{task.title}</Text>
         {/* Due date/time + recurrence info row */}
         <View style={s.metaRow}>
@@ -375,7 +397,7 @@ const TaskItem = ({
             </Text>
           )}
         </View>
-      </View>
+      </Pressable>
 
       {/* Due date + time badge */}
       {!done && (task.dueDate || task.deadlineTime) && (
@@ -408,7 +430,10 @@ const TaskItem = ({
           )}
         </View>
       )}
-    </Pressable>
+      <Pressable style={s.detailsHint} onPress={() => onOpenDetails(task)}>
+        <Ionicons name='chevron-forward' size={16} color='#c7c7cc' />
+      </Pressable>
+    </View>
   )
 }
 
@@ -530,6 +555,9 @@ const s = StyleSheet.create({
     textDecorationLine: 'line-through',
     flex: 1,
   },
+  taskContent: {
+    flex: 1,
+  },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -632,6 +660,11 @@ const s = StyleSheet.create({
   },
   swipeableContainer: {
     overflow: 'hidden',
+  },
+  detailsHint: {
+    paddingLeft: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })
 

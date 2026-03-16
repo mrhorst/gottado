@@ -23,6 +23,7 @@ import type { ActionItem, Recurrence, Severity } from '@/types/audit'
 import type { SectionProps } from '@/types/section'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { SharedValue } from 'react-native-reanimated'
+import ScreenMotion from '@/components/ui/ScreenMotion'
 
 const PRIORITY_COLORS: Record<Severity, string> = {
   low: '#34C759',
@@ -55,28 +56,33 @@ const ActionItemsScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={[s.container, { justifyContent: 'center' }]}>
-        <ActivityIndicator size='large' color={colors.primary} />
-      </View>
+      <ScreenMotion>
+        <View style={[s.container, { justifyContent: 'center' }]}>
+          <ActivityIndicator size='large' color={colors.primary} />
+        </View>
+      </ScreenMotion>
     )
   }
 
   if (actionItems.length === 0) {
     return (
-      <View style={s.container}>
-        <View style={s.emptyContainer}>
-          <Ionicons name='checkmark-done-circle-outline' size={48} color='#d1d1d6' />
-          <Text style={s.emptyText}>No pending action items</Text>
-          <Text style={s.emptySubtext}>
-            Action items from audit runs will appear here
-          </Text>
+      <ScreenMotion>
+        <View style={s.container}>
+          <View style={s.emptyContainer}>
+            <Ionicons name='checkmark-done-circle-outline' size={48} color='#d1d1d6' />
+            <Text style={s.emptyText}>No pending action items</Text>
+            <Text style={s.emptySubtext}>
+              Action items from audit runs will appear here
+            </Text>
+          </View>
         </View>
-      </View>
+      </ScreenMotion>
     )
   }
 
   return (
-    <View style={s.container}>
+    <ScreenMotion>
+      <View style={s.container}>
       <View style={s.summaryBar}>
         <Text style={s.summaryText}>
           {actionItems.length} pending action{actionItems.length !== 1 ? 's' : ''}
@@ -102,7 +108,8 @@ const ActionItemsScreen = () => {
           onClose={() => setPromoteItem(null)}
         />
       )}
-    </View>
+      </View>
+    </ScreenMotion>
   )
 }
 
@@ -279,7 +286,7 @@ const PromoteModal = ({
             <Ionicons name='checkmark-circle' size={56} color='#34C759' />
             <Text style={s.successTitle}>Task Created</Text>
             <Text style={s.successSubtext}>
-              "{title}" has been added to your tasks
+              &quot;{title}&quot; has been added to your tasks
               {recurrence ? ` as a ${RECURRENCE_LABELS[recurrence].toLowerCase()} task` : ''}.
             </Text>
             <Pressable style={s.viewTaskBtn} onPress={handleViewTask}>

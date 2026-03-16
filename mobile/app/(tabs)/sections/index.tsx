@@ -19,6 +19,7 @@ import { useSectionMutation } from '@/hooks/useSectionMutation'
 import { Pressable } from 'react-native-gesture-handler'
 import { SharedValue } from 'react-native-reanimated'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
+import ScreenMotion from '@/components/ui/ScreenMotion'
 
 const getRoleBadgeStyle = (role: string) => {
   switch (role) {
@@ -106,17 +107,21 @@ const SectionListScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={[s.container, s.loadingContainer]}>
-        <ActivityIndicator size='large' color={colors.primary} />
-      </View>
+      <ScreenMotion>
+        <View style={[s.container, s.loadingContainer]}>
+          <ActivityIndicator size='large' color={colors.primary} />
+        </View>
+      </ScreenMotion>
     )
   }
 
   if (isError) {
     return (
-      <View style={[s.container, s.loadingContainer]}>
-        <Text>Error: {error?.message}</Text>
-      </View>
+      <ScreenMotion>
+        <View style={[s.container, s.loadingContainer]}>
+          <Text>Error: {error?.message}</Text>
+        </View>
+      </ScreenMotion>
     )
   }
 
@@ -179,7 +184,8 @@ const SectionListScreen = () => {
   }
 
   return (
-    <View style={s.container}>
+    <ScreenMotion>
+      <View style={s.container}>
       <SectionList
         sections={groupedSections}
         keyExtractor={(item) => item.id.toString()}
@@ -249,7 +255,8 @@ const SectionListScreen = () => {
           </View>
         }
       />
-    </View>
+      </View>
+    </ScreenMotion>
   )
 }
 
