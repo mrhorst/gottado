@@ -149,9 +149,7 @@ const uploadImage = async (uri: string): Promise<string> => {
     type: mimeType,
   } as unknown as Blob)
 
-  const { data } = await api.post('/uploads', formData, {
-    headers: { 'Content-Type': undefined },
-  })
+  const { data } = await api.post('/uploads', formData)
   return data.url
 }
 
