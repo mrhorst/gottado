@@ -8,6 +8,7 @@ import {
   taskCompletion,
   auditCheckpoint,
   auditTemplate,
+  section,
 } from '@/db/schema.ts'
 import { and, eq, gte, lte, sql, desc, count, avg, asc } from 'drizzle-orm'
 import { AuthenticatedRequest } from '@/types/index.ts'
@@ -136,7 +137,8 @@ const getPartnerSummary = async (
         count: count(),
       })
       .from(auditAction)
-      .where(eq(auditAction.orgId, orgId))
+      .innerJoin(auditRun, eq(auditAction.runId, auditRun.id))
+      .where(eq(auditRun.orgId, orgId))
       .groupBy(auditAction.status, auditAction.priority)
 
     // High impact action items (top 5)
@@ -147,11 +149,15 @@ const getPartnerSummary = async (
         priority: auditAction.priority,
         status: auditAction.status,
         createdAt: auditAction.createdAt,
+        zone: auditCheckpoint.zone,
       })
       .from(auditAction)
+      .innerJoin(auditRun, eq(auditAction.runId, auditRun.id))
+      .innerJoin(auditFinding, eq(auditAction.findingId, auditFinding.id))
+      .innerJoin(auditCheckpoint, eq(auditFinding.checkpointId, auditCheckpoint.id))
       .where(
         and(
-          eq(auditAction.orgId, orgId),
+          eq(auditRun.orgId, orgId),
           sql`${auditAction.status} != 'dismissed'`
         )
       )
@@ -166,11 +172,11 @@ const getPartnerSummary = async (
       )
       .limit(5)
 
-    // Get zone breakdown from findings
+    // Get zone breakdown from findings (zone/label live on auditCheckpoint)
     const zoneScores = await db
       .select({
-        zone: auditFinding.zone,
-        avgScore: sql<number>`AVG(CASE 
+        zone: auditCheckpoint.zone,
+        avgScore: sql<number>`AVG(CASE
           WHEN ${auditFinding.passed} = true THEN 5
           WHEN ${auditFinding.passed} = false THEN 0
           ELSE ${auditFinding.score}
@@ -179,6 +185,7 @@ const getPartnerSummary = async (
       })
       .from(auditFinding)
       .innerJoin(auditRun, eq(auditRun.id, auditFinding.runId))
+      .innerJoin(auditCheckpoint, eq(auditCheckpoint.id, auditFinding.checkpointId))
       .where(
         and(
           eq(auditRun.orgId, orgId),
@@ -186,13 +193,13 @@ const getPartnerSummary = async (
           lte(auditRun.startedAt, end.toISOString())
         )
       )
-      .groupBy(auditFinding.zone)
+      .groupBy(auditCheckpoint.zone)
 
     // Previous period zone scores for trend
     const prevZoneScores = await db
       .select({
-        zone: auditFinding.zone,
-        avgScore: sql<number>`AVG(CASE 
+        zone: auditCheckpoint.zone,
+        avgScore: sql<number>`AVG(CASE
           WHEN ${auditFinding.passed} = true THEN 5
           WHEN ${auditFinding.passed} = false THEN 0
           ELSE ${auditFinding.score}
@@ -200,6 +207,7 @@ const getPartnerSummary = async (
       })
       .from(auditFinding)
       .innerJoin(auditRun, eq(auditRun.id, auditFinding.runId))
+      .innerJoin(auditCheckpoint, eq(auditCheckpoint.id, auditFinding.checkpointId))
       .where(
         and(
           eq(auditRun.orgId, orgId),
@@ -207,17 +215,18 @@ const getPartnerSummary = async (
           lte(auditRun.startedAt, prevEnd.toISOString())
         )
       )
-      .groupBy(auditFinding.zone)
+      .groupBy(auditCheckpoint.zone)
 
     // Top issues per zone (most failed)
     const topIssuesPerZone = await db
       .select({
-        zone: auditFinding.zone,
-        label: auditFinding.label,
+        zone: auditCheckpoint.zone,
+        label: auditCheckpoint.label,
         failCount: sql<number>`COUNT(CASE WHEN ${auditFinding.passed} = false OR ${auditFinding.score} <= 2 THEN 1 END)`,
       })
       .from(auditFinding)
       .innerJoin(auditRun, eq(auditRun.id, auditFinding.runId))
+      .innerJoin(auditCheckpoint, eq(auditCheckpoint.id, auditFinding.checkpointId))
       .where(
         and(
           eq(auditRun.orgId, orgId),
@@ -225,11 +234,11 @@ const getPartnerSummary = async (
           lte(auditRun.startedAt, end.toISOString())
         )
       )
-      .groupBy(auditFinding.zone, auditFinding.label)
-      .having(sql`failCount > 0`)
-      .orderBy(desc(sql`failCount`))
+      .groupBy(auditCheckpoint.zone, auditCheckpoint.label)
+      .having(sql`COUNT(CASE WHEN ${auditFinding.passed} = false OR ${auditFinding.score} <= 2 THEN 1 END) > 0`)
+      .orderBy(desc(sql`COUNT(CASE WHEN ${auditFinding.passed} = false OR ${auditFinding.score} <= 2 THEN 1 END)`))
 
-    // Task completion stats
+    // Task completion stats (task has no orgId — join through section)
     const taskStats = await db
       .select({
         total: count(),
@@ -238,9 +247,10 @@ const getPartnerSummary = async (
       })
       .from(taskCompletion)
       .innerJoin(task, eq(task.id, taskCompletion.taskId))
+      .innerJoin(section, eq(section.id, task.sectionId))
       .where(
         and(
-          eq(task.orgId, orgId),
+          eq(section.orgId, orgId),
           gte(taskCompletion.completedAt, start.toISOString()),
           lte(taskCompletion.completedAt, end.toISOString())
         )
@@ -305,7 +315,7 @@ const getPartnerSummary = async (
           title: a.title,
           priority: a.priority,
           status: a.status,
-          zone: 'General', // Could join to get actual zone
+          zone: a.zone || 'General',
           createdAt: a.createdAt,
         })),
       },
@@ -335,7 +345,7 @@ const exportPartnerCSV = async (
     const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     const end = endDate ? new Date(endDate as string) : new Date()
 
-    // Get detailed action items with findings
+    // Get detailed action items with findings (join through auditRun for org, auditCheckpoint for zone/label)
     const actionItems = await db
       .select({
         id: auditAction.id,
@@ -344,15 +354,16 @@ const exportPartnerCSV = async (
         priority: auditAction.priority,
         status: auditAction.status,
         createdAt: auditAction.createdAt,
-        zone: auditFinding.zone,
-        findingLabel: auditFinding.label,
+        zone: auditCheckpoint.zone,
+        findingLabel: auditCheckpoint.label,
       })
       .from(auditAction)
-      .leftJoin(auditFinding, eq(auditFinding.id, auditAction.findingId))
-      .leftJoin(auditRun, eq(auditRun.id, auditFinding.runId))
+      .innerJoin(auditRun, eq(auditAction.runId, auditRun.id))
+      .innerJoin(auditFinding, eq(auditAction.findingId, auditFinding.id))
+      .innerJoin(auditCheckpoint, eq(auditFinding.checkpointId, auditCheckpoint.id))
       .where(
         and(
-          eq(auditAction.orgId, orgId),
+          eq(auditRun.orgId, orgId),
           gte(auditAction.createdAt, start.toISOString()),
           lte(auditAction.createdAt, end.toISOString())
         )
