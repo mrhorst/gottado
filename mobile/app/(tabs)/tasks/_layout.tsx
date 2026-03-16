@@ -1,7 +1,7 @@
 import { colors } from '@/styles/theme'
 import { baseStackScreenOptions } from '@/styles/navigation'
 import { Ionicons } from '@expo/vector-icons'
-import { Link, Stack } from 'expo-router'
+import { Link, Stack, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Text } from 'react-native'
 import { NewSection } from '../sections/_layout'
 
@@ -40,7 +40,7 @@ const TasksScreenLayout = () => {
       />
       <Stack.Screen
         name='details/[id]'
-        options={{ title: 'Task Details' }}
+        options={{ title: 'Task Details', headerLeft: () => <BackToTasks /> }}
       />
       <Stack.Screen
         name='snapshot'
@@ -67,6 +67,20 @@ const SnapshotLink = () => {
         <Ionicons name='calendar-outline' size={22} color={colors.primary} />
       </Pressable>
     </Link>
+  )
+}
+
+const BackToTasks = () => {
+  const router = useRouter()
+
+  return (
+    <Pressable
+      style={styles.headerButton}
+      hitSlop={8}
+      onPress={() => router.replace('/(tabs)/tasks')}
+    >
+      <Ionicons name='chevron-back' size={22} color={colors.primary} />
+    </Pressable>
   )
 }
 
