@@ -56,8 +56,12 @@ async function request<T>(
   // Merge headers - config.headers takes precedence
   const headers: Record<string, string> = { ...authHeaders, ...config.headers }
 
-  // For FormData, let the browser/React Native set the Content-Type with boundary
-  if (body instanceof FormData) {
+  // Detect FormData (instanceof + duck-type fallback for RN polyfill)
+  const isFormData = body instanceof FormData ||
+    (body && typeof body === 'object' && typeof (body as any).append === 'function' && typeof (body as any).getParts === 'function')
+
+  // For FormData, let React Native set the Content-Type with multipart boundary
+  if (isFormData) {
     delete headers['Content-Type']
   }
 
@@ -66,7 +70,7 @@ async function request<T>(
     headers,
   }
 
-  if (body && !(body instanceof FormData)) {
+  if (body && !isFormData) {
     options.body = JSON.stringify(body)
   } else if (body) {
     options.body = body as FormData
