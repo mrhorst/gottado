@@ -21,7 +21,14 @@ export const useTasksQuery = () => {
     return sortTasks(tasks)
   }, [tasks])
 
-  const allPendingTasks = tasks.filter((t) => !t.complete)
+  const today = new Date().toISOString().split('T')[0]
+
+  const allPendingTasks = tasks.filter((t) => {
+    if (t.complete) return false
+    // Hide recurring tasks whose next due date hasn't arrived yet
+    if (t.recurrence && t.dueDate && t.dueDate > today && t.lastCompletedAt) return false
+    return true
+  })
   const allCompletedTasks = tasks.filter((t) => t.complete)
 
   const sectionPendingTasks = (section: SectionProps): UserTasks[] => {
