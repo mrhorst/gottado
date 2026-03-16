@@ -100,17 +100,10 @@ const TasksScreen = () => {
   const sectionsWithTasks = (sections ?? []).filter((sec) =>
     tasks.some((t) => t.sectionName === sec.name)
   )
-  const sortedSections = [...sectionsWithTasks].sort((a, b) => {
-    const aPending = tasks.filter((t) => t.sectionName === a.name && !t.complete).length
-    const bPending = tasks.filter((t) => t.sectionName === b.name && !t.complete).length
-    if ((aPending === 0) !== (bPending === 0)) return aPending === 0 ? 1 : -1
-    if (aPending !== bPending) return bPending - aPending
-    return a.name.localeCompare(b.name)
-  })
-  const activeSections = sortedSections.filter(
+  const activeSections = sectionsWithTasks.filter(
     (sec) => tasks.some((t) => t.sectionName === sec.name && !t.complete)
   )
-  const completedSections = sortedSections.filter(
+  const completedSections = sectionsWithTasks.filter(
     (sec) => !tasks.some((t) => t.sectionName === sec.name && !t.complete)
   )
 
@@ -212,6 +205,8 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
   const total = sectionTotalTasks(section)
 
   const [showCompleted, setShowCompleted] = useState(false)
+  const [showOneTime, setShowOneTime] = useState(true)
+  const [showRecurring, setShowRecurring] = useState(true)
 
   const launchCamera = useCallback(async (task: UserTasks) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
@@ -296,52 +291,78 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
 
       {oneTimePending.length > 0 && (
         <>
-          <View style={s.groupHeader}>
-            <Text style={s.groupHeaderText}>One-Time Tasks</Text>
-          </View>
-          {oneTimePending.map((task) => (
-            <SwipeableTaskItem
-              key={task.id}
-              task={task}
-              onToggle={handleToggle}
-              onOpenDetails={handleOpenDetails}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              done={false}
+          <Pressable style={s.groupHeader} onPress={() => setShowOneTime((prev) => !prev)}>
+            <Ionicons
+              name={showOneTime ? 'chevron-down' : 'chevron-forward'}
+              size={14}
+              color='#8e8e93'
             />
-          ))}
+            <Text style={s.groupHeaderText}>One-Time Tasks ({oneTimePending.length})</Text>
+          </Pressable>
+          {showOneTime && (
+            <Animated.View
+              entering={FadeIn.duration(180)}
+              exiting={FadeOut.duration(140)}
+              layout={LinearTransition.springify().damping(18).stiffness(170)}
+            >
+              {oneTimePending.map((task) => (
+                <SwipeableTaskItem
+                  key={task.id}
+                  task={task}
+                  onToggle={handleToggle}
+                  onOpenDetails={handleOpenDetails}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  done={false}
+                />
+              ))}
+            </Animated.View>
+          )}
         </>
       )}
 
       {recurringPending.length > 0 && (
         <>
-          <View style={s.groupHeader}>
-            <Text style={s.groupHeaderText}>Recurring Tasks</Text>
-          </View>
-          {RECURRENCE_ORDER.map((recurrence) => {
-            const recurrenceTasks = recurringPending.filter((task) => task.recurrence === recurrence)
-            if (recurrenceTasks.length === 0) return null
-            return (
-              <View key={recurrence}>
-                <View style={s.recurrenceGroupHeader}>
-                  <Text style={s.recurrenceGroupText}>
-                    {RECURRENCE_LABELS[recurrence]} Tasks
-                  </Text>
-                </View>
-                {recurrenceTasks.map((task) => (
-                  <SwipeableTaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={handleToggle}
-                    onOpenDetails={handleOpenDetails}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    done={false}
-                  />
-                ))}
-              </View>
-            )
-          })}
+          <Pressable style={s.groupHeader} onPress={() => setShowRecurring((prev) => !prev)}>
+            <Ionicons
+              name={showRecurring ? 'chevron-down' : 'chevron-forward'}
+              size={14}
+              color='#8e8e93'
+            />
+            <Text style={s.groupHeaderText}>Recurring Tasks ({recurringPending.length})</Text>
+          </Pressable>
+          {showRecurring && (
+            <Animated.View
+              entering={FadeIn.duration(180)}
+              exiting={FadeOut.duration(140)}
+              layout={LinearTransition.springify().damping(18).stiffness(170)}
+            >
+              {RECURRENCE_ORDER.map((recurrence) => {
+                const recurrenceTasks = recurringPending.filter((task) => task.recurrence === recurrence)
+                if (recurrenceTasks.length === 0) return null
+                return (
+                  <View key={recurrence}>
+                    <View style={s.recurrenceGroupHeader}>
+                      <Text style={s.recurrenceGroupText}>
+                        {RECURRENCE_LABELS[recurrence]} Tasks
+                      </Text>
+                    </View>
+                    {recurrenceTasks.map((task) => (
+                      <SwipeableTaskItem
+                        key={task.id}
+                        task={task}
+                        onToggle={handleToggle}
+                        onOpenDetails={handleOpenDetails}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        done={false}
+                      />
+                    ))}
+                  </View>
+                )
+              })}
+            </Animated.View>
+          )}
         </>
       )}
 
