@@ -149,8 +149,7 @@ const uploadImage = async (uri: string): Promise<string> => {
   } as unknown as Blob)
 
   const { data } = await api.post('/uploads', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    transformRequest: (d) => d,
+    headers: { 'Content-Type': undefined },
   })
   return data.url
 }
