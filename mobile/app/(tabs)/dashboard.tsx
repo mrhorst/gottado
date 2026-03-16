@@ -15,6 +15,7 @@ import {
   Text,
   View,
 } from 'react-native'
+import { Recurrence, UserTasks } from '@/services/taskService'
 
 const todayIso = () => new Date().toISOString().split('T')[0]
 
@@ -24,6 +25,74 @@ const greeting = () => {
   if (hour < 17) return 'Good afternoon'
   return 'Good evening'
 }
+
+const RECURRENCE_LABELS: Record<Recurrence, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  semi_annual: 'Semi Annual',
+  yearly: 'Yearly',
+}
+
+const RECURRENCE_WEIGHT: Record<Recurrence, number> = {
+  daily: 20,
+  weekly: 14,
+  monthly: 10,
+  quarterly: 8,
+  semi_annual: 6,
+  yearly: 4,
+}
+
+const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+const dateDiffDays = (from: Date, dueDate: string) => {
+  const due = new Date(`${dueDate}T00:00:00`)
+  return Math.floor((due.getTime() - startOfDay(from).getTime()) / 86_400_000)
+}
+
+const minutesUntilDeadlineToday = (task: UserTasks, now: Date) => {
+  if (!task.deadlineTime) return null
+  const [h, m] = task.deadlineTime.split(':').map(Number)
+  const deadline = new Date(now)
+  deadline.setHours(h, m, 0, 0)
+  return Math.floor((deadline.getTime() - now.getTime()) / 60_000)
+}
+
+const taskPriorityScore = (task: UserTasks, now: Date) => {
+  let score = 0
+  const today = todayIso()
+
+  if (task.dueDate) {
+    if (task.dueDate < today) {
+      score += 160 + Math.abs(dateDiffDays(now, task.dueDate)) * 18
+    } else if (task.dueDate === today) {
+      score += 85
+      const minutesLeft = minutesUntilDeadlineToday(task, now)
+      if (minutesLeft != null) {
+        if (minutesLeft <= 0) score += 35
+        else if (minutesLeft <= 60) score += 28
+        else if (minutesLeft <= 180) score += 18
+      }
+    } else {
+      score += Math.max(0, 42 - dateDiffDays(now, task.dueDate) * 4)
+    }
+  } else if (task.recurrence) {
+    score += RECURRENCE_WEIGHT[task.recurrence]
+    const minutesLeft = minutesUntilDeadlineToday(task, now)
+    if (minutesLeft != null && minutesLeft <= 120) {
+      score += minutesLeft <= 0 ? 26 : 16
+    }
+  }
+
+  if (task.requiresPicture) score += 8
+  if (task.description) score += 3
+
+  return score
+}
+
+const recurrenceText = (task: UserTasks) =>
+  task.recurrence ? RECURRENCE_LABELS[task.recurrence] : null
 
 const Dashboard = () => {
   const router = useRouter()
@@ -36,6 +105,7 @@ const Dashboard = () => {
   if (!user || !org) return null
 
   const today = todayIso()
+  const now = new Date()
   const pending = tasks.filter((t) => !t.complete)
   const overdue = pending.filter((t) => !!t.dueDate && t.dueDate < today)
   const dueToday = pending.filter((t) => t.dueDate === today)
@@ -43,17 +113,14 @@ const Dashboard = () => {
 
   const prioritized = [...pending]
     .sort((a, b) => {
-      const aOverdue = a.dueDate && a.dueDate < today ? 1 : 0
-      const bOverdue = b.dueDate && b.dueDate < today ? 1 : 0
-      if (aOverdue !== bOverdue) return bOverdue - aOverdue
-
+      const scoreDelta = taskPriorityScore(b, now) - taskPriorityScore(a, now)
+      if (scoreDelta !== 0) return scoreDelta
       const aDate = a.dueDate ?? '9999-12-31'
       const bDate = b.dueDate ?? '9999-12-31'
       if (aDate !== bDate) return aDate.localeCompare(bDate)
-
       return a.title.localeCompare(b.title)
     })
-    .slice(0, 5)
+    .slice(0, 4)
 
   const pendingActions = dashboard?.pendingActionsCount ?? 0
   const averageScore = dashboard?.averageScore ?? null
@@ -132,8 +199,9 @@ const Dashboard = () => {
                     <Text style={s.taskTitle}>{task.title}</Text>
                     <Text style={s.taskMeta}>
                       {task.sectionName}
-                      {task.recurrence ? ` • ${task.recurrence}` : ''}
+                      {recurrenceText(task) ? ` • ${recurrenceText(task)}` : ''}
                       {task.dueDate ? ` • ${task.dueDate}` : ''}
+                      {task.requiresPicture ? ' • Photo' : ''}
                     </Text>
                   </View>
                 </View>
@@ -247,11 +315,11 @@ const s = StyleSheet.create({
     color: '#8e8e93',
   },
   focusCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fe',
     borderRadius: 16,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#e5e5ea',
+    borderColor: '#e6e9f8',
   },
   sectionTitle: {
     fontSize: 13,
@@ -269,10 +337,12 @@ const s = StyleSheet.create({
   kpiCard: {
     flexGrow: 1,
     minWidth: 120,
-    backgroundColor: '#f7f7fa',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ececf2',
   },
   kpiValue: {
     fontSize: 24,
@@ -304,10 +374,10 @@ const s = StyleSheet.create({
     color: '#fff',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#e5e5ea',
+    borderColor: '#ececf2',
     overflow: 'hidden',
   },
   cardHeaderRow: {
@@ -334,7 +404,7 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
+    borderBottomColor: '#f0f1f7',
   },
   lastRow: {
     borderBottomWidth: 0,
@@ -388,10 +458,12 @@ const s = StyleSheet.create({
   },
   auditMetric: {
     flex: 1,
-    backgroundColor: '#f7f7fa',
+    backgroundColor: '#f8f9fe',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ececf2',
   },
   auditValue: {
     fontSize: 22,
