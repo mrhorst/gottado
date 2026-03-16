@@ -60,6 +60,7 @@ export const updateSectionMemberSchema = z.object({
 const recurrenceEnum = z.enum([
   'daily', 'weekly', 'monthly', 'quarterly', 'semi_annual', 'yearly',
 ])
+const taskPriorityEnum = z.enum(['low', 'medium', 'high'])
 
 export const createTaskSchema = z.object({
   title: z.string().min(1).max(100),
@@ -68,6 +69,7 @@ export const createTaskSchema = z.object({
   deadlineTime: z.string().max(5).optional(),
   recurrence: recurrenceEnum.optional(),
   requiresPicture: z.boolean().optional(),
+  priority: taskPriorityEnum.optional(),
   sectionId: z.number().int().positive(),
 })
 
@@ -78,6 +80,7 @@ export const updateTaskSchema = z.object({
   deadlineTime: z.string().max(5).nullable().optional(),
   recurrence: recurrenceEnum.nullable().optional(),
   requiresPicture: z.boolean().optional(),
+  priority: taskPriorityEnum.optional(),
   complete: z.boolean().optional(),
   pictureUrl: z.string().max(500).nullable().optional(),
 })

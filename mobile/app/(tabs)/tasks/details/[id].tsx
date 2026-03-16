@@ -35,6 +35,12 @@ const resolveImageUrl = (url: string) => {
   return url
 }
 
+const PRIORITY_META = {
+  low: { label: 'Low Priority', color: '#34C759', bg: '#34C75915' },
+  medium: { label: 'Medium Priority', color: '#FF9500', bg: '#FF950015' },
+  high: { label: 'High Priority', color: '#FF3B30', bg: '#FF3B3015' },
+} as const
+
 const blurActiveElementOnWeb = () => {
   if (Platform.OS !== 'web') return
   const activeEl = document.activeElement
@@ -131,6 +137,26 @@ const TaskDetailsScreen = () => {
         <View style={s.card}>
           <Text style={s.taskTitle}>{task.title}</Text>
           <View style={s.chipsRow}>
+            <View
+              style={[
+                s.chip,
+                { backgroundColor: PRIORITY_META[task.priority ?? 'medium'].bg },
+              ]}
+            >
+              <Ionicons
+                name='flag-outline'
+                size={12}
+                color={PRIORITY_META[task.priority ?? 'medium'].color}
+              />
+              <Text
+                style={[
+                  s.chipText,
+                  { color: PRIORITY_META[task.priority ?? 'medium'].color },
+                ]}
+              >
+                {PRIORITY_META[task.priority ?? 'medium'].label}
+              </Text>
+            </View>
             {task.requiresPicture && (
               <View style={s.chip}>
                 <Ionicons name='camera-outline' size={12} color='#8e8e93' />

@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1773546155210,
+      "tag": "0000_audit-module",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773552451659,
+      "tag": "0001_happy_violations",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773584598853,
+      "tag": "0002_little_stryfe",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773622991207,
+      "tag": "0003_certain_impossible_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773669959068,
+      "tag": "0004_massive_valkyrie",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773690300000,
+      "tag": "0005_task_priority",
+      "breakpoints": true
+    }
+  ]
+}

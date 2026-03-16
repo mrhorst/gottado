@@ -18,7 +18,7 @@ import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useAuth } from '@/context/auth/AuthContext'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import type { Recurrence } from '@/services/taskService'
+import type { Recurrence, TaskPriority } from '@/services/taskService'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -29,6 +29,12 @@ const RECURRENCE_OPTIONS: { value: Recurrence; label: string; icon: string }[] =
   { value: 'quarterly', label: 'Quarterly', icon: 'time-outline' },
   { value: 'semi_annual', label: '6 Months', icon: 'hourglass-outline' },
   { value: 'yearly', label: 'Yearly', icon: 'repeat-outline' },
+]
+
+const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
+  { value: 'low', label: 'Low', color: '#34C759' },
+  { value: 'medium', label: 'Medium', color: '#FF9500' },
+  { value: 'high', label: 'High', color: '#FF3B30' },
 ]
 
 const TIME_SLOTS = (() => {
@@ -59,6 +65,7 @@ const NewTaskScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [requiresPicture, setRequiresPicture] = useState(false)
+  const [priority, setPriority] = useState<TaskPriority>('medium')
 
   const { user } = useAuth()
   const { sections } = useSectionQuery()
@@ -81,6 +88,7 @@ const NewTaskScreen = () => {
         dueDate: dueDate ? dueDate.toISOString().split('T')[0] : undefined,
         deadlineTime: deadlineTime || undefined,
         requiresPicture: requiresPicture || undefined,
+        priority,
       })
     } else {
       createTask({
@@ -91,6 +99,7 @@ const NewTaskScreen = () => {
         recurrence,
         deadlineTime: deadlineTime || undefined,
         requiresPicture: requiresPicture || undefined,
+        priority,
       })
     }
     router.back()
@@ -133,6 +142,30 @@ const NewTaskScreen = () => {
             multiline
             textAlignVertical='top'
           />
+        </View>
+
+        <View style={s.fieldGroup}>
+          <Text style={s.label}>Priority</Text>
+          <View style={s.priorityRow}>
+            {PRIORITY_OPTIONS.map((opt) => {
+              const selected = priority === opt.value
+              return (
+                <Pressable
+                  key={opt.value}
+                  style={[
+                    s.priorityChip,
+                    selected && { borderColor: opt.color, backgroundColor: `${opt.color}15` },
+                  ]}
+                  onPress={() => setPriority(opt.value)}
+                >
+                  <View style={[s.priorityDot, { backgroundColor: opt.color }]} />
+                  <Text style={[s.priorityChipText, selected && { color: opt.color }]}>
+                    {opt.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
         </View>
 
         {/* Mode toggle: One-time / Recurring */}
@@ -435,6 +468,32 @@ const s = StyleSheet.create({
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  priorityRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  priorityChip: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    backgroundColor: '#f7f7fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  priorityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  priorityChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8e8e93',
   },
   segmentedControl: {
     flexDirection: 'row',

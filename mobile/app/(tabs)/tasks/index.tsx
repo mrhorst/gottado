@@ -497,6 +497,12 @@ const RECURRENCE_LABELS: Record<string, string> = {
   yearly: 'Yearly',
 }
 
+const PRIORITY_STYLES = {
+  low: { bg: '#34C75915', text: '#34C759', label: 'Low' },
+  medium: { bg: '#FF950015', text: '#FF9500', label: 'Medium' },
+  high: { bg: '#FF3B3015', text: '#FF3B30', label: 'High' },
+} as const
+
 const RECURRENCE_ORDER: (keyof typeof RECURRENCE_LABELS)[] = [
   'daily',
   'weekly',
@@ -549,6 +555,23 @@ const TaskItem = ({
         <Text style={done ? s.taskTitleDone : s.taskTitle}>{task.title}</Text>
         {/* Due date/time + recurrence info row */}
         <View style={s.metaRow}>
+          {!!task.priority && (
+            <View
+              style={[
+                s.priorityPill,
+                { backgroundColor: PRIORITY_STYLES[task.priority].bg },
+              ]}
+            >
+              <Text
+                style={[
+                  s.priorityText,
+                  { color: PRIORITY_STYLES[task.priority].text },
+                ]}
+              >
+                {PRIORITY_STYLES[task.priority].label}
+              </Text>
+            </View>
+          )}
           {task.recurrence && (
             <View style={s.recurrencePill}>
               <Ionicons name='repeat' size={11} color='#8e8e93' />
@@ -771,6 +794,15 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+  },
+  priorityPill: {
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  priorityText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   auditSourcePill: {
     flexDirection: 'row',
