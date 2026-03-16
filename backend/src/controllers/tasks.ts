@@ -48,6 +48,21 @@ const listTasks = async (
       .innerJoin(sectionMember, eq(section.id, sectionMember.sectionId))
       .where(and(eq(section.orgId, orgId), eq(sectionMember.userId, userId)))
 
+    // Auto-reset completed recurring tasks whose due date has passed
+    const today = new Date().toISOString().split('T')[0]
+    const resetPromises = tasks
+      .filter((t) => t.recurrence && t.complete && t.dueDate && t.dueDate < today)
+      .map(async (t) => {
+        const nextDue = getNextDueDate(t.dueDate, t.recurrence!)
+        await db
+          .update(task)
+          .set({ complete: false, dueDate: nextDue })
+          .where(eq(task.id, t.id))
+        t.complete = false
+        t.dueDate = nextDue
+      })
+    await Promise.all(resetPromises)
+
     res.send(tasks)
   } catch (err) {
     console.log(err)
@@ -153,9 +168,8 @@ const updateTask = async (
       const pictureUrl = req.body.pictureUrl || null
 
       if (existing.recurrence) {
-        // Recurring: log completion, then reset with next due date
-        const nextDue = getNextDueDate(existing.dueDate, existing.recurrence)
-
+        // Recurring: log completion, mark complete, keep current dueDate.
+        // The task will be auto-reset when the next due date arrives (at read time).
         const [updated] = await db.transaction(async (tx) => {
           await tx.insert(taskCompletion).values({
             taskId: existing.id,
@@ -170,8 +184,7 @@ const updateTask = async (
           return tx
             .update(task)
             .set({
-              complete: false,
-              dueDate: nextDue,
+              complete: true,
               lastCompletedAt: now,
             })
             .where(eq(task.id, Number(taskIdToBeUpdated)))
