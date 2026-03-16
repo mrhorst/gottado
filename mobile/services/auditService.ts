@@ -312,12 +312,7 @@ const uploadPhoto = async (
 
   const { data } = await api.post(
     `/audits/runs/${runId}/findings/${findingId}/photos`,
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
+    formData
   )
   return data
 }
@@ -386,14 +381,12 @@ const getPartnerSummary = async (
   return data
 }
 
-const exportPartnerCSV = async (startDate?: string, endDate?: string): Promise<Blob> => {
+const exportPartnerCSV = async (startDate?: string, endDate?: string): Promise<string> => {
   const params = new URLSearchParams()
   if (startDate) params.append('startDate', startDate)
   if (endDate) params.append('endDate', endDate)
   const query = params.toString() ? `?${params.toString()}` : ''
-  const { data } = await api.get(`/audits/reports/partner-summary.csv${query}`, {
-    responseType: 'blob',
-  })
+  const { data } = await api.get<string>(`/audits/reports/partner-summary.csv${query}`)
   return data
 }
 
