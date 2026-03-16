@@ -10,6 +10,8 @@ export type Recurrence =
   | 'semi_annual'
   | 'yearly'
 
+export type TaskPriority = 'low' | 'medium' | 'high'
+
 export interface UserTasks {
   description: string
   dueDate: string
@@ -22,6 +24,7 @@ export interface UserTasks {
   deadlineTime: string | null
   requiresPicture: boolean
   relevanceTag: string | null
+  priority?: TaskPriority | null
 }
 
 export interface TaskCompletion {
@@ -70,6 +73,7 @@ interface CreateTaskPayload {
   deadlineTime?: string
   recurrence?: Recurrence
   requiresPicture?: boolean
+  priority?: TaskPriority
 }
 
 const createNewTask = async (payload: CreateTaskPayload) => {
@@ -109,6 +113,7 @@ interface UpdateTaskPayload {
   deadlineTime?: string | null
   recurrence?: Recurrence | null
   requiresPicture?: boolean
+  priority?: TaskPriority
 }
 
 const updateTask = async (id: number, payload: UpdateTaskPayload) => {

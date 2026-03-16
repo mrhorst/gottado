@@ -8,6 +8,7 @@ import {
   uploadImage,
   UserTasks,
   Recurrence,
+  TaskPriority,
   UpdateTaskPayload,
 } from '../services/taskService'
 
@@ -55,6 +56,7 @@ export const useTasksMutation = () => {
       deadlineTime?: string
       recurrence?: Recurrence
       requiresPicture?: boolean
+      priority?: TaskPriority
     }) => createNewTask(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey })

@@ -86,6 +86,8 @@ const taskPriorityScore = (task: UserTasks, now: Date) => {
   }
 
   if (task.requiresPicture) score += 8
+  if (task.priority === 'high') score += 18
+  if (task.priority === 'medium') score += 8
   if (task.description) score += 3
 
   return score
@@ -200,6 +202,7 @@ const Dashboard = () => {
                     <Text style={s.taskMeta}>
                       {task.sectionName}
                       {recurrenceText(task) ? ` • ${recurrenceText(task)}` : ''}
+                      {task.priority ? ` • ${task.priority}` : ''}
                       {task.dueDate ? ` • ${task.dueDate}` : ''}
                       {task.requiresPicture ? ' • Photo' : ''}
                     </Text>

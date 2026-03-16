@@ -47,6 +47,10 @@ export const task = pgTable('tasks', {
   lastCompletedAt: timestamp('last_completed_at', { withTimezone: true }),
   deadlineTime: varchar('deadline_time', { length: 5 }), // HH:MM format, e.g. "16:00"
   requiresPicture: boolean('requires_picture').notNull().default(false),
+  priority: varchar({ length: 20 })
+    .notNull()
+    .default('medium')
+    .$type<'low' | 'medium' | 'high'>(),
 })
 
 export const taskCompletion = pgTable(
