@@ -1,3 +1,4 @@
+import * as ImageManipulator from 'expo-image-manipulator'
 import api from './api'
 import type {
   AuditTemplate,
@@ -303,9 +304,18 @@ const uploadPhoto = async (
   uri: string,
   filename: string
 ): Promise<AuditPhoto> => {
+  // Resize and compress before upload
+  const manipulated = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 1200 } }],
+    { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+  )
+
+  const fileUri = manipulated.uri.startsWith('file://') ? manipulated.uri : `file://${manipulated.uri}`
+
   const formData = new FormData()
   formData.append('photo', {
-    uri,
+    uri: fileUri,
     name: filename,
     type: 'image/jpeg',
   } as unknown as Blob)

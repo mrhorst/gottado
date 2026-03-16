@@ -1,3 +1,4 @@
+import * as ImageManipulator from 'expo-image-manipulator'
 import api from './api'
 
 export type Recurrence =
@@ -138,15 +139,22 @@ const completeTaskWithPicture = async (id: number, pictureUrl: string) => {
 }
 
 const uploadImage = async (uri: string): Promise<string> => {
-  const formData = new FormData()
-  const filename = uri.split('/').pop() || 'photo.jpg'
-  const ext = filename.split('.').pop()?.toLowerCase() || 'jpg'
-  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg'
-
-  formData.append('image', {
+  // Resize and compress the image before uploading
+  const manipulated = await ImageManipulator.manipulateAsync(
     uri,
+    [{ resize: { width: 1200 } }],
+    { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+  )
+
+  // Ensure file:// prefix for React Native file access
+  const fileUri = manipulated.uri.startsWith('file://') ? manipulated.uri : `file://${manipulated.uri}`
+  const filename = fileUri.split('/').pop() || 'photo.jpg'
+
+  const formData = new FormData()
+  formData.append('image', {
+    uri: fileUri,
     name: filename,
-    type: mimeType,
+    type: 'image/jpeg',
   } as unknown as Blob)
 
   const { data } = await api.post<{ url: string }>('/uploads', formData)
