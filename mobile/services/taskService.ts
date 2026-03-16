@@ -149,7 +149,9 @@ const uploadImage = async (uri: string): Promise<string> => {
     type: mimeType,
   } as unknown as Blob)
 
-  const { data } = await api.post('/uploads', formData)
+  const { data } = await api.post('/uploads', formData, {
+    transformRequest: (d: unknown) => d,
+  })
   return data.url
 }
 
