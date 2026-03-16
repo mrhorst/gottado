@@ -5,18 +5,19 @@ import { Stack, useRouter, useSegments } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 import { colors } from '@/styles/theme'
+import { baseStackScreenOptions } from '@/styles/navigation'
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useEffect } from 'react'
 import { Text, TextInput } from 'react-native'
+import WorkspaceProvider, {
+  useWorkspace,
+} from '@/context/workspace/WorkspaceContext'
 
 // Prevent OS-level font scaling from breaking layouts
 if ((Text as any).defaultProps == null) (Text as any).defaultProps = {}
 ;(Text as any).defaultProps.allowFontScaling = false
 if ((TextInput as any).defaultProps == null) (TextInput as any).defaultProps = {}
 ;(TextInput as any).defaultProps.allowFontScaling = false
-import WorkspaceProvider, {
-  useWorkspace,
-} from '@/context/workspace/WorkspaceContext'
 
 const AppTheme = {
   ...DefaultTheme,
@@ -48,7 +49,7 @@ const RootLayoutNav = () => {
   }, [user, segments, router, activeOrgId])
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ ...baseStackScreenOptions, headerShown: false }}>
       <Stack.Screen name='(tabs)' />
       <Stack.Screen name='(auth)' />
       <Stack.Screen

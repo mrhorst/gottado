@@ -1,8 +1,9 @@
 import { Stack } from 'expo-router'
+import { baseStackScreenOptions } from '@/styles/navigation'
 
 const ActionItemsLayout = () => {
   return (
-    <Stack screenOptions={{ headerShown: true }}>
+    <Stack screenOptions={{ ...baseStackScreenOptions, headerShown: true }}>
       <Stack.Screen
         name='index'
         options={{ title: 'Action Items', headerLargeTitle: true }}

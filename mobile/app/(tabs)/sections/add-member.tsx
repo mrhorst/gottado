@@ -3,7 +3,6 @@ import {
   MembershipRoles,
   SectionNonMembers,
 } from '@/hooks/useMembershipQuery'
-import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useMembershipMutation } from '@/hooks/useMembershipMutation'
 import {
   ActivityIndicator,
@@ -15,8 +14,8 @@ import {
   View,
 } from 'react-native'
 import { useState } from 'react'
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { colors, spacing, typography } from '@/styles/theme'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { colors, spacing } from '@/styles/theme'
 import { Ionicons } from '@expo/vector-icons'
 
 const ROLES: MembershipRoles[] = ['editor', 'viewer']
@@ -26,10 +25,8 @@ const AddSectionMemberScreen = () => {
   const sectionId = Number(id)
   const router = useRouter()
 
-  const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading } = useMembershipQuery()
   const { subscribeMember } = useMembershipMutation()
-  const section = sections?.find((s) => s.id === sectionId)
 
   const nonSectionMembers = sectionMembersResponse?.nonMembers ?? []
 
@@ -54,8 +51,6 @@ const AddSectionMemberScreen = () => {
 
   return (
     <View style={s.container}>
-      <Stack.Screen options={{ title: `Add to ${section?.name ?? 'Section'}` }} />
-
       {/* Search */}
       <View style={s.searchBar}>
         <Ionicons name='search' size={18} color='#8e8e93' />

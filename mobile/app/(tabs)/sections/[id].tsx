@@ -16,10 +16,9 @@ import {
   SectionNonMembers,
   useMembershipQuery,
 } from '@/hooks/useMembershipQuery'
-import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useMembershipMutation } from '@/hooks/useMembershipMutation'
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { colors, spacing, typography } from '@/styles/theme'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { colors, spacing } from '@/styles/theme'
 import { Ionicons } from '@expo/vector-icons'
 
 const ROLES: MembershipRoles[] = ['editor', 'viewer']
@@ -42,11 +41,8 @@ const SectionDetailScreen = () => {
   const router = useRouter()
   const sectionId = Number(id)
 
-  const { sections } = useSectionQuery()
   const { sectionMembersResponse, isLoading, isError } = useMembershipQuery()
   const { unsubscribeMember, updateMember } = useMembershipMutation()
-
-  const section = sections?.find((s) => s.id === sectionId)
 
   const [editingUser, setEditingUser] = useState<SectionMembers | null>(null)
 
@@ -102,8 +98,6 @@ const SectionDetailScreen = () => {
 
   return (
     <View style={s.container}>
-      <Stack.Screen options={{ title: section?.name ?? 'Section' }} />
-
       <SectionList<SectionMembers | SectionNonMembers>
         sections={groupedMembers}
         keyExtractor={(item) =>
