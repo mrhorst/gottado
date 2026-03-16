@@ -1,6 +1,8 @@
 import {
   ActivityIndicator,
+  Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, typography } from '@/styles/theme'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useTaskHistoryQuery } from '@/hooks/useTaskHistoryQuery'
+import { useTasksMutation } from '@/hooks/useTasksMutation'
+import * as ImagePicker from 'expo-image-picker'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || ''
 
@@ -37,12 +41,65 @@ const TaskDetailsScreen = () => {
   const router = useRouter()
   const { tasks, isLoading } = useTasksQuery()
   const { completions, isLoading: historyLoading } = useTaskHistoryQuery(taskId)
+  const { toggleCompleteAsync, completeWithPicture, isTogglingComplete, isUploadingPicture } =
+    useTasksMutation()
 
   const task = tasks.find((t) => t.id === taskId)
   const photoCompletions = useMemo(
     () => completions.filter((c) => !!c.pictureUrl),
     [completions]
   )
+  const isSubmitting = isTogglingComplete || isUploadingPicture
+
+  const pickCompletionImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Camera access is required to complete this task.')
+        return null
+      }
+      const cameraResult = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      })
+      if (cameraResult.canceled || !cameraResult.assets?.[0]?.uri) return null
+      return cameraResult.assets[0].uri
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    })
+    if (pickerResult.canceled || !pickerResult.assets?.[0]?.uri) return null
+    return pickerResult.assets[0].uri
+  }
+
+  const handleComplete = async () => {
+    if (!task) return
+    try {
+      if (task.requiresPicture) {
+        const imageUri = await pickCompletionImage()
+        if (!imageUri) return
+        await completeWithPicture({ id: task.id, imageUri })
+      } else {
+        await toggleCompleteAsync({ id: task.id, complete: true })
+      }
+      router.replace('/(tabs)/tasks')
+    } catch {
+      Alert.alert('Unable to complete task', 'Please try again.')
+    }
+  }
+
+  const handleMarkIncomplete = async () => {
+    if (!task) return
+    try {
+      await toggleCompleteAsync({ id: task.id, complete: false })
+    } catch {
+      Alert.alert('Unable to update task', 'Please try again.')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -114,8 +171,29 @@ const TaskDetailsScreen = () => {
 
       <View style={s.footer}>
         <Pressable
+          style={[s.completeButton, task.complete && s.incompleteButton]}
+          onPress={task.complete ? handleMarkIncomplete : handleComplete}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size='small' color='#fff' />
+          ) : (
+            <>
+              <Ionicons
+                name={task.complete ? 'close-circle-outline' : 'checkmark-circle-outline'}
+                size={18}
+                color='#fff'
+              />
+              <Text style={s.completeButtonText}>
+                {task.complete ? 'Mark Incomplete' : 'Complete Task'}
+              </Text>
+            </>
+          )}
+        </Pressable>
+        <Pressable
           style={s.editButton}
           onPress={() => router.push(`/(tabs)/tasks/${taskId}`)}
+          disabled={isSubmitting}
         >
           <Ionicons name='create-outline' size={18} color='#fff' />
           <Text style={s.editButtonText}>Edit Task</Text>
@@ -220,6 +298,23 @@ const s = StyleSheet.create({
     borderTopColor: '#e5e5ea',
     padding: spacing.md,
     paddingBottom: spacing.xl,
+    gap: spacing.sm,
+  },
+  completeButton: {
+    backgroundColor: '#34C759',
+    borderRadius: 12,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  incompleteButton: {
+    backgroundColor: '#8e8e93',
+  },
+  completeButtonText: {
+    ...typography.button,
+    color: '#fff',
   },
   editButton: {
     backgroundColor: colors.primary,

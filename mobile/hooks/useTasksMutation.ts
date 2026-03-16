@@ -100,10 +100,12 @@ export const useTasksMutation = () => {
 
   return {
     toggleComplete: toggleCompleteMutation.mutate,
+    toggleCompleteAsync: toggleCompleteMutation.mutateAsync,
     createTask: createTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     completeWithPicture: completeWithPictureMutation.mutateAsync,
+    isTogglingComplete: toggleCompleteMutation.isPending,
     isUploadingPicture: completeWithPictureMutation.isPending,
   }
 }
