@@ -79,6 +79,7 @@ const TasksScreen = () => {
     useTasksQuery()
   const { width } = useWindowDimensions()
   const isWide = width > 700
+  const [showCompletedSections, setShowCompletedSections] = useState(false)
 
   const isLoading = sectionsLoading || tasksLoading
 
@@ -96,6 +97,22 @@ const TasksScreen = () => {
   const completedCount = allCompletedTasks.length
   const pendingCount = allPendingTasks.length
   const progress = totalTasks > 0 ? completedCount / totalTasks : 0
+  const sectionsWithTasks = (sections ?? []).filter((sec) =>
+    tasks.some((t) => t.sectionName === sec.name)
+  )
+  const sortedSections = [...sectionsWithTasks].sort((a, b) => {
+    const aPending = tasks.filter((t) => t.sectionName === a.name && !t.complete).length
+    const bPending = tasks.filter((t) => t.sectionName === b.name && !t.complete).length
+    if ((aPending === 0) !== (bPending === 0)) return aPending === 0 ? 1 : -1
+    if (aPending !== bPending) return bPending - aPending
+    return a.name.localeCompare(b.name)
+  })
+  const activeSections = sortedSections.filter(
+    (sec) => tasks.some((t) => t.sectionName === sec.name && !t.complete)
+  )
+  const completedSections = sortedSections.filter(
+    (sec) => !tasks.some((t) => t.sectionName === sec.name && !t.complete)
+  )
 
   if (!sections || sections.length === 0 || totalTasks === 0) {
     return (
@@ -132,15 +149,52 @@ const TasksScreen = () => {
       </View>
 
       <FlatList
-        data={sections.filter((sec) =>
-          tasks.some((t) => t.sectionName === sec.name)
-        )}
+        data={activeSections}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={[
           s.content,
           isWide && { maxWidth: 800, alignSelf: 'center', width: '100%' },
         ]}
-        renderItem={({ item }) => <SectionGroup section={item} />}
+        renderItem={({ item }) => (
+          <Animated.View layout={LinearTransition.springify().damping(18).stiffness(170)}>
+            <SectionGroup section={item} />
+          </Animated.View>
+        )}
+        ListFooterComponent={
+          completedSections.length > 0 ? (
+            <View style={s.completedSectionsWrap}>
+              <Pressable
+                style={s.completedSectionsToggle}
+                onPress={() => setShowCompletedSections((prev) => !prev)}
+              >
+                <Ionicons
+                  name={showCompletedSections ? 'chevron-down' : 'chevron-forward'}
+                  size={15}
+                  color='#8e8e93'
+                />
+                <Text style={s.completedSectionsText}>
+                  Completed Sections ({completedSections.length})
+                </Text>
+              </Pressable>
+              {showCompletedSections && (
+                <Animated.View
+                  entering={FadeInDown.duration(220)}
+                  exiting={FadeOutUp.duration(180)}
+                  layout={LinearTransition.springify().damping(18).stiffness(170)}
+                >
+                  {completedSections.map((sec) => (
+                    <Animated.View
+                      key={sec.id}
+                      layout={LinearTransition.springify().damping(18).stiffness(170)}
+                    >
+                      <SectionGroup section={sec} />
+                    </Animated.View>
+                  ))}
+                </Animated.View>
+              )}
+            </View>
+          ) : null
+        }
       />
       </View>
     </ScreenMotion>
@@ -225,6 +279,8 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
   if (total === 0) return null
 
   const allDone = pending.length === 0
+  const oneTimePending = pending.filter((task) => !task.recurrence)
+  const recurringPending = pending.filter((task) => !!task.recurrence)
 
   return (
     <View style={s.sectionCard}>
@@ -238,17 +294,56 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
         {allDone && <Text style={s.sectionDone}>All done</Text>}
       </View>
 
-      {pending.map((task) => (
-        <SwipeableTaskItem
-          key={task.id}
-          task={task}
-          onToggle={handleToggle}
-          onOpenDetails={handleOpenDetails}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          done={false}
-        />
-      ))}
+      {oneTimePending.length > 0 && (
+        <>
+          <View style={s.groupHeader}>
+            <Text style={s.groupHeaderText}>One-Time Tasks</Text>
+          </View>
+          {oneTimePending.map((task) => (
+            <SwipeableTaskItem
+              key={task.id}
+              task={task}
+              onToggle={handleToggle}
+              onOpenDetails={handleOpenDetails}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              done={false}
+            />
+          ))}
+        </>
+      )}
+
+      {recurringPending.length > 0 && (
+        <>
+          <View style={s.groupHeader}>
+            <Text style={s.groupHeaderText}>Recurring Tasks</Text>
+          </View>
+          {RECURRENCE_ORDER.map((recurrence) => {
+            const recurrenceTasks = recurringPending.filter((task) => task.recurrence === recurrence)
+            if (recurrenceTasks.length === 0) return null
+            return (
+              <View key={recurrence}>
+                <View style={s.recurrenceGroupHeader}>
+                  <Text style={s.recurrenceGroupText}>
+                    {RECURRENCE_LABELS[recurrence]} Tasks
+                  </Text>
+                </View>
+                {recurrenceTasks.map((task) => (
+                  <SwipeableTaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={handleToggle}
+                    onOpenDetails={handleOpenDetails}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    done={false}
+                  />
+                ))}
+              </View>
+            )
+          })}
+        </>
+      )}
 
       {completed.length > 0 && (
         <Pressable
@@ -364,6 +459,15 @@ const RECURRENCE_LABELS: Record<string, string> = {
   semi_annual: '6 months',
   yearly: 'Yearly',
 }
+
+const RECURRENCE_ORDER: (keyof typeof RECURRENCE_LABELS)[] = [
+  'daily',
+  'weekly',
+  'monthly',
+  'quarterly',
+  'semi_annual',
+  'yearly',
+]
 
 const TaskItem = ({
   task,
@@ -556,6 +660,30 @@ const s = StyleSheet.create({
     borderRadius: 6,
     overflow: 'hidden',
   },
+  groupHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  groupHeaderText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#8e8e93',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  recurrenceGroupHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: 8,
+    paddingBottom: 3,
+  },
+  recurrenceGroupText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#a0a0a7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -682,6 +810,21 @@ const s = StyleSheet.create({
     fontSize: 13,
     color: '#8e8e93',
     fontWeight: '500',
+  },
+  completedSectionsWrap: {
+    marginTop: spacing.sm,
+  },
+  completedSectionsToggle: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  completedSectionsText: {
+    fontSize: 13,
+    color: '#8e8e93',
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
