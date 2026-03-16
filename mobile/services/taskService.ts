@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import api from './api'
 
 export type Recurrence =
@@ -149,9 +150,22 @@ const uploadImage = async (uri: string): Promise<string> => {
     type: mimeType,
   } as unknown as Blob)
 
-  const { data } = await api.post('/uploads', formData, {
-    transformRequest: (d: unknown) => d,
+  // Use fetch directly — axios mangles FormData in React Native
+  const token = await AsyncStorage.getItem('auth_token')
+  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/uploads`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
   })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
+    throw new Error(err.error || `Upload failed (HTTP ${res.status})`)
+  }
+
+  const data = await res.json()
   return data.url
 }
 
