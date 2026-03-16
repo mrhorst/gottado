@@ -3,7 +3,6 @@ import {
   Alert,
   Image,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +16,9 @@ import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useTaskHistoryQuery } from '@/hooks/useTaskHistoryQuery'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import * as ImagePicker from 'expo-image-picker'
+import AppCard from '@/components/ui/AppCard'
+import AppButton from '@/components/ui/AppButton'
+import PriorityBadge from '@/components/ui/PriorityBadge'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || ''
 
@@ -34,12 +36,6 @@ const resolveImageUrl = (url: string) => {
   if (url.startsWith('/')) return `${API_URL}${url}`
   return url
 }
-
-const PRIORITY_META = {
-  low: { label: 'Low Priority', color: '#34C759', bg: '#34C75915' },
-  medium: { label: 'Medium Priority', color: '#FF9500', bg: '#FF950015' },
-  high: { label: 'High Priority', color: '#FF3B30', bg: '#FF3B3015' },
-} as const
 
 const blurActiveElementOnWeb = () => {
   if (Platform.OS !== 'web') return
@@ -134,29 +130,10 @@ const TaskDetailsScreen = () => {
   return (
     <View style={s.container}>
       <ScrollView contentContainerStyle={s.content}>
-        <View style={s.card}>
+        <AppCard>
           <Text style={s.taskTitle}>{task.title}</Text>
           <View style={s.chipsRow}>
-            <View
-              style={[
-                s.chip,
-                { backgroundColor: PRIORITY_META[task.priority ?? 'medium'].bg },
-              ]}
-            >
-              <Ionicons
-                name='flag-outline'
-                size={12}
-                color={PRIORITY_META[task.priority ?? 'medium'].color}
-              />
-              <Text
-                style={[
-                  s.chipText,
-                  { color: PRIORITY_META[task.priority ?? 'medium'].color },
-                ]}
-              >
-                {PRIORITY_META[task.priority ?? 'medium'].label}
-              </Text>
-            </View>
+            <PriorityBadge priority={task.priority} />
             {task.requiresPicture && (
               <View style={s.chip}>
                 <Ionicons name='camera-outline' size={12} color='#8e8e93' />
@@ -170,16 +147,16 @@ const TaskDetailsScreen = () => {
               </View>
             )}
           </View>
-        </View>
+        </AppCard>
 
-        <View style={s.card}>
+        <AppCard>
           <Text style={s.blockTitle}>Description</Text>
           <Text style={task.description ? s.bodyText : s.emptyText}>
             {task.description || 'No instructions added for this task yet.'}
           </Text>
-        </View>
+        </AppCard>
 
-        <View style={s.card}>
+        <AppCard>
           <Text style={s.blockTitle}>Completion Photos</Text>
           {historyLoading ? (
             <ActivityIndicator size='small' color={colors.primary} />
@@ -199,38 +176,30 @@ const TaskDetailsScreen = () => {
               ))}
             </View>
           )}
-        </View>
+        </AppCard>
       </ScrollView>
 
       <View style={s.footer}>
-        <Pressable
-          style={[s.completeButton, task.complete && s.incompleteButton]}
+        <AppButton
+          label={task.complete ? 'Mark Incomplete' : 'Complete Task'}
           onPress={task.complete ? handleMarkIncomplete : handleComplete}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator size='small' color='#fff' />
-          ) : (
-            <>
-              <Ionicons
-                name={task.complete ? 'close-circle-outline' : 'checkmark-circle-outline'}
-                size={18}
-                color='#fff'
-              />
-              <Text style={s.completeButtonText}>
-                {task.complete ? 'Mark Incomplete' : 'Complete Task'}
-              </Text>
-            </>
-          )}
-        </Pressable>
-        <Pressable
-          style={s.editButton}
+          tone={task.complete ? 'neutral' : 'success'}
+          loading={isSubmitting}
+          icon={
+            <Ionicons
+              name={task.complete ? 'close-circle-outline' : 'checkmark-circle-outline'}
+              size={18}
+              color='#fff'
+            />
+          }
+        />
+        <AppButton
+          label='Edit Task'
           onPress={() => router.push(`/(tabs)/tasks/${taskId}`)}
+          tone='primary'
           disabled={isSubmitting}
-        >
-          <Ionicons name='create-outline' size={18} color='#fff' />
-          <Text style={s.editButtonText}>Edit Task</Text>
-        </Pressable>
+          icon={<Ionicons name='create-outline' size={18} color='#fff' />}
+        />
       </View>
     </View>
   )
@@ -249,14 +218,6 @@ const s = StyleSheet.create({
     padding: spacing.md,
     paddingBottom: 110,
     gap: spacing.md,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
-    padding: spacing.md,
-    gap: spacing.sm,
   },
   taskTitle: {
     ...typography.h3,
@@ -332,35 +293,6 @@ const s = StyleSheet.create({
     padding: spacing.md,
     paddingBottom: spacing.xl,
     gap: spacing.sm,
-  },
-  completeButton: {
-    backgroundColor: '#34C759',
-    borderRadius: 12,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  incompleteButton: {
-    backgroundColor: '#8e8e93',
-  },
-  completeButtonText: {
-    ...typography.button,
-    color: '#fff',
-  },
-  editButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  editButtonText: {
-    ...typography.button,
-    color: '#fff',
   },
 })
 

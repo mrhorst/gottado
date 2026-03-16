@@ -14,11 +14,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
-import { colors, spacing, typography } from '@/styles/theme'
+import { colors, spacing } from '@/styles/theme'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import type { Recurrence, TaskActivity, TaskPriority } from '@/services/taskService'
 import { getTaskActivities } from '@/services/taskService'
+import AppButton from '@/components/ui/AppButton'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -462,25 +463,13 @@ const EditTaskScreen = () => {
 
       {/* Save button */}
       <View style={s.footer}>
-        <Pressable
-          style={[s.saveButton, !isValid && s.saveButtonDisabled]}
+        <AppButton
+          label='Save Changes'
           onPress={handleSave}
+          tone='primary'
           disabled={!isValid}
-        >
-          <Ionicons
-            name='checkmark-circle'
-            size={20}
-            color={isValid ? '#fff' : '#c7c7cc'}
-          />
-          <Text
-            style={[
-              s.saveButtonText,
-              !isValid && s.saveButtonTextDisabled,
-            ]}
-          >
-            Save Changes
-          </Text>
-        </Pressable>
+          icon={<Ionicons name='checkmark-circle' size={20} color='#fff' />}
+        />
       </View>
     </KeyboardAvoidingView>
   )
@@ -564,11 +553,7 @@ const s = StyleSheet.create({
   },
   segmentActive: {
     backgroundColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    boxShadow: '0px 2px 4px rgba(10, 132, 255, 0.30)',
   },
   segmentText: {
     fontSize: 14,
@@ -689,22 +674,6 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e5e5ea',
   },
-  saveButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#e5e5ea',
-  },
-  saveButtonText: {
-    ...typography.button,
-    color: '#fff',
-  },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -720,9 +689,6 @@ const s = StyleSheet.create({
     color: '#8e8e93',
     marginTop: 2,
     marginLeft: 4,
-  },
-  saveButtonTextDisabled: {
-    color: '#c7c7cc',
   },
   activityList: {
     backgroundColor: '#fff',
