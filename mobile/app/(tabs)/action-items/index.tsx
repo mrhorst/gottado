@@ -18,7 +18,7 @@ import { colors, spacing, typography } from '@/styles/theme'
 import { useActionItemsQuery } from '@/hooks/useActionItemsQuery'
 import { useActionItemsMutation } from '@/hooks/useActionItemsMutation'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
-import type { ActionItem, Severity } from '@/types/audit'
+import type { ActionItem, Recurrence, Severity } from '@/types/audit'
 import type { SectionProps } from '@/types/section'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { SharedValue } from 'react-native-reanimated'
@@ -224,6 +224,8 @@ const PromoteModal = ({
   const [title, setTitle] = useState(item.title)
   const [description, setDescription] = useState(item.description || '')
   const [dueDate, setDueDate] = useState('')
+  const [deadlineTime, setDeadlineTime] = useState('')
+  const [recurrence, setRecurrence] = useState<Recurrence | null>(item.recurrence ?? null)
 
   const writableSections = sections?.filter((s) => s.role !== 'viewer') ?? []
 
@@ -237,6 +239,8 @@ const PromoteModal = ({
           title: title.trim() || undefined,
           description: description.trim() || undefined,
           dueDate: dueDate || undefined,
+          deadlineTime: deadlineTime || undefined,
+          recurrence,
         },
       })
       onClose()
@@ -305,6 +309,47 @@ const PromoteModal = ({
               placeholder='YYYY-MM-DD'
               placeholderTextColor='#c7c7cc'
             />
+          </View>
+
+          {/* Deadline Time */}
+          <View style={s.fieldGroup}>
+            <Text style={s.label}>Deadline Time (optional)</Text>
+            <TextInput
+              style={s.input}
+              value={deadlineTime}
+              onChangeText={setDeadlineTime}
+              placeholder='HH:MM'
+              placeholderTextColor='#c7c7cc'
+            />
+          </View>
+
+          {/* Recurrence */}
+          <View style={s.fieldGroup}>
+            <Text style={s.label}>Recurrence</Text>
+            <View style={s.recurrenceOptions}>
+              <Pressable
+                style={[s.recurrenceChip, !recurrence && s.recurrenceChipSelected]}
+                onPress={() => setRecurrence(null)}
+              >
+                <Text style={[s.recurrenceChipText, !recurrence && s.recurrenceChipTextSelected]}>
+                  One-time
+                </Text>
+              </Pressable>
+              {Object.entries(RECURRENCE_LABELS).map(([key, label]) => {
+                const isSelected = recurrence === key
+                return (
+                  <Pressable
+                    key={key}
+                    style={[s.recurrenceChip, isSelected && s.recurrenceChipSelected]}
+                    onPress={() => setRecurrence(key as Recurrence)}
+                  >
+                    <Text style={[s.recurrenceChipText, isSelected && s.recurrenceChipTextSelected]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                )
+              })}
+            </View>
           </View>
 
           {/* Section picker */}
@@ -551,6 +596,32 @@ const s = StyleSheet.create({
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  recurrenceOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  recurrenceChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  recurrenceChipSelected: {
+    backgroundColor: colors.primary + '15',
+    borderColor: colors.primary,
+  },
+  recurrenceChipText: {
+    fontSize: 14,
+    color: '#8e8e93',
+    fontWeight: '500',
+  },
+  recurrenceChipTextSelected: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   sectionList: {
     backgroundColor: '#fff',
