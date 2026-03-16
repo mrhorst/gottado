@@ -1,6 +1,15 @@
 import { Ionicons } from '@expo/vector-icons'
-import { Tabs } from 'expo-router'
+import { Link, Tabs } from 'expo-router'
 import { colors } from '@/styles/theme'
+import { Pressable } from 'react-native'
+
+const headerActionStyle = {
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+}
 
 export default function TabLayout() {
   return (
@@ -18,8 +27,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name='dashboard'
         options={{
-          headerShown: false,
-          title: 'Dashboard',
+          headerShown: true,
+          title: '',
+          headerLeft: () => (
+            <Link href='/select-org' asChild>
+              <Pressable
+                hitSlop={8}
+                style={[headerActionStyle, { backgroundColor: '#f2f2f7' }]}
+              >
+                <Ionicons name='business-outline' size={16} color={colors.text} />
+              </Pressable>
+            </Link>
+          ),
+          headerRight: () => (
+            <Link href='/(tabs)/tasks/new' asChild>
+              <Pressable
+                hitSlop={8}
+                style={[headerActionStyle, { backgroundColor: colors.primary }]}
+              >
+                <Ionicons name='add' size={18} color='#fff' />
+              </Pressable>
+            </Link>
+          ),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
