@@ -387,25 +387,13 @@ export default function PartnerReport() {
 
   const handleExport = useCallback(async () => {
     try {
-      const blob = await exportPartnerCSV(dates.start, dates.end)
-      
-      // Convert blob to base64 for sharing
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64 = reader.result as string
-        const base64Data = base64.split(',')[1]
-        
-        const fileUri = FileSystem.cacheDirectory + `partner-report-${dates.start}.csv`
-        await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-          encoding: FileSystem.EncodingType.Base64,
-        })
-        
-        await Share.share({
-          url: fileUri,
-          title: `Partner Report ${dates.start} to ${dates.end}`,
-        })
-      }
-      reader.readAsDataURL(blob)
+      const csvText = await exportPartnerCSV(dates.start, dates.end)
+      const fileUri = FileSystem.cacheDirectory + `partner-report-${dates.start}.csv`
+      await FileSystem.writeAsStringAsync(fileUri, csvText)
+      await Share.share({
+        url: fileUri,
+        title: `Partner Report ${dates.start} to ${dates.end}`,
+      })
     } catch (error) {
       Alert.alert('Export Failed', 'Could not generate CSV export.')
     }
