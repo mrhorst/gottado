@@ -13,6 +13,7 @@ import type {
   Recurrence,
   PromoteActionPayload,
   AdHocFindingPayload,
+  ActionItem,
 } from '@/types/audit'
 
 // Templates
@@ -267,6 +268,13 @@ const getAuditDashboard = async (
   return data
 }
 
+// Action Items (org-wide)
+const getActionItems = async (status?: string): Promise<ActionItem[]> => {
+  const params = status ? `?status=${status}` : ''
+  const { data } = await api.get(`/audits/action-items${params}`)
+  return data
+}
+
 export {
   getTemplates,
   getTemplate,
@@ -294,6 +302,7 @@ export {
   updateFollowUp,
   completeFollowUp,
   getAuditDashboard,
+  getActionItems,
   seedPrestoTemplate,
   addAdHocFinding,
 }
