@@ -29,7 +29,12 @@ export const useTasksQuery = () => {
     if (t.recurrence && t.dueDate && t.dueDate > today && t.lastCompletedAt) return false
     return true
   })
-  const allCompletedTasks = tasks.filter((t) => t.complete)
+  const allCompletedTasks = tasks.filter((t) => {
+    if (t.complete) return true
+    // Show recently-completed recurring tasks in the completed section until next due date
+    if (t.recurrence && t.dueDate && t.dueDate > today && t.lastCompletedAt) return true
+    return false
+  })
 
   const sectionPendingTasks = (section: SectionProps): UserTasks[] => {
     return allPendingTasks.filter((t) => t.sectionName === section.name)

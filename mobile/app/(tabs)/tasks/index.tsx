@@ -162,6 +162,11 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
 
   const handleToggle = useCallback(
     (task: UserTasks) => {
+      // Recurring tasks waiting for their next due date can't be toggled
+      const today = new Date().toISOString().split('T')[0]
+      if (task.recurrence && !task.complete && task.dueDate && task.dueDate > today && task.lastCompletedAt) {
+        return
+      }
       // If completing a task that requires a picture, launch camera
       if (!task.complete && task.requiresPicture) {
         launchCamera(task)
