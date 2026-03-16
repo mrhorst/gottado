@@ -9,16 +9,16 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { useState } from 'react'
-import { SectionProps } from '@/types/section'
-import { useRouter } from 'expo-router'
+import { useEffect, useState } from 'react'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useQuery } from '@tanstack/react-query'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
+import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { colors, spacing, typography } from '@/styles/theme'
-import { useSectionQuery } from '@/hooks/useSectionQuery'
-import { useAuth } from '@/context/auth/AuthContext'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import type { Recurrence } from '@/services/taskService'
+import type { Recurrence, TaskActivity } from '@/services/taskService'
+import { getTaskActivities } from '@/services/taskService'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -48,10 +48,56 @@ const formatTime12h = (time24: string) => {
   return `${h12}:${String(m).padStart(2, '0')} ${suffix}`
 }
 
-const NewTaskScreen = () => {
+const activityIconName = (action: TaskActivity['action']): keyof typeof Ionicons.glyphMap => {
+  switch (action) {
+    case 'created': return 'add-circle'
+    case 'completed': return 'checkmark-circle'
+    case 'uncompleted': return 'arrow-undo'
+    case 'edited': return 'create'
+    case 'deleted': return 'trash'
+    default: return 'ellipse'
+  }
+}
+
+const activityLabel = (action: TaskActivity['action']) => {
+  switch (action) {
+    case 'created': return 'created this task'
+    case 'completed': return 'completed this task'
+    case 'uncompleted': return 'marked as incomplete'
+    case 'edited': return 'edited this task'
+    case 'deleted': return 'deleted this task'
+    default: return action
+  }
+}
+
+const activityColor = (action: TaskActivity['action']) => {
+  switch (action) {
+    case 'completed': return { backgroundColor: '#34C759' }
+    case 'uncompleted': return { backgroundColor: '#FF9500' }
+    case 'created': return { backgroundColor: '#007AFF' }
+    case 'edited': return { backgroundColor: '#5856D6' }
+    case 'deleted': return { backgroundColor: '#FF3B30' }
+    default: return { backgroundColor: '#8e8e93' }
+  }
+}
+
+const EditTaskScreen = () => {
+  const { id } = useLocalSearchParams()
+  const taskId = Number(id)
+  const router = useRouter()
+  const { tasks } = useTasksQuery()
+  const { updateTask } = useTasksMutation()
+
+  const task = tasks.find((t) => t.id === taskId)
+
+  const { data: activities } = useQuery({
+    queryKey: ['task-activities', taskId],
+    queryFn: () => getTaskActivities(taskId),
+    enabled: !!taskId,
+  })
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [selectedSection, setSelectedSection] = useState<SectionProps | null>(null)
   const [mode, setMode] = useState<TaskMode>('one_time')
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [deadlineTime, setDeadlineTime] = useState<string | null>(null)
@@ -60,43 +106,51 @@ const NewTaskScreen = () => {
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [requiresPicture, setRequiresPicture] = useState(false)
 
-  const { user } = useAuth()
-  const { sections } = useSectionQuery()
-  const router = useRouter()
-  const { createTask } = useTasksMutation()
+  useEffect(() => {
+    if (!task) return
+    setTitle(task.title)
+    setDescription(task.description || '')
+    setRequiresPicture(task.requiresPicture)
+    if (task.recurrence) {
+      setMode('recurring')
+      setRecurrence(task.recurrence)
+    } else {
+      setMode('one_time')
+      if (task.dueDate) setDueDate(new Date(task.dueDate + 'T00:00:00'))
+    }
+    if (task.deadlineTime) setDeadlineTime(task.deadlineTime)
+  }, [task])
 
-  if (!user) return null
+  if (!task) return null
 
-  const writableSections = sections?.filter((s) => s.role !== 'viewer') ?? []
-
-  const handleCreate = () => {
-    if (!title.trim() || !selectedSection) return
+  const handleSave = () => {
+    if (!title.trim()) return
 
     if (mode === 'one_time') {
-      createTask({
+      updateTask({
+        id: taskId,
         title: title.trim(),
         description: description.trim() || undefined,
-        sectionId: selectedSection.id,
-        userId: user.id,
-        dueDate: dueDate ? dueDate.toISOString().split('T')[0] : undefined,
-        deadlineTime: deadlineTime || undefined,
-        requiresPicture: requiresPicture || undefined,
+        dueDate: dueDate ? dueDate.toISOString().split('T')[0] : null,
+        deadlineTime: deadlineTime || null,
+        recurrence: null,
+        requiresPicture,
       })
     } else {
-      createTask({
+      updateTask({
+        id: taskId,
         title: title.trim(),
         description: description.trim() || undefined,
-        sectionId: selectedSection.id,
-        userId: user.id,
+        dueDate: null,
+        deadlineTime: deadlineTime || null,
         recurrence,
-        deadlineTime: deadlineTime || undefined,
-        requiresPicture: requiresPicture || undefined,
+        requiresPicture,
       })
     }
     router.back()
   }
 
-  const isValid = title.trim().length > 0 && selectedSection !== null
+  const isValid = title.trim().length > 0
 
   return (
     <KeyboardAvoidingView
@@ -117,7 +171,6 @@ const NewTaskScreen = () => {
             onChangeText={setTitle}
             placeholder='What needs to be done?'
             placeholderTextColor='#c7c7cc'
-            autoFocus
           />
         </View>
 
@@ -135,7 +188,7 @@ const NewTaskScreen = () => {
           />
         </View>
 
-        {/* Mode toggle: One-time / Recurring */}
+        {/* Mode toggle */}
         <View style={s.fieldGroup}>
           <Text style={s.label}>Schedule</Text>
           <View style={s.segmentedControl}>
@@ -205,7 +258,6 @@ const NewTaskScreen = () => {
                   value={dueDate ?? new Date()}
                   mode='date'
                   display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  minimumDate={new Date()}
                   onChange={(_, selectedDate) => {
                     if (Platform.OS === 'android') setShowDatePicker(false)
                     if (selectedDate) setDueDate(selectedDate)
@@ -325,75 +377,63 @@ const NewTaskScreen = () => {
           </View>
         </View>
 
-        {/* Section picker */}
+        {/* Section (read-only) */}
         <View style={s.fieldGroup}>
           <Text style={s.label}>Section</Text>
-          {writableSections.length === 0 ? (
-            <View style={s.emptyState}>
-              <Ionicons name='layers-outline' size={24} color='#c7c7cc' />
-              <Text style={s.emptyStateText}>
-                No sections available. Create a section first.
-              </Text>
-            </View>
-          ) : (
-            <View style={s.sectionList}>
-              {writableSections.map((sec) => {
-                const isSelected = selectedSection?.id === sec.id
-                return (
-                  <Pressable
-                    key={sec.id}
-                    style={[
-                      s.sectionOption,
-                      isSelected && s.sectionOptionSelected,
-                    ]}
-                    onPress={() => setSelectedSection(sec)}
-                  >
-                    <View style={s.sectionOptionLeft}>
-                      <View
-                        style={[
-                          s.radioOuter,
-                          isSelected && s.radioOuterSelected,
-                        ]}
-                      >
-                        {isSelected && <View style={s.radioInner} />}
-                      </View>
-                      <Text
-                        style={[
-                          s.sectionOptionText,
-                          isSelected && s.sectionOptionTextSelected,
-                        ]}
-                      >
-                        {sec.name}
-                      </Text>
-                    </View>
-                    <Text style={s.sectionRoleBadge}>{sec.role}</Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-          )}
+          <View style={s.readOnlyField}>
+            <Ionicons name='layers-outline' size={18} color='#8e8e93' />
+            <Text style={s.readOnlyText}>{task.sectionName}</Text>
+          </View>
         </View>
+
+        {/* Activity History */}
+        {activities && activities.length > 0 && (
+          <View style={s.fieldGroup}>
+            <Text style={s.label}>Activity History</Text>
+            <View style={s.activityList}>
+              {activities.map((activity) => (
+                <View key={activity.id} style={s.activityRow}>
+                  <View style={[s.activityIcon, activityColor(activity.action)]}>
+                    <Ionicons name={activityIconName(activity.action)} size={12} color='#fff' />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.activityText}>
+                      <Text style={{ fontWeight: '600' }}>{activity.userName}</Text>
+                      {' '}{activityLabel(activity.action)}
+                    </Text>
+                    <Text style={s.activityTime}>
+                      {new Date(activity.createdAt).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric',
+                        hour: 'numeric', minute: '2-digit',
+                      })}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Create button */}
+      {/* Save button */}
       <View style={s.footer}>
         <Pressable
-          style={[s.createButton, !isValid && s.createButtonDisabled]}
-          onPress={handleCreate}
+          style={[s.saveButton, !isValid && s.saveButtonDisabled]}
+          onPress={handleSave}
           disabled={!isValid}
         >
           <Ionicons
-            name='add-circle'
+            name='checkmark-circle'
             size={20}
             color={isValid ? '#fff' : '#c7c7cc'}
           />
           <Text
             style={[
-              s.createButtonText,
-              !isValid && s.createButtonTextDisabled,
+              s.saveButtonText,
+              !isValid && s.saveButtonTextDisabled,
             ]}
           >
-            Create Task
+            Save Changes
           </Text>
         </Pressable>
       </View>
@@ -552,82 +592,20 @@ const s = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
-  sectionList: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
-    overflow: 'hidden',
-  },
-  sectionOption: {
+  readOnlyField: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
-  },
-  sectionOptionSelected: {
-    backgroundColor: colors.primary + '08',
-  },
-  sectionOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#d1d1d6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: colors.primary,
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  sectionOptionText: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  sectionOptionTextSelected: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  sectionRoleBadge: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#8e8e93',
-    textTransform: 'uppercase',
+    gap: 10,
     backgroundColor: '#f2f2f7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  emptyState: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: spacing.xl,
-    alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: '#e5e5ea',
   },
-  emptyStateText: {
-    fontSize: 14,
+  readOnlyText: {
+    fontSize: 16,
     color: '#8e8e93',
-    textAlign: 'center',
   },
   footer: {
     position: 'absolute',
@@ -640,7 +618,7 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e5e5ea',
   },
-  createButton: {
+  saveButton: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -649,10 +627,10 @@ const s = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
   },
-  createButtonDisabled: {
+  saveButtonDisabled: {
     backgroundColor: '#e5e5ea',
   },
-  createButtonText: {
+  saveButtonText: {
     ...typography.button,
     color: '#fff',
   },
@@ -672,9 +650,41 @@ const s = StyleSheet.create({
     marginTop: 2,
     marginLeft: 4,
   },
-  createButtonTextDisabled: {
+  saveButtonTextDisabled: {
     color: '#c7c7cc',
+  },
+  activityList: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    overflow: 'hidden',
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f7',
+  },
+  activityIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activityText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  activityTime: {
+    fontSize: 11,
+    color: '#8e8e93',
+    marginTop: 1,
   },
 })
 
-export default NewTaskScreen
+export default EditTaskScreen
