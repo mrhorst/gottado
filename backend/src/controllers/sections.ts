@@ -25,7 +25,7 @@ const listSections = async (
   ]
 
   try {
-    const scopedQuery = getScopedSectionQuery(userId, orgId)
+    const scopedQuery = getScopedSectionQuery(userId)
 
     const active = await scopedQuery.where(
       and(...securityFilters, eq(section.active, true))
