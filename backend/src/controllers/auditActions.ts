@@ -101,7 +101,7 @@ const promoteAction = async (
   next: NextFunction
 ) => {
   const actionId = Number(req.params.id)
-  const { sectionId, title, description, dueDate, measurableCriteria } = req.body
+  const { sectionId, title, description, dueDate, deadlineTime, recurrence, measurableCriteria } = req.body
 
   try {
     const [action] = await db
@@ -139,9 +139,10 @@ const promoteAction = async (
           description: description ?? action.description,
           sectionId,
           dueDate: dueDate || null,
+          deadlineTime: deadlineTime || null,
           measurableCriteria: measurableCriteria || null,
           relevanceTag,
-          recurrence: action.recurrence,
+          recurrence: recurrence !== undefined ? recurrence : action.recurrence,
           complete: false,
         })
         .returning()

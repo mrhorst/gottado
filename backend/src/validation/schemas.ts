@@ -184,6 +184,11 @@ export const promoteActionSchema = z.object({
   title: z.string().min(1).max(100).optional(),
   description: z.string().max(255).optional(),
   dueDate: z.string().optional(),
+  deadlineTime: z.string().max(5).optional(),
+  recurrence: z
+    .enum(['daily', 'weekly', 'monthly', 'quarterly', 'semi_annual', 'yearly'])
+    .nullable()
+    .optional(),
   measurableCriteria: z.string().optional(),
 })
 
