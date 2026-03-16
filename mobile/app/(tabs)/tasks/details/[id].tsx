@@ -35,6 +35,12 @@ const resolveImageUrl = (url: string) => {
   return url
 }
 
+const blurActiveElementOnWeb = () => {
+  if (Platform.OS !== 'web') return
+  const activeEl = document.activeElement
+  if (activeEl instanceof HTMLElement) activeEl.blur()
+}
+
 const TaskDetailsScreen = () => {
   const { id } = useLocalSearchParams()
   const taskId = Number(id)
@@ -86,6 +92,7 @@ const TaskDetailsScreen = () => {
       } else {
         await toggleCompleteAsync({ id: task.id, complete: true })
       }
+      blurActiveElementOnWeb()
       router.replace('/(tabs)/tasks')
     } catch {
       Alert.alert('Unable to complete task', 'Please try again.')
