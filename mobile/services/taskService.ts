@@ -19,6 +19,7 @@ export interface UserTasks {
   lastCompletedAt: string | null
   deadlineTime: string | null
   requiresPicture: boolean
+  relevanceTag: string | null
 }
 
 export interface TaskCompletion {
