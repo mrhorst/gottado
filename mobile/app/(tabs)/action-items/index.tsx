@@ -37,6 +37,15 @@ const PRIORITY_LABELS: Record<Severity, string> = {
   critical: 'Critical',
 }
 
+const RECURRENCE_LABELS: Record<string, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  semi_annual: 'Semi-Annual',
+  yearly: 'Yearly',
+}
+
 const ActionItemsScreen = () => {
   const { actionItems, isLoading } = useActionItemsQuery()
   const { width } = useWindowDimensions()
@@ -178,6 +187,12 @@ const SwipeableActionItem = ({
               <Text style={s.metaText}>{item.auditName}</Text>
             </View>
             <Text style={s.metaText}>{auditDate}</Text>
+            {item.recurrence && (
+              <View style={s.recurrenceBadge}>
+                <Ionicons name='repeat-outline' size={11} color={colors.primary} />
+                <Text style={s.recurrenceText}>{RECURRENCE_LABELS[item.recurrence]}</Text>
+              </View>
+            )}
             {item.assignedUserName && (
               <View style={s.assigneeBadge}>
                 <Ionicons name='person-outline' size={11} color='#8e8e93' />
@@ -412,6 +427,20 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+  },
+  recurrenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: colors.primary + '12',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  recurrenceText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.primary,
   },
   metaText: {
     fontSize: 11,
