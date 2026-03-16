@@ -27,6 +27,7 @@ import {
 } from '@/controllers/auditFindings.ts'
 import {
   listActions,
+  listActionItems,
   createAction,
   updateAction,
   promoteAction,
@@ -92,7 +93,10 @@ auditsRouter.post('/runs/:runId/findings', validate(addAdHocFindingSchema), addA
 auditsRouter.put('/runs/:runId/findings/batch', validate(batchAssessFindingsSchema), batchAssessFindings)
 auditsRouter.put('/runs/:runId/findings/:findingId', validate(assessFindingSchema), assessFinding)
 
-// Actions
+// Action Items (org-wide)
+auditsRouter.get('/action-items', listActionItems)
+
+// Actions (run-scoped)
 auditsRouter.get('/runs/:runId/actions', listActions)
 auditsRouter.post('/runs/:runId/actions', validate(createActionSchema), createAction)
 auditsRouter.put('/actions/:id', validate(updateActionSchema), updateAction)
