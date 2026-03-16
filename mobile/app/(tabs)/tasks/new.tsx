@@ -13,12 +13,13 @@ import { useState } from 'react'
 import { SectionProps } from '@/types/section'
 import { useRouter } from 'expo-router'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
-import { colors, spacing, typography } from '@/styles/theme'
+import { colors, spacing } from '@/styles/theme'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useAuth } from '@/context/auth/AuthContext'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import type { Recurrence, TaskPriority } from '@/services/taskService'
+import AppButton from '@/components/ui/AppButton'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -410,25 +411,13 @@ const NewTaskScreen = () => {
 
       {/* Create button */}
       <View style={s.footer}>
-        <Pressable
-          style={[s.createButton, !isValid && s.createButtonDisabled]}
+        <AppButton
+          label='Create Task'
           onPress={handleCreate}
+          tone='primary'
           disabled={!isValid}
-        >
-          <Ionicons
-            name='add-circle'
-            size={20}
-            color={isValid ? '#fff' : '#c7c7cc'}
-          />
-          <Text
-            style={[
-              s.createButtonText,
-              !isValid && s.createButtonTextDisabled,
-            ]}
-          >
-            Create Task
-          </Text>
-        </Pressable>
+          icon={<Ionicons name='add-circle' size={20} color='#fff' />}
+        />
       </View>
     </KeyboardAvoidingView>
   )
@@ -512,11 +501,7 @@ const s = StyleSheet.create({
   },
   segmentActive: {
     backgroundColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    boxShadow: '0px 2px 4px rgba(10, 132, 255, 0.30)',
   },
   segmentText: {
     fontSize: 14,
@@ -699,22 +684,6 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e5e5ea',
   },
-  createButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-  },
-  createButtonDisabled: {
-    backgroundColor: '#e5e5ea',
-  },
-  createButtonText: {
-    ...typography.button,
-    color: '#fff',
-  },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -730,9 +699,6 @@ const s = StyleSheet.create({
     color: '#8e8e93',
     marginTop: 2,
     marginLeft: 4,
-  },
-  createButtonTextDisabled: {
-    color: '#c7c7cc',
   },
 })
 
