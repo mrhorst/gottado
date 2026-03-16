@@ -13,5 +13,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     backgroundColor: 'white',
+    fontSize: 16,
   },
 })
