@@ -46,7 +46,35 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
-const updateUser = async (_req: Request, _res: Response) => {}
+const updateUser = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = Number(req.user?.sub)
+  const { name, email } = req.body
+
+  try {
+    const updates: Record<string, unknown> = { updatedAt: new Date() }
+    if (name) updates.name = name
+    if (email) updates.email = email
+
+    const [updated] = await db
+      .update(user)
+      .set(updates)
+      .where(eq(user.id, userId))
+      .returning({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      })
+
+    if (!updated) return res.sendStatus(404)
+    res.send(updated)
+  } catch (err) {
+    next(err)
+  }
+}
 
 const deleteUser = async (
   req: AuthenticatedRequest,

@@ -17,6 +17,14 @@ const SectionsScreenLayout = () => {
         name='index'
         options={{ title: 'Sections', headerRight: () => <NewSection /> }}
       />
+      <Stack.Screen
+        name='[id]'
+        options={{ title: 'Members' }}
+      />
+      <Stack.Screen
+        name='add-member'
+        options={{ title: 'Add Member', presentation: 'modal' }}
+      />
     </Stack>
   )
 }
