@@ -150,6 +150,7 @@ const uploadImage = async (uri: string): Promise<string> => {
 
   const { data } = await api.post('/uploads', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    transformRequest: (d) => d,
   })
   return data.url
 }
