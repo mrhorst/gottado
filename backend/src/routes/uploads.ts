@@ -2,9 +2,16 @@ import { Router, Request, Response } from 'express'
 import multer from 'multer'
 import path from 'path'
 import crypto from 'crypto'
+import fs from 'fs'
+import type { Express } from 'express'
+
+const uploadDir = path.resolve(import.meta.dirname, '../../uploads')
+
+// Task photo uploads should work on fresh environments before any manual setup.
+fs.mkdirSync(uploadDir, { recursive: true })
 
 const storage = multer.diskStorage({
-  destination: path.resolve(import.meta.dirname, '../../uploads'),
+  destination: uploadDir,
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname)
     cb(null, `${crypto.randomUUID()}${ext}`)
@@ -25,11 +32,14 @@ const upload = multer({
 
 const router = Router()
 
-router.post('/', upload.single('image'), (req: Request, res: Response) => {
-  if (!req.file) {
+router.post('/', upload.any(), (req: Request, res: Response) => {
+  const files = (req.files as Express.Multer.File[] | undefined) ?? []
+  const uploadedFile = req.file ?? files[0]
+
+  if (!uploadedFile) {
     return res.status(400).send({ error: 'No image provided' })
   }
-  const url = `/uploads/${req.file.filename}`
+  const url = `/uploads/${uploadedFile.filename}`
   res.status(201).send({ url })
 })
 

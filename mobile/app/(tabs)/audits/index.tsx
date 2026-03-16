@@ -9,17 +9,14 @@ import {
 import { useRouter } from 'expo-router'
 import { useAuditDashboardQuery } from '@/hooks/useAuditDashboardQuery'
 import { colors, spacing, typography } from '@/styles/theme'
+import ScreenMotion from '@/components/ui/ScreenMotion'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-  },
-  heading: {
-    ...typography.h1,
-    marginBottom: spacing.lg,
+    paddingTop: spacing.md,
   },
   card: {
     backgroundColor: '#fff',
@@ -160,9 +157,11 @@ export default function AuditsHome() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        <ActivityIndicator size='large' color={colors.primary} />
-      </View>
+      <ScreenMotion>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ActivityIndicator size='large' color={colors.primary} />
+        </View>
+      </ScreenMotion>
     )
   }
 
@@ -170,8 +169,8 @@ export default function AuditsHome() {
   const previousZoneScores = dashboard?.previousZoneScores
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.heading}>Audits</Text>
+    <ScreenMotion>
+      <ScrollView style={styles.container}>
 
       {/* Average Score Card */}
       <View style={styles.card}>
@@ -293,6 +292,7 @@ export default function AuditsHome() {
           ))}
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </ScreenMotion>
   )
 }

@@ -1,4 +1,5 @@
 import * as ImageManipulator from 'expo-image-manipulator'
+import { Platform } from 'react-native'
 import api from './api'
 
 export type Recurrence =
@@ -30,6 +31,7 @@ export interface TaskCompletion {
   dueDate: string | null
   deadlineTime: string | null
   onTime: boolean | null
+  pictureUrl?: string | null
 }
 
 export interface DailySnapshot {
@@ -146,16 +148,28 @@ const uploadImage = async (uri: string): Promise<string> => {
     { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
   )
 
-  // Ensure file:// prefix for React Native file access
-  const fileUri = manipulated.uri.startsWith('file://') ? manipulated.uri : `file://${manipulated.uri}`
+  let fileUri = manipulated.uri
+  if (
+    Platform.OS !== 'web' &&
+    !fileUri.startsWith('file://') &&
+    !fileUri.startsWith('content://')
+  ) {
+    fileUri = `file://${fileUri}`
+  }
   const filename = fileUri.split('/').pop() || 'photo.jpg'
 
   const formData = new FormData()
-  formData.append('image', {
-    uri: fileUri,
-    name: filename,
-    type: 'image/jpeg',
-  } as unknown as Blob)
+  if (Platform.OS === 'web') {
+    const imageResponse = await fetch(fileUri)
+    const blob = await imageResponse.blob()
+    formData.append('image', blob, filename)
+  } else {
+    formData.append('image', {
+      uri: fileUri,
+      name: filename,
+      type: 'image/jpeg',
+    } as unknown as Blob)
+  }
 
   const { data } = await api.post<{ url: string }>('/uploads', formData)
   return data.url

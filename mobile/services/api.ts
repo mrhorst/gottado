@@ -56,9 +56,21 @@ async function request<T>(
   // Merge headers - config.headers takes precedence
   const headers: Record<string, string> = { ...authHeaders, ...config.headers }
 
-  // Detect FormData (instanceof + duck-type fallback for RN polyfill)
-  const isFormData = body instanceof FormData ||
-    (body && typeof body === 'object' && typeof (body as any).append === 'function' && typeof (body as any).getParts === 'function')
+  // Detect FormData across browser/RN/Expo runtimes.
+  const isFormData =
+    !!body &&
+    (
+      (typeof FormData !== 'undefined' && body instanceof FormData) ||
+      Object.prototype.toString.call(body) === '[object FormData]' ||
+      (
+        typeof body === 'object' &&
+        typeof (body as { append?: unknown }).append === 'function' &&
+        (
+          typeof (body as { getParts?: unknown }).getParts === 'function' ||
+          Array.isArray((body as { _parts?: unknown })._parts)
+        )
+      )
+    )
 
   // For FormData, let React Native set the Content-Type with multipart boundary
   if (isFormData) {

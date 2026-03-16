@@ -1,4 +1,5 @@
 import * as ImageManipulator from 'expo-image-manipulator'
+import { Platform } from 'react-native'
 import api from './api'
 import type {
   AuditTemplate,
@@ -19,12 +20,12 @@ import type {
 
 // Templates
 const getTemplates = async (): Promise<AuditTemplate[]> => {
-  const { data } = await api.get('/audits/templates')
+  const { data } = await api.get<'/audits/templates'>('/audits/templates')
   return data
 }
 
 const getTemplate = async (id: number): Promise<AuditTemplateDetail> => {
-  const { data } = await api.get(`/audits/templates/${id}`)
+  const { data } = await api.get<`/audits/templates/${id}`>(`/audits/templates/${id}`)
   return data
 }
 
@@ -104,12 +105,12 @@ const reorderCheckpoints = async (
 
 // Runs
 const getRuns = async (): Promise<AuditRunListItem[]> => {
-  const { data } = await api.get('/audits/runs')
+  const { data } = await api.get<'/audits/runs'>('/audits/runs')
   return data
 }
 
 const getRun = async (id: number): Promise<AuditRunDetail> => {
-  const { data } = await api.get(`/audits/runs/${id}`)
+  const { data } = await api.get<`/audits/runs/${id}`>(`/audits/runs/${id}`)
   return data
 }
 
@@ -168,7 +169,7 @@ const batchAssessFindings = async (
 
 // Actions
 const getActions = async (runId: number): Promise<AuditAction[]> => {
-  const { data } = await api.get(`/audits/runs/${runId}/actions`)
+  const { data } = await api.get<`/audits/runs/${runId}/actions`>(`/audits/runs/${runId}/actions`)
   return data
 }
 
@@ -230,7 +231,7 @@ const dismissAction = async (id: number): Promise<AuditAction> => {
 
 // Follow-ups
 const getFollowUps = async (runId: number): Promise<AuditFollowUp[]> => {
-  const { data } = await api.get(`/audits/runs/${runId}/follow-ups`)
+  const { data } = await api.get<`/audits/runs/${runId}/follow-ups`>(`/audits/runs/${runId}/follow-ups`)
   return data
 }
 
@@ -265,14 +266,14 @@ const getAuditDashboard = async (
   scoreLimit?: number
 ): Promise<AuditDashboardData> => {
   const params = scoreLimit ? `?scoreLimit=${scoreLimit}` : ''
-  const { data } = await api.get(`/audits/dashboard${params}`)
+  const { data } = await api.get<`/audits/dashboard${params}`>(`/audits/dashboard${params}`)
   return data
 }
 
 // Action Items (org-wide)
 const getActionItems = async (status?: string): Promise<ActionItem[]> => {
   const params = status ? `?status=${status}` : ''
-  const { data } = await api.get(`/audits/action-items${params}`)
+  const { data } = await api.get<`/audits/action-items${params}`>(`/audits/action-items${params}`)
   return data
 }
 
@@ -311,16 +312,29 @@ const uploadPhoto = async (
     { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
   )
 
-  const fileUri = manipulated.uri.startsWith('file://') ? manipulated.uri : `file://${manipulated.uri}`
+  let fileUri = manipulated.uri
+  if (
+    Platform.OS !== 'web' &&
+    !fileUri.startsWith('file://') &&
+    !fileUri.startsWith('content://')
+  ) {
+    fileUri = `file://${fileUri}`
+  }
 
   const formData = new FormData()
-  formData.append('photo', {
-    uri: fileUri,
-    name: filename,
-    type: 'image/jpeg',
-  } as unknown as Blob)
+  if (Platform.OS === 'web') {
+    const imageResponse = await fetch(fileUri)
+    const blob = await imageResponse.blob()
+    formData.append('photo', blob, filename)
+  } else {
+    formData.append('photo', {
+      uri: fileUri,
+      name: filename,
+      type: 'image/jpeg',
+    } as unknown as Blob)
+  }
 
-  const { data } = await api.post(
+  const { data } = await api.post<AuditPhoto>(
     `/audits/runs/${runId}/findings/${findingId}/photos`,
     formData
   )
@@ -387,7 +401,7 @@ const getPartnerSummary = async (
   if (startDate) params.append('startDate', startDate)
   if (endDate) params.append('endDate', endDate)
   const query = params.toString() ? `?${params.toString()}` : ''
-  const { data } = await api.get(`/audits/reports/partner-summary${query}`)
+  const { data } = await api.get<PartnerReportData>(`/audits/reports/partner-summary${query}`)
   return data
 }
 
@@ -435,5 +449,4 @@ export {
   deletePhoto,
   getPartnerSummary,
   exportPartnerCSV,
-  type PartnerReportData,
 }

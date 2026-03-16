@@ -10,7 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native'
-import { colors, spacing, typography } from '@/styles/theme'
+import { colors, spacing } from '@/styles/theme'
 import { UserProfile } from '@/types/user'
 import { useWorkspace } from '@/context/workspace/WorkspaceContext'
 import { router } from 'expo-router'
@@ -18,6 +18,7 @@ import { useAuditDashboardQuery } from '@/hooks/useAuditDashboardQuery'
 import { Ionicons } from '@expo/vector-icons'
 import { useCompletionsByUserQuery } from '@/hooks/useTaskHistoryQuery'
 import { useState } from 'react'
+import ScreenMotion from '@/components/ui/ScreenMotion'
 
 const styles = StyleSheet.create({
   container: {
@@ -308,46 +309,48 @@ const Dashboard = () => {
   const { org, clearOrganization } = useWorkspace()
   const { width } = useWindowDimensions()
   const isWide = width > 700
-  const [scoreLimit, setScoreLimit] = useState(5)
+  const scoreLimit = 5
 
   if (!user || !org) return null
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={[1]}
-        keyExtractor={() => 'dashboard'}
-        ListHeaderComponent={
-          <>
-            <DashboardHeader
-              user={user}
-              orgName={org.name}
-              onOrgPress={clearOrganization}
-            />
-            <View
-              style={[
-                styles.scrollContent,
-                isWide && { maxWidth: 800, alignSelf: 'center', width: '100%' },
-              ]}
-            >
-              {/* Create Task button */}
-              <Pressable
-                style={styles.createTaskButton}
-                onPress={() => router.push('/(tabs)/tasks/new')}
+    <ScreenMotion>
+      <View style={styles.container}>
+        <FlatList
+          data={[1]}
+          keyExtractor={() => 'dashboard'}
+          ListHeaderComponent={
+            <>
+              <DashboardHeader
+                user={user}
+                orgName={org.name}
+                onOrgPress={clearOrganization}
+              />
+              <View
+                style={[
+                  styles.scrollContent,
+                  isWide && { maxWidth: 800, alignSelf: 'center', width: '100%' },
+                ]}
               >
-                <Ionicons name='add-circle' size={20} color='#fff' />
-                <Text style={styles.createTaskText}>New Task</Text>
-              </Pressable>
+                {/* Create Task button */}
+                <Pressable
+                  style={styles.createTaskButton}
+                  onPress={() => router.push('/(tabs)/tasks/new')}
+                >
+                  <Ionicons name='add-circle' size={20} color='#fff' />
+                  <Text style={styles.createTaskText}>New Task</Text>
+                </Pressable>
 
-              <PendingTasksCard user={user} />
-              <CompletionsByUserCard />
-              <AuditSummarySection scoreLimit={scoreLimit} />
-            </View>
-          </>
-        }
-        renderItem={() => null}
-      />
-    </View>
+                <PendingTasksCard user={user} />
+                <CompletionsByUserCard />
+                <AuditSummarySection scoreLimit={scoreLimit} />
+              </View>
+            </>
+          }
+          renderItem={() => null}
+        />
+      </View>
+    </ScreenMotion>
   )
 }
 
