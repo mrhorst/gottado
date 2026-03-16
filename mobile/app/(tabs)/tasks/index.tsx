@@ -19,7 +19,18 @@ import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
-import { SharedValue } from 'react-native-reanimated'
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  FadeOutUp,
+  LinearTransition,
+  SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated'
 import * as ImagePicker from 'expo-image-picker'
 import ScreenMotion from '@/components/ui/ScreenMotion'
 
@@ -256,17 +267,25 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
       )}
 
       {showCompleted &&
-        completed.map((task) => (
-          <SwipeableTaskItem
-            key={task.id}
-            task={task}
-            onToggle={handleToggle}
-            onOpenDetails={handleOpenDetails}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            done
-          />
-        ))}
+        (
+          <Animated.View
+            entering={FadeInDown.duration(220)}
+            exiting={FadeOutUp.duration(180)}
+            layout={LinearTransition.springify().damping(18).stiffness(170)}
+          >
+            {completed.map((task) => (
+              <SwipeableTaskItem
+                key={task.id}
+                task={task}
+                onToggle={handleToggle}
+                onOpenDetails={handleOpenDetails}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                done
+              />
+            ))}
+          </Animated.View>
+        )}
     </View>
   )
 }
@@ -317,17 +336,23 @@ const SwipeableTaskItem = ({
   )
 
   return (
-    <ReanimatedSwipeable
-      ref={swipeableRef}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
-      overshootLeft={false}
-      renderRightActions={renderRightActions}
-      containerStyle={s.swipeableContainer}
+    <Animated.View
+      entering={FadeIn.duration(180)}
+      exiting={FadeOut.duration(140)}
+      layout={LinearTransition.springify().damping(18).stiffness(170)}
     >
-      <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
-    </ReanimatedSwipeable>
+      <ReanimatedSwipeable
+        ref={swipeableRef}
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={40}
+        overshootLeft={false}
+        renderRightActions={renderRightActions}
+        containerStyle={s.swipeableContainer}
+      >
+        <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
+      </ReanimatedSwipeable>
+    </Animated.View>
   )
 }
 
@@ -354,15 +379,31 @@ const TaskItem = ({
   const status = getTaskStatus(task)
   const isLate = status === 'late'
   const isDueToday = status === 'due_today'
+  const checkboxScale = useSharedValue(1)
+
+  const checkboxAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkboxScale.value }],
+  }))
+
+  const handleCheckboxPress = () => {
+    checkboxScale.value = withSequence(
+      withTiming(0.86, { duration: 90 }),
+      withTiming(1.06, { duration: 90 }),
+      withTiming(1, { duration: 70 })
+    )
+    onToggle(task)
+  }
 
   return (
     <View style={[s.taskRow, isLate && s.taskRowLate]}>
-      <Pressable
-        style={[s.checkbox, done && s.checkboxDone, isLate && !done && s.checkboxLate]}
-        onPress={() => onToggle(task)}
-      >
-        {done && <Ionicons name='checkmark' size={14} color='#fff' />}
-      </Pressable>
+      <Animated.View style={checkboxAnimStyle}>
+        <Pressable
+          style={[s.checkbox, done && s.checkboxDone, isLate && !done && s.checkboxLate]}
+          onPress={handleCheckboxPress}
+        >
+          {done && <Ionicons name='checkmark' size={14} color='#fff' />}
+        </Pressable>
+      </Animated.View>
       <Pressable style={s.taskContent} onPress={() => onOpenDetails(task)}>
         <Text style={done ? s.taskTitleDone : s.taskTitle}>{task.title}</Text>
         {/* Due date/time + recurrence info row */}
