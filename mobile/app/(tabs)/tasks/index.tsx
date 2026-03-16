@@ -457,6 +457,21 @@ const SwipeableTaskItem = ({
       exiting={FadeOut.duration(140)}
       layout={LinearTransition.springify().damping(18).stiffness(170)}
     >
+      {Platform.OS === 'web' ? (
+        <View>
+          <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
+          <View style={s.webTaskActionsRow}>
+            <Pressable style={s.webTaskActionBtn} onPress={() => onEdit(task)}>
+              <Ionicons name='create-outline' size={14} color={colors.primary} />
+              <Text style={s.webTaskActionText}>Edit</Text>
+            </Pressable>
+            <Pressable style={s.webTaskActionBtn} onPress={() => onDelete(task)}>
+              <Ionicons name='trash-outline' size={14} color={colors.iOSred} />
+              <Text style={[s.webTaskActionText, s.webTaskActionTextDanger]}>Delete</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
       <ReanimatedSwipeable
         ref={swipeableRef}
         friction={2}
@@ -468,6 +483,7 @@ const SwipeableTaskItem = ({
       >
         <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
       </ReanimatedSwipeable>
+      )}
     </Animated.View>
   )
 }
@@ -639,11 +655,7 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 14,
     marginBottom: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
     overflow: 'hidden',
   },
   sectionHeader: {
@@ -819,6 +831,33 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     marginTop: 2,
+  },
+  webTaskActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    paddingHorizontal: spacing.md,
+    paddingBottom: 10,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f8f8',
+  },
+  webTaskActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f2f2f7',
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  webTaskActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  webTaskActionTextDanger: {
+    color: colors.iOSred,
   },
   completedToggle: {
     paddingVertical: 10,
