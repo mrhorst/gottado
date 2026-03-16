@@ -154,8 +154,9 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
     if (!result.canceled && result.assets[0]) {
       try {
         await completeWithPicture({ id: task.id, imageUri: result.assets[0].uri })
-      } catch {
-        Alert.alert('Upload failed', 'Could not upload the picture. Please try again.')
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error'
+        Alert.alert('Upload failed', msg)
       }
     }
   }, [completeWithPicture])

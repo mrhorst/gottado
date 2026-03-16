@@ -27,6 +27,10 @@ api.interceptors.request.use(
     } catch (err) {
       console.log('api interceptor request:', err)
     }
+    // Let React Native set the multipart boundary automatically for FormData
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
     return config
   },
   (err) => Promise.reject(err)
