@@ -1,0 +1,157 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import request from 'supertest'
+import type { Express } from 'express'
+import jwt from 'jsonwebtoken'
+import { Client } from 'pg'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import * as schema from '../src/db/schema.ts'
+import { cleanDatabase, resetTestDatabase, setupTestDb } from './test-db.ts'
+import bcrypt from 'bcrypt'
+
+const TEST_DB_URL =
+  process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/gottado_test'
+
+describe('Tasks API E2E', () => {
+  let app: Express
+  let client: Client
+  let db: ReturnType<typeof drizzle>
+  let token: string
+  let orgId: number
+  let sectionId: number
+  let userId: number
+
+  const authHeaders = () => ({
+    Authorization: `Bearer ${token}`,
+    'x-org-id': String(orgId),
+  })
+
+  beforeAll(async () => {
+    process.env.DATABASE_URL = TEST_DB_URL
+    await resetTestDatabase()
+    await setupTestDb()
+    app = (await import('../src/app.ts')).default
+    client = new Client({ connectionString: TEST_DB_URL })
+    await client.connect()
+    db = drizzle(client, { schema })
+  })
+
+  beforeEach(async () => {
+    await cleanDatabase()
+
+    const [org] = await db
+      .insert(schema.organization)
+      .values({ name: `Org ${Date.now()}` })
+      .returning()
+    orgId = org.id
+
+    const passwordHash = await bcrypt.hash('password123', 10)
+    const [user] = await db
+      .insert(schema.user)
+      .values({
+        name: 'E2E User',
+        email: `e2e-${Date.now()}@example.com`,
+        passwordHash,
+      })
+      .returning()
+    userId = user.id
+
+    await db
+      .insert(schema.orgMember)
+      .values({ orgId, userId, role: 'owner' })
+      .returning()
+
+    const [section] = await db
+      .insert(schema.section)
+      .values({ name: `Ops ${Date.now()}`, orgId, ownerId: userId })
+      .returning()
+    sectionId = section.id
+
+    await db
+      .insert(schema.sectionMember)
+      .values({ sectionId, userId, role: 'owner' })
+      .returning()
+
+    token = jwt.sign(
+      { sub: String(userId), email: user.email, name: user.name },
+      'secret'
+    )
+  })
+
+  afterAll(async () => {
+    await client.end()
+  })
+
+  it('creates, lists, updates and completes a task with priority', async () => {
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set(authHeaders())
+      .send({
+        title: 'Close kitchen',
+        description: 'Deep clean and lock up',
+        sectionId,
+        dueDate: '2026-03-16',
+        deadlineTime: '22:00',
+        priority: 'high',
+      })
+
+    expect(createRes.status).toBe(201)
+    expect(createRes.body.priority).toBe('high')
+    const taskId = createRes.body.id as number
+
+    const listRes = await request(app).get('/api/tasks').set(authHeaders())
+    expect(listRes.status).toBe(200)
+    expect(listRes.body.some((t: { id: number; priority: string }) => t.id === taskId && t.priority === 'high')).toBe(true)
+
+    const updateRes = await request(app)
+      .put(`/api/tasks/${taskId}`)
+      .set(authHeaders())
+      .send({ priority: 'low' })
+
+    expect(updateRes.status).toBe(200)
+    expect(updateRes.body.priority).toBe('low')
+
+    const completeRes = await request(app)
+      .put(`/api/tasks/${taskId}`)
+      .set(authHeaders())
+      .send({ complete: true })
+
+    expect(completeRes.status).toBe(200)
+    expect(completeRes.body.complete).toBe(true)
+
+    const historyRes = await request(app)
+      .get(`/api/tasks/${taskId}/history`)
+      .set(authHeaders())
+    expect(historyRes.status).toBe(200)
+    expect(historyRes.body.length).toBeGreaterThan(0)
+  })
+
+  it('enforces photo-required completion', async () => {
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set(authHeaders())
+      .send({
+        title: 'Verify stock room',
+        sectionId,
+        requiresPicture: true,
+        priority: 'medium',
+      })
+
+    expect(createRes.status).toBe(201)
+    const taskId = createRes.body.id as number
+
+    const rejectRes = await request(app)
+      .put(`/api/tasks/${taskId}`)
+      .set(authHeaders())
+      .send({ complete: true })
+
+    expect(rejectRes.status).toBe(400)
+
+    const acceptRes = await request(app)
+      .put(`/api/tasks/${taskId}`)
+      .set(authHeaders())
+      .send({ complete: true, pictureUrl: '/uploads/e2e.jpg' })
+
+    expect(acceptRes.status).toBe(200)
+    expect(acceptRes.body.complete).toBe(true)
+  })
+})
