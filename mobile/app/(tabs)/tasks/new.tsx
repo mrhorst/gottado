@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SectionProps } from '@/types/section'
 import { useRouter } from 'expo-router'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
@@ -22,6 +22,9 @@ import AppButton from '@/components/ui/AppButton'
 import { Input } from '@/components/ui/Input'
 import FormField from '@/components/ui/FormField'
 import ScreenHeader from '@/components/ui/ScreenHeader'
+import { useQuery } from '@tanstack/react-query'
+import { getSectionTaskLists } from '@/services/sectionService'
+import { getInitialListId } from '@/utils/taskListSelection'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -70,24 +73,43 @@ const NewTaskScreen = () => {
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [requiresPicture, setRequiresPicture] = useState(false)
   const [priority, setPriority] = useState<TaskPriority | null>(null)
+  const [selectedListId, setSelectedListId] = useState<number | null>(null)
 
   const { user } = useAuth()
   const { sections } = useSectionQuery()
   const router = useRouter()
   const { createTask } = useTasksMutation()
 
+  const writableSections = sections?.filter((s) => s.role !== 'viewer') ?? []
+  const { data: sectionLists = [], isLoading: listsLoading } = useQuery({
+    queryKey: ['section-task-lists', selectedSection?.id],
+    queryFn: () => getSectionTaskLists(Number(selectedSection?.id)),
+    enabled: !!selectedSection?.id,
+  })
+
+  useEffect(() => {
+    setSelectedListId(
+      getInitialListId({
+        sectionId: selectedSection?.id ?? null,
+        lists: sectionLists.map((list) => ({
+          ...list,
+          sectionId: selectedSection?.id ?? undefined,
+        })),
+      })
+    )
+  }, [selectedSection?.id, sectionLists])
+
   if (!user) return null
 
-  const writableSections = sections?.filter((s) => s.role !== 'viewer') ?? []
-
   const handleCreate = () => {
-    if (!title.trim() || !selectedSection) return
+    if (!title.trim() || !selectedSection || !selectedListId) return
 
     if (mode === 'one_time') {
       createTask({
         title: title.trim(),
         description: description.trim() || undefined,
         sectionId: selectedSection.id,
+        listId: selectedListId,
         userId: user.id,
         dueDate: dueDate ? dueDate.toISOString().split('T')[0] : undefined,
         deadlineTime: deadlineTime || undefined,
@@ -99,6 +121,7 @@ const NewTaskScreen = () => {
         title: title.trim(),
         description: description.trim() || undefined,
         sectionId: selectedSection.id,
+        listId: selectedListId,
         userId: user.id,
         recurrence,
         deadlineTime: deadlineTime || undefined,
@@ -109,7 +132,8 @@ const NewTaskScreen = () => {
     router.back()
   }
 
-  const isValid = title.trim().length > 0 && selectedSection !== null
+  const isValid =
+    title.trim().length > 0 && selectedSection !== null && selectedListId !== null
 
   return (
     <KeyboardAvoidingView
@@ -146,6 +170,123 @@ const NewTaskScreen = () => {
             multiline
           />
         </FormField>
+
+        <View style={s.fieldGroup}>
+          <Text style={s.label}>Section</Text>
+          {writableSections.length === 0 ? (
+            <View style={s.emptyState}>
+              <Ionicons name='layers-outline' size={24} color='#c7c7cc' />
+              <Text style={s.emptyStateText}>
+                No sections available. Create a section first.
+              </Text>
+            </View>
+          ) : (
+            <View style={s.sectionList}>
+              {writableSections.map((sec) => {
+                const isSelected = selectedSection?.id === sec.id
+                return (
+                  <Pressable
+                    key={sec.id}
+                    style={[
+                      s.sectionOption,
+                      isSelected && s.sectionOptionSelected,
+                    ]}
+                    onPress={() => setSelectedSection(sec)}
+                  >
+                    <View style={s.sectionOptionLeft}>
+                      <View
+                        style={[
+                          s.radioOuter,
+                          isSelected && s.radioOuterSelected,
+                        ]}
+                      >
+                        {isSelected && <View style={s.radioInner} />}
+                      </View>
+                      <Text
+                        style={[
+                          s.sectionOptionText,
+                          isSelected && s.sectionOptionTextSelected,
+                        ]}
+                      >
+                        {sec.name}
+                      </Text>
+                    </View>
+                    <Text style={s.sectionRoleBadge}>{sec.role}</Text>
+                  </Pressable>
+                )
+              })}
+            </View>
+          )}
+        </View>
+
+        <View style={s.fieldGroup}>
+          <Text style={s.label}>Checklist</Text>
+          {!selectedSection ? (
+            <View style={s.emptyState}>
+              <Ionicons name='list-outline' size={24} color='#c7c7cc' />
+              <Text style={s.emptyStateText}>
+                Choose a section first, then select the checklist this task belongs to.
+              </Text>
+            </View>
+          ) : listsLoading ? (
+            <View style={s.loadingState}>
+              <Text style={s.emptyStateText}>Loading lists...</Text>
+            </View>
+          ) : sectionLists.length === 0 ? (
+            <View style={s.emptyState}>
+              <Ionicons name='list-outline' size={24} color='#c7c7cc' />
+              <Text style={s.emptyStateText}>
+                This section has no lists yet. Create one first so tasks have a clear home.
+              </Text>
+              <Pressable
+                style={s.inlineLink}
+                onPress={() => router.push(`/(tabs)/tasks/section/${selectedSection.id}`)}
+              >
+                <Text style={s.inlineLinkText}>Open Section</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={s.sectionList}>
+              {sectionLists.map((list) => {
+                const isSelected = selectedListId === list.id
+                return (
+                  <Pressable
+                    key={list.id}
+                    style={[
+                      s.sectionOption,
+                      isSelected && s.sectionOptionSelected,
+                    ]}
+                    onPress={() => setSelectedListId(list.id)}
+                  >
+                    <View style={s.sectionOptionLeft}>
+                      <View
+                        style={[
+                          s.radioOuter,
+                          isSelected && s.radioOuterSelected,
+                        ]}
+                      >
+                        {isSelected && <View style={s.radioInner} />}
+                      </View>
+                      <View style={s.listCopy}>
+                        <Text
+                          style={[
+                            s.sectionOptionText,
+                            isSelected && s.sectionOptionTextSelected,
+                          ]}
+                        >
+                          {list.name}
+                        </Text>
+                        {!!list.description && (
+                          <Text style={s.listDescription}>{list.description}</Text>
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                )
+              })}
+            </View>
+          )}
+        </View>
 
         <View style={s.fieldGroup}>
           <Text style={s.label}>Priority</Text>
@@ -361,54 +502,6 @@ const NewTaskScreen = () => {
           </View>
         </View>
 
-        {/* Section picker */}
-        <View style={s.fieldGroup}>
-          <Text style={s.label}>Section</Text>
-          {writableSections.length === 0 ? (
-            <View style={s.emptyState}>
-              <Ionicons name='layers-outline' size={24} color='#c7c7cc' />
-              <Text style={s.emptyStateText}>
-                No sections available. Create a section first.
-              </Text>
-            </View>
-          ) : (
-            <View style={s.sectionList}>
-              {writableSections.map((sec) => {
-                const isSelected = selectedSection?.id === sec.id
-                return (
-                  <Pressable
-                    key={sec.id}
-                    style={[
-                      s.sectionOption,
-                      isSelected && s.sectionOptionSelected,
-                    ]}
-                    onPress={() => setSelectedSection(sec)}
-                  >
-                    <View style={s.sectionOptionLeft}>
-                      <View
-                        style={[
-                          s.radioOuter,
-                          isSelected && s.radioOuterSelected,
-                        ]}
-                      >
-                        {isSelected && <View style={s.radioInner} />}
-                      </View>
-                      <Text
-                        style={[
-                          s.sectionOptionText,
-                          isSelected && s.sectionOptionTextSelected,
-                        ]}
-                      >
-                        {sec.name}
-                      </Text>
-                    </View>
-                    <Text style={s.sectionRoleBadge}>{sec.role}</Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-          )}
-        </View>
       </ScrollView>
 
       {/* Create button */}
@@ -660,6 +753,30 @@ const s = StyleSheet.create({
     fontSize: 14,
     color: '#8e8e93',
     textAlign: 'center',
+  },
+  loadingState: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  inlineLink: {
+    marginTop: spacing.xs,
+  },
+  inlineLinkText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  listCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  listDescription: {
+    fontSize: 12,
+    color: '#8e8e93',
   },
   footer: {
     position: 'absolute',

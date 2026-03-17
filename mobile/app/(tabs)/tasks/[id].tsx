@@ -20,6 +20,8 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import type { Recurrence, TaskActivity, TaskPriority } from '@/services/taskService'
 import { getTaskActivities } from '@/services/taskService'
 import AppButton from '@/components/ui/AppButton'
+import { getSectionTaskLists } from '@/services/sectionService'
+import { getInitialListId } from '@/utils/taskListSelection'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -114,6 +116,13 @@ const EditTaskScreen = () => {
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [requiresPicture, setRequiresPicture] = useState(false)
   const [priority, setPriority] = useState<TaskPriority | null>(null)
+  const [selectedListId, setSelectedListId] = useState<number | null>(null)
+
+  const { data: sectionLists = [], isLoading: listsLoading } = useQuery({
+    queryKey: ['section-task-lists', task?.sectionId],
+    queryFn: () => getSectionTaskLists(Number(task?.sectionId)),
+    enabled: !!task?.sectionId,
+  })
 
   useEffect(() => {
     if (!task) return
@@ -129,7 +138,17 @@ const EditTaskScreen = () => {
       if (task.dueDate) setDueDate(new Date(task.dueDate + 'T00:00:00'))
     }
     if (task.deadlineTime) setDeadlineTime(task.deadlineTime)
-  }, [task])
+    setSelectedListId(
+      getInitialListId({
+        sectionId: task.sectionId,
+        lists: sectionLists.map((list) => ({
+          ...list,
+          sectionId: task.sectionId,
+        })),
+        task,
+      })
+    )
+  }, [sectionLists, task])
 
   if (!task) return null
 
@@ -146,6 +165,7 @@ const EditTaskScreen = () => {
         recurrence: null,
         requiresPicture,
         priority: priority || undefined,
+        listId: selectedListId,
       })
     } else {
       updateTask({
@@ -157,6 +177,7 @@ const EditTaskScreen = () => {
         recurrence,
         requiresPicture,
         priority: priority || undefined,
+        listId: selectedListId,
       })
     }
     router.back()
@@ -422,6 +443,59 @@ const EditTaskScreen = () => {
           </View>
         </View>
 
+        <View style={s.fieldGroup}>
+          <Text style={s.label}>Checklist</Text>
+          {listsLoading ? (
+            <View style={s.readOnlyField}>
+              <Text style={s.readOnlyText}>Loading lists...</Text>
+            </View>
+          ) : sectionLists.length === 0 ? (
+            <View style={s.readOnlyField}>
+              <Text style={s.readOnlyText}>No lists available in this section.</Text>
+            </View>
+          ) : (
+            <View style={s.sectionList}>
+              {sectionLists.map((list) => {
+                const isSelected = selectedListId === list.id
+                return (
+                  <Pressable
+                    key={list.id}
+                    style={[
+                      s.sectionOption,
+                      isSelected && s.sectionOptionSelected,
+                    ]}
+                    onPress={() => setSelectedListId(list.id)}
+                  >
+                    <View style={s.sectionOptionLeft}>
+                      <View
+                        style={[
+                          s.radioOuter,
+                          isSelected && s.radioOuterSelected,
+                        ]}
+                      >
+                        {isSelected && <View style={s.radioInner} />}
+                      </View>
+                      <View style={s.listCopy}>
+                        <Text
+                          style={[
+                            s.sectionOptionText,
+                            isSelected && s.sectionOptionTextSelected,
+                          ]}
+                        >
+                          {list.name}
+                        </Text>
+                        {!!list.description && (
+                          <Text style={s.listDescription}>{list.description}</Text>
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                )
+              })}
+            </View>
+          )}
+        </View>
+
         {/* Audit Source */}
         {task.relevanceTag && (
           <View style={s.fieldGroup}>
@@ -648,6 +722,66 @@ const s = StyleSheet.create({
   recurrenceTextSelected: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  sectionList: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    overflow: 'hidden',
+  },
+  sectionOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f7',
+  },
+  sectionOptionSelected: {
+    backgroundColor: colors.primary + '08',
+  },
+  sectionOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  radioOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#d1d1d6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioOuterSelected: {
+    borderColor: colors.primary,
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  sectionOptionText: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  sectionOptionTextSelected: {
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  listCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  listDescription: {
+    fontSize: 12,
+    color: '#8e8e93',
   },
   readOnlyField: {
     flexDirection: 'row',
