@@ -3,7 +3,7 @@ import { baseStackScreenOptions } from '@/styles/navigation'
 import { Ionicons } from '@expo/vector-icons'
 import { Link, Stack, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Text } from 'react-native'
-import { NewSection } from '../sections/_layout'
+import { NewSection } from '../areas/_layout'
 
 const styles = StyleSheet.create({
   headerLink: {
@@ -23,8 +23,8 @@ const TasksScreenLayout = () => {
       <Stack.Screen
         name='index'
         options={{
-          title: 'Tasks',
-          headerLargeTitle: true,
+          title: '',
+          headerLargeTitle: false,
           gestureEnabled: false,
           headerLeft: () => <SnapshotLink />,
           headerRight: () => <NewTask />,
@@ -43,7 +43,7 @@ const TasksScreenLayout = () => {
         options={{ title: 'Area' }}
       />
       <Stack.Screen
-        name='list/[id]'
+        name='area/[areaId]/list/[listId]'
         options={{ title: 'Checklist' }}
       />
       <Stack.Screen

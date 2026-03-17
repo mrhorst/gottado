@@ -35,8 +35,8 @@ const formatTime12h = (time24: string) => {
 }
 
 const ListChecklistScreen = () => {
-  const { id } = useLocalSearchParams()
-  const listId = Number(id)
+  const { listId: rawListId } = useLocalSearchParams()
+  const listId = Number(rawListId)
   const router = useRouter()
   const { tasks, isLoading } = useTasksQuery()
   const { toggleComplete, completeWithPicture } = useTasksMutation()

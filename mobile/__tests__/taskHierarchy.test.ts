@@ -61,6 +61,23 @@ describe('taskHierarchy', () => {
     )
   })
 
+  it('keeps areas with no tasks so the chooser can list every area', () => {
+    const summaries = buildSectionSummaries(sections, tasks)
+
+    expect(summaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 2,
+          name: 'Kitchen',
+          totalTasks: 0,
+          completedTasks: 0,
+          pendingTasks: 0,
+          listCount: 0,
+        }),
+      ])
+    )
+  })
+
   it('builds list summaries for a section', () => {
     const summaries = buildSectionListSummaries(1, tasks)
 

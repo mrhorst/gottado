@@ -22,9 +22,19 @@ const TasksScreen = () => {
   const { sections, isLoading: sectionsLoading } = useSectionQuery()
   const { tasks, isLoading: tasksLoading } = useTasksQuery()
 
-  const sectionSummaries = useMemo(
-    () => buildSectionSummaries(sections ?? [], tasks),
-    [sections, tasks]
+  const sectionSummaries = useMemo(() => {
+    return buildSectionSummaries(sections ?? [], tasks).filter(
+      (section) => section.totalTasks > 0
+    )
+  }, [sections, tasks])
+
+  const overview = useMemo(
+    () => ({
+      pending: sectionSummaries.reduce((sum, section) => sum + section.pendingTasks, 0),
+      dueToday: sectionSummaries.reduce((sum, section) => sum + section.dueTodayTasks, 0),
+      overdue: sectionSummaries.reduce((sum, section) => sum + section.overdueTasks, 0),
+    }),
+    [sectionSummaries]
   )
 
   if (sectionsLoading || tasksLoading) {
@@ -41,10 +51,15 @@ const TasksScreen = () => {
     <ScreenMotion>
       <ScrollView style={s.container} contentContainerStyle={s.content}>
         <View style={s.hero}>
-          <Text style={s.title}>Areas</Text>
-          <Text style={s.subtitle}>
-            Pick an area to open its checklists and start checking work off.
-          </Text>
+          <Text style={s.eyebrow}>Tasks</Text>
+          <Text style={s.title}>Choose an area</Text>
+          <Text style={s.subtitle}>Open a checklist and start checking work off.</Text>
+        </View>
+
+        <View style={s.overviewRow}>
+          <StatBadge label='Pending' value={overview.pending} tone='neutral' />
+          <StatBadge label='Due Today' value={overview.dueToday} tone='warn' />
+          <StatBadge label='Overdue' value={overview.overdue} tone='danger' />
         </View>
 
         {sectionSummaries.length === 0 ? (
@@ -140,7 +155,13 @@ const s = StyleSheet.create({
   hero: {
     gap: 4,
     paddingTop: spacing.xs,
-    marginBottom: spacing.xs,
+  },
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#8e8e93',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   title: {
     ...typography.h1,
@@ -151,6 +172,12 @@ const s = StyleSheet.create({
     lineHeight: 20,
     color: '#8e8e93',
     maxWidth: 340,
+  },
+  overviewRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: spacing.xs,
   },
   sectionCard: {
     gap: spacing.md,

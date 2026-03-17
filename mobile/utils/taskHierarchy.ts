@@ -9,30 +9,28 @@ export const buildSectionSummaries = (
 ): SectionTaskSummary[] => {
   const today = todayIso()
 
-  return sections
-    .map((section) => {
-      const sectionTasks = tasks.filter((task) => task.sectionId === section.id)
-      const completedTasks = sectionTasks.filter((task) => task.complete).length
-      const pendingTasks = sectionTasks.length - completedTasks
-      const overdueTasks = sectionTasks.filter(
-        (task) => !task.complete && !!task.dueDate && task.dueDate < today
-      ).length
-      const dueTodayTasks = sectionTasks.filter(
-        (task) => !task.complete && task.dueDate === today
-      ).length
-      const listCount = new Set(sectionTasks.map((task) => task.listId)).size
+  return sections.map((section) => {
+    const sectionTasks = tasks.filter((task) => task.sectionId === section.id)
+    const completedTasks = sectionTasks.filter((task) => task.complete).length
+    const pendingTasks = sectionTasks.length - completedTasks
+    const overdueTasks = sectionTasks.filter(
+      (task) => !task.complete && !!task.dueDate && task.dueDate < today
+    ).length
+    const dueTodayTasks = sectionTasks.filter(
+      (task) => !task.complete && task.dueDate === today
+    ).length
+    const listCount = new Set(sectionTasks.map((task) => task.listId)).size
 
-      return {
-        ...section,
-        totalTasks: sectionTasks.length,
-        completedTasks,
-        pendingTasks,
-        overdueTasks,
-        dueTodayTasks,
-        listCount,
-      }
-    })
-    .filter((section) => section.totalTasks > 0)
+    return {
+      ...section,
+      totalTasks: sectionTasks.length,
+      completedTasks,
+      pendingTasks,
+      overdueTasks,
+      dueTodayTasks,
+      listCount,
+    }
+  })
 }
 
 export const buildSectionListSummaries = (

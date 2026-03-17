@@ -83,7 +83,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='sections'
+        name='areas'
         options={{
           headerShown: false,
           title: 'Areas',

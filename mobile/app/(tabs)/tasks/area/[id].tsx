@@ -18,7 +18,7 @@ import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { getSectionTaskLists } from '@/services/sectionService'
 import { colors, spacing, typography } from '@/styles/theme'
-import { getAreaSettingsPath } from '@/utils/areaRoutes'
+import { getAreaChecklistPath, getAreaSettingsPath } from '@/utils/areaRoutes'
 import { buildSectionListSummaries } from '@/utils/taskHierarchy'
 
 const AreaScreen = () => {
@@ -80,27 +80,23 @@ const AreaScreen = () => {
       <ScrollView style={s.container} contentContainerStyle={s.content}>
         <View style={s.hero}>
           <Text style={s.eyebrow}>Area</Text>
-          <Text style={s.title}>{area.name}</Text>
+          <View style={s.titleRow}>
+            <Text style={s.title}>{area.name}</Text>
+            {(area.role === 'owner' || area.role === 'editor') && (
+              <Pressable
+                accessibilityLabel='Open area settings'
+                hitSlop={8}
+                style={s.settingsButton}
+                onPress={() => router.push(getAreaSettingsPath(area.id))}
+              >
+                <Ionicons name='settings-outline' size={18} color={colors.textSecondary} />
+              </Pressable>
+            )}
+          </View>
           <Text style={s.subtitle}>
             Pick a checklist to work through tasks. Configuration stays in area settings.
           </Text>
         </View>
-
-        {(area.role === 'owner' || area.role === 'editor') && (
-          <AppCard style={s.manageCard}>
-            <View style={s.manageCopy}>
-              <Text style={s.manageTitle}>Need to change members or create a checklist?</Text>
-              <Text style={s.manageText}>
-                Open area settings to manage assignments and checklist structure.
-              </Text>
-            </View>
-            <AppButton
-              label='Manage Area'
-              tone='neutral'
-              onPress={() => router.push(getAreaSettingsPath(area.id))}
-            />
-          </AppCard>
-        )}
 
         {checklistSummaries.length === 0 ? (
           <AppCard style={s.emptyCard}>
@@ -126,7 +122,7 @@ const AreaScreen = () => {
             return (
               <Pressable
                 key={checklist.id}
-                onPress={() => router.push(`/(tabs)/tasks/list/${checklist.id}`)}
+                onPress={() => router.push(getAreaChecklistPath(area.id, checklist.id))}
               >
                 <AppCard style={s.checklistCard}>
                   <View style={s.row}>
@@ -195,6 +191,11 @@ const s = StyleSheet.create({
   hero: {
     gap: 4,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   eyebrow: {
     fontSize: 12,
     fontWeight: '700',
@@ -205,6 +206,7 @@ const s = StyleSheet.create({
   title: {
     ...typography.h2,
     color: colors.text,
+    flex: 1,
   },
   subtitle: {
     fontSize: 14,
@@ -212,20 +214,13 @@ const s = StyleSheet.create({
     color: '#8e8e93',
     maxWidth: 360,
   },
-  manageCard: {
-    gap: spacing.md,
-  },
-  manageCopy: {
-    gap: 4,
-  },
-  manageTitle: {
-    ...typography.h4,
-    color: colors.text,
-  },
-  manageText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#8e8e93',
+  settingsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceMuted,
   },
   emptyCard: {
     gap: spacing.md,

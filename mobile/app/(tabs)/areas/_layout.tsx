@@ -15,12 +15,12 @@ const styles = StyleSheet.create({
   },
 })
 
-const SectionsScreenLayout = () => {
+const AreasScreenLayout = () => {
   return (
     <Stack screenOptions={{ ...baseStackScreenOptions, headerShown: true }}>
       <Stack.Screen
         name='index'
-        options={{ title: 'Areas', headerRight: () => <NewSection /> }}
+        options={{ title: '', headerRight: () => <NewSection /> }}
       />
       <Stack.Screen
         name='[id]'
@@ -44,4 +44,4 @@ export const NewSection = () => {
   )
 }
 
-export default SectionsScreenLayout
+export default AreasScreenLayout
