@@ -32,7 +32,8 @@ const RECURRENCE_OPTIONS: { value: Recurrence; label: string; icon: string }[] =
   { value: 'yearly', label: 'Yearly', icon: 'repeat-outline' },
 ]
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
+const PRIORITY_OPTIONS: { value: TaskPriority | null; label: string; color: string }[] = [
+  { value: null, label: 'None', color: '#8e8e93' },
   { value: 'low', label: 'Low', color: '#34C759' },
   { value: 'medium', label: 'Medium', color: '#FF9500' },
   { value: 'high', label: 'High', color: '#FF3B30' },
@@ -112,14 +113,14 @@ const EditTaskScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [requiresPicture, setRequiresPicture] = useState(false)
-  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const [priority, setPriority] = useState<TaskPriority | null>(null)
 
   useEffect(() => {
     if (!task) return
     setTitle(task.title)
     setDescription(task.description || '')
     setRequiresPicture(task.requiresPicture)
-    setPriority(task.priority ?? 'medium')
+    setPriority(task.priority ?? null)
     if (task.recurrence) {
       setMode('recurring')
       setRecurrence(task.recurrence)
@@ -144,7 +145,7 @@ const EditTaskScreen = () => {
         deadlineTime: deadlineTime || null,
         recurrence: null,
         requiresPicture,
-        priority,
+        priority: priority || undefined,
       })
     } else {
       updateTask({
@@ -155,7 +156,7 @@ const EditTaskScreen = () => {
         deadlineTime: deadlineTime || null,
         recurrence,
         requiresPicture,
-        priority,
+        priority: priority || undefined,
       })
     }
     router.back()
