@@ -6,20 +6,22 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native'
 import { useState } from 'react'
 import { SectionProps } from '@/types/section'
 import { useRouter } from 'expo-router'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
-import { colors, spacing } from '@/styles/theme'
+import { colors, layout, spacing } from '@/styles/theme'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useAuth } from '@/context/auth/AuthContext'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import type { Recurrence, TaskPriority } from '@/services/taskService'
 import AppButton from '@/components/ui/AppButton'
+import { Input } from '@/components/ui/Input'
+import FormField from '@/components/ui/FormField'
+import ScreenHeader from '@/components/ui/ScreenHeader'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -32,7 +34,8 @@ const RECURRENCE_OPTIONS: { value: Recurrence; label: string; icon: string }[] =
   { value: 'yearly', label: 'Yearly', icon: 'repeat-outline' },
 ]
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
+const PRIORITY_OPTIONS: { value: TaskPriority | null; label: string; color: string }[] = [
+  { value: null, label: 'None', color: '#8e8e93' },
   { value: 'low', label: 'Low', color: '#34C759' },
   { value: 'medium', label: 'Medium', color: '#FF9500' },
   { value: 'high', label: 'High', color: '#FF3B30' },
@@ -66,7 +69,7 @@ const NewTaskScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [requiresPicture, setRequiresPicture] = useState(false)
-  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const [priority, setPriority] = useState<TaskPriority | null>(null)
 
   const { user } = useAuth()
   const { sections } = useSectionQuery()
@@ -89,7 +92,7 @@ const NewTaskScreen = () => {
         dueDate: dueDate ? dueDate.toISOString().split('T')[0] : undefined,
         deadlineTime: deadlineTime || undefined,
         requiresPicture: requiresPicture || undefined,
-        priority,
+        priority: priority || undefined,
       })
     } else {
       createTask({
@@ -100,7 +103,7 @@ const NewTaskScreen = () => {
         recurrence,
         deadlineTime: deadlineTime || undefined,
         requiresPicture: requiresPicture || undefined,
-        priority,
+        priority: priority || undefined,
       })
     }
     router.back()
@@ -118,32 +121,31 @@ const NewTaskScreen = () => {
         contentContainerStyle={s.content}
         keyboardShouldPersistTaps='handled'
       >
-        {/* Title */}
-        <View style={s.fieldGroup}>
-          <Text style={s.label}>Title</Text>
-          <TextInput
-            style={s.input}
+        <ScreenHeader
+          title='New Task'
+          subtitle='Create a clear checklist item with the right schedule and proof requirements.'
+        />
+
+        <FormField label='Title'>
+          <Input
             value={title}
             onChangeText={setTitle}
             placeholder='What needs to be done?'
-            placeholderTextColor='#c7c7cc'
             autoFocus
           />
-        </View>
+        </FormField>
 
-        {/* Description */}
-        <View style={s.fieldGroup}>
-          <Text style={s.label}>Description</Text>
-          <TextInput
-            style={[s.input, s.textArea]}
+        <FormField
+          label='Description'
+          hint='Optional instructions for how the task should be completed.'
+        >
+          <Input
             value={description}
             onChangeText={setDescription}
             placeholder='Add details (optional)'
-            placeholderTextColor='#c7c7cc'
             multiline
-            textAlignVertical='top'
           />
-        </View>
+        </FormField>
 
         <View style={s.fieldGroup}>
           <Text style={s.label}>Priority</Text>
@@ -429,11 +431,12 @@ const s = StyleSheet.create({
     backgroundColor: '#f2f2f7',
   },
   content: {
-    padding: spacing.lg,
+    padding: layout.screenPadding,
     paddingBottom: 120,
+    gap: layout.formGap,
   },
   fieldGroup: {
-    marginBottom: spacing.lg,
+    gap: layout.fieldGap,
   },
   label: {
     fontSize: 13,
@@ -441,22 +444,7 @@ const s = StyleSheet.create({
     color: '#8e8e93',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 8,
     marginLeft: 4,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
   },
   priorityRow: {
     flexDirection: 'row',
