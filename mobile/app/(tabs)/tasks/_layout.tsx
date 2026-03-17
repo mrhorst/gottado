@@ -39,6 +39,14 @@ const TasksScreenLayout = () => {
         options={{ title: 'Edit Task' }}
       />
       <Stack.Screen
+        name='section/[id]'
+        options={{ title: 'Section' }}
+      />
+      <Stack.Screen
+        name='list/[id]'
+        options={{ title: 'Checklist' }}
+      />
+      <Stack.Screen
         name='details/[id]'
         options={{ title: 'Task Details', headerLeft: () => <BackToTasks /> }}
       />
@@ -77,7 +85,13 @@ const BackToTasks = () => {
     <Pressable
       style={styles.headerButton}
       hitSlop={8}
-      onPress={() => router.replace('/(tabs)/tasks')}
+      onPress={() => {
+        if (router.canGoBack()) {
+          router.back()
+          return
+        }
+        router.replace('/(tabs)/tasks')
+      }}
     >
       <Ionicons name='chevron-back' size={22} color={colors.primary} />
     </Pressable>
