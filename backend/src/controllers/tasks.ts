@@ -1,6 +1,6 @@
 import db from '../utils/db.ts'
 import { NextFunction, Response } from 'express'
-import { section, sectionMember, task, taskActivity, taskCompletion, user } from '../db/schema.ts'
+import { section, sectionMember, task, taskActivity, taskCompletion, taskList, user } from '../db/schema.ts'
 
 import { and, eq, desc, gte, lte, sql } from 'drizzle-orm'
 import { getUserSectionRole } from '@/utils/controllerHelpers.ts'
@@ -36,7 +36,10 @@ const listTasks = async (
         description: task.description,
         dueDate: task.dueDate,
         complete: task.complete,
+        sectionId: task.sectionId,
         sectionName: section.name,
+        listId: task.listId,
+        listName: taskList.name,
         recurrence: task.recurrence,
         lastCompletedAt: task.lastCompletedAt,
         deadlineTime: task.deadlineTime,
@@ -46,6 +49,7 @@ const listTasks = async (
       })
       .from(task)
       .innerJoin(section, eq(task.sectionId, section.id))
+      .innerJoin(taskList, eq(task.listId, taskList.id))
       .innerJoin(sectionMember, eq(section.id, sectionMember.sectionId))
       .where(and(eq(section.orgId, orgId), eq(sectionMember.userId, userId)))
 
@@ -88,7 +92,37 @@ const createTask = async (
         .send({ error: 'only owners and editors can create tasks' })
     }
 
-    const taskPayload = { ...body, userId }
+    let listId = body.listId as number | undefined
+    if (!listId) {
+      const [defaultList] = await db
+        .select({ id: taskList.id })
+        .from(taskList)
+        .where(eq(taskList.sectionId, Number(body.sectionId)))
+        .orderBy(taskList.sortOrder)
+        .limit(1)
+
+      if (!defaultList) {
+        return res.status(400).send({ error: 'task list not found for section' })
+      }
+      listId = defaultList.id
+    } else {
+      const [matchingList] = await db
+        .select({ id: taskList.id })
+        .from(taskList)
+        .where(
+          and(
+            eq(taskList.id, Number(listId)),
+            eq(taskList.sectionId, Number(body.sectionId))
+          )
+        )
+        .limit(1)
+
+      if (!matchingList) {
+        return res.status(400).send({ error: 'list does not belong to section' })
+      }
+    }
+
+    const taskPayload = { ...body, listId }
 
     const [taskRecord] = await db.insert(task).values(taskPayload).returning()
     await logActivity(taskRecord.id, userId, 'created', { title: taskRecord.title })

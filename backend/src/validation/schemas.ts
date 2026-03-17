@@ -71,6 +71,7 @@ export const createTaskSchema = z.object({
   requiresPicture: z.boolean().optional(),
   priority: taskPriorityEnum.optional(),
   sectionId: z.number().int().positive(),
+  listId: z.number().int().positive().optional(),
 })
 
 export const updateTaskSchema = z.object({
@@ -80,7 +81,8 @@ export const updateTaskSchema = z.object({
   deadlineTime: z.string().max(5).nullable().optional(),
   recurrence: recurrenceEnum.nullable().optional(),
   requiresPicture: z.boolean().optional(),
-  priority: taskPriorityEnum.optional(),
+  priority: taskPriorityEnum.nullable().optional(),
+  listId: z.number().int().positive().nullable().optional(),
   complete: z.boolean().optional(),
   pictureUrl: z.string().max(500).nullable().optional(),
 })

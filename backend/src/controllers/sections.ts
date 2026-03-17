@@ -1,7 +1,7 @@
 import { NextFunction, Response } from 'express'
-import { section, sectionMember, task } from '@/db/schema.ts'
+import { section, sectionMember, task, taskList } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import {
   getSectionMembers,
   getSectionNonMembers,
@@ -9,7 +9,6 @@ import {
 } from '@/utils/controllerHelpers.ts'
 import { AuthenticatedRequest } from '@/types/index.ts'
 import { getScopedSectionQuery } from '@/utils/queryHelper.ts'
-import als from '@/utils/context.ts'
 
 const listSections = async (
   req: AuthenticatedRequest,
@@ -155,6 +154,42 @@ const getSectionInfo = async (
   }
 }
 
+const getTaskLists = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const sectionId = Number(req.params.id)
+  const loggedUser = Number(req.user?.sub)
+
+  try {
+    const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+    if (!requesterRole) {
+      return res.status(403).send({ error: 'you do not have access to this section' })
+    }
+
+    const lists = await db
+      .select({
+        id: taskList.id,
+        name: taskList.name,
+        description: taskList.description,
+        sortOrder: taskList.sortOrder,
+        totalTasks: sql<number>`count(${task.id})::int`,
+        completedTasks:
+          sql<number>`count(case when ${task.complete} = true then 1 end)::int`,
+      })
+      .from(taskList)
+      .leftJoin(task, eq(task.listId, taskList.id))
+      .where(eq(taskList.sectionId, sectionId))
+      .groupBy(taskList.id)
+      .orderBy(taskList.sortOrder, taskList.name)
+
+    res.send(lists)
+  } catch (error) {
+    next(error)
+  }
+}
+
 const addMember = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -244,6 +279,7 @@ export {
   updateSection,
   deleteSection,
   getSectionInfo,
+  getTaskLists,
   addMember,
   updateMemberRole,
   unsubscribeMember,

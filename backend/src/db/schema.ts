@@ -39,6 +39,9 @@ export const task = pgTable('tasks', {
   sectionId: integer('section_id')
     .references((): AnyPgColumn => section.id)
     .notNull(),
+  listId: integer('list_id')
+    .references((): AnyPgColumn => taskList.id)
+    .notNull(),
   measurableCriteria: text('measurable_criteria'),
   relevanceTag: varchar('relevance_tag', { length: 100 }),
   recurrence: varchar({ length: 20 }).$type<
@@ -52,6 +55,28 @@ export const task = pgTable('tasks', {
     .default('medium')
     .$type<'low' | 'medium' | 'high'>(),
 })
+
+export const taskList = pgTable(
+  'task_lists',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    sectionId: integer('section_id')
+      .references(() => section.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar({ length: 255 }).notNull(),
+    description: text(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('task_lists_section_id_idx').on(table.sectionId),
+  ]
+)
 
 export const taskCompletion = pgTable(
   'task_completions',
