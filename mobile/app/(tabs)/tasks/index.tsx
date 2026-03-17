@@ -2,7 +2,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -210,7 +209,6 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
   const [showCompleted, setShowCompleted] = useState(false)
   const [showOneTime, setShowOneTime] = useState(true)
   const [showRecurring, setShowRecurring] = useState(true)
-  const [actionTask, setActionTask] = useState<UserTasks | null>(null)
 
   const launchCamera = useCallback(async (task: UserTasks) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
@@ -275,11 +273,6 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
     [deleteTask]
   )
 
-  const handleOpenActions = useCallback((task: UserTasks) => {
-    if (getTaskActionMode(Platform.OS) !== 'long_press') return
-    setActionTask(task)
-  }, [])
-
   if (total === 0) return null
 
   const allDone = pending.length === 0
@@ -322,7 +315,6 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
                   onOpenDetails={handleOpenDetails}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
-                  onOpenActions={handleOpenActions}
                   done={false}
                 />
               ))}
@@ -365,7 +357,6 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
                         onOpenDetails={handleOpenDetails}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
-                        onOpenActions={handleOpenActions}
                         done={false}
                       />
                     ))}
@@ -408,50 +399,11 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
                 onOpenDetails={handleOpenDetails}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onOpenActions={handleOpenActions}
                 done
               />
             ))}
           </Animated.View>
         )}
-
-      <Modal
-        visible={!!actionTask}
-        transparent
-        animationType='fade'
-        onRequestClose={() => setActionTask(null)}
-      >
-        <Pressable style={s.actionOverlay} onPress={() => setActionTask(null)}>
-          <Pressable style={s.actionSheet} onPress={() => {}}>
-            <Text style={s.actionTitle}>{actionTask?.title}</Text>
-            <Pressable
-              style={s.actionRow}
-              onPress={() => {
-                if (!actionTask) return
-                setActionTask(null)
-                handleEdit(actionTask)
-              }}
-            >
-              <Ionicons name='create-outline' size={18} color={colors.primary} />
-              <Text style={s.actionText}>Edit Task</Text>
-            </Pressable>
-            <Pressable
-              style={s.actionRow}
-              onPress={() => {
-                if (!actionTask) return
-                setActionTask(null)
-                handleDelete(actionTask)
-              }}
-            >
-              <Ionicons name='trash-outline' size={18} color={colors.iOSred} />
-              <Text style={[s.actionText, s.actionTextDanger]}>Delete Task</Text>
-            </Pressable>
-            <Pressable style={s.actionCancel} onPress={() => setActionTask(null)}>
-              <Text style={s.actionCancelText}>Cancel</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   )
 }
@@ -462,7 +414,6 @@ const SwipeableTaskItem = ({
   onOpenDetails,
   onEdit,
   onDelete,
-  onOpenActions,
   done,
 }: {
   task: UserTasks
@@ -470,7 +421,6 @@ const SwipeableTaskItem = ({
   onOpenDetails: (t: UserTasks) => void
   onEdit: (t: UserTasks) => void
   onDelete: (t: UserTasks) => void
-  onOpenActions: (t: UserTasks) => void
   done: boolean
 }) => {
   const swipeableRef = useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null)
@@ -509,12 +459,11 @@ const SwipeableTaskItem = ({
       exiting={FadeOut.duration(140)}
       layout={LinearTransition.springify().damping(18).stiffness(170)}
     >
-      {getTaskActionMode(Platform.OS) === 'long_press' ? (
+      {getTaskActionMode(Platform.OS) === 'none' ? (
         <TaskItem
           task={task}
           onToggle={onToggle}
           onOpenDetails={onOpenDetails}
-          onOpenActions={onOpenActions}
           done={done}
         />
       ) : (
@@ -531,7 +480,6 @@ const SwipeableTaskItem = ({
           task={task}
           onToggle={onToggle}
           onOpenDetails={onOpenDetails}
-          onOpenActions={onOpenActions}
           done={done}
         />
       </ReanimatedSwipeable>
@@ -562,13 +510,11 @@ const TaskItem = ({
   task,
   onToggle,
   onOpenDetails,
-  onOpenActions,
   done,
 }: {
   task: UserTasks
   onToggle: (t: UserTasks) => void
   onOpenDetails: (t: UserTasks) => void
-  onOpenActions: (t: UserTasks) => void
   done: boolean
 }) => {
   const status = getTaskStatus(task)
@@ -602,8 +548,6 @@ const TaskItem = ({
       <Pressable
         style={s.taskContent}
         onPress={() => onOpenDetails(task)}
-        onLongPress={() => onOpenActions(task)}
-        delayLongPress={220}
       >
         <Text style={done ? s.taskTitleDone : s.taskTitle}>{task.title}</Text>
         {/* Due date/time + recurrence info row */}
@@ -893,54 +837,6 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     marginTop: 2,
-  },
-  actionOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
-    justifyContent: 'flex-end',
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  actionSheet: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  actionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-  },
-  actionText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  actionTextDanger: {
-    color: colors.iOSred,
-  },
-  actionCancel: {
-    borderTopWidth: 1,
-    borderTopColor: '#f2f2f7',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  actionCancelText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.textSecondary ?? '#6B7280',
   },
   completedToggle: {
     paddingVertical: 10,
