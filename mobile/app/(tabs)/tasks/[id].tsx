@@ -434,9 +434,9 @@ const EditTaskScreen = () => {
           </View>
         </View>
 
-        {/* Section (read-only) */}
+        {/* Area (read-only) */}
         <View style={s.fieldGroup}>
-          <Text style={s.label}>Section</Text>
+          <Text style={s.label}>Area</Text>
           <View style={s.readOnlyField}>
             <Ionicons name='layers-outline' size={18} color='#8e8e93' />
             <Text style={s.readOnlyText}>{task.sectionName}</Text>
@@ -447,11 +447,11 @@ const EditTaskScreen = () => {
           <Text style={s.label}>Checklist</Text>
           {listsLoading ? (
             <View style={s.readOnlyField}>
-              <Text style={s.readOnlyText}>Loading lists...</Text>
+              <Text style={s.readOnlyText}>Loading checklists...</Text>
             </View>
           ) : sectionLists.length === 0 ? (
             <View style={s.readOnlyField}>
-              <Text style={s.readOnlyText}>No lists available in this section.</Text>
+              <Text style={s.readOnlyText}>No checklists available in this area.</Text>
             </View>
           ) : (
             <View style={s.sectionList}>

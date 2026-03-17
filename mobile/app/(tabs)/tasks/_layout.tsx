@@ -39,6 +39,10 @@ const TasksScreenLayout = () => {
         options={{ title: 'Edit Task' }}
       />
       <Stack.Screen
+        name='area/[id]'
+        options={{ title: 'Area' }}
+      />
+      <Stack.Screen
         name='list/[id]'
         options={{ title: 'Checklist' }}
       />

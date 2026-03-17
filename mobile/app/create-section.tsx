@@ -43,12 +43,12 @@ const NewSectionScreen = () => {
         </View>
 
         <ScreenHeader
-          title='Create a Section'
-          subtitle='Sections help you organize tasks into groups like Kitchen, Front of House, or Admin.'
+          title='Create an Area'
+          subtitle='Areas help you organize work into groups like Kitchen, Front of House, or Admin.'
         />
 
         <FormField
-          label='Section name'
+          label='Area name'
           hint='Use a short name people can scan quickly.'
         >
           <Input
@@ -64,7 +64,7 @@ const NewSectionScreen = () => {
 
       <View style={s.footer}>
         <AppButton
-          label='Create Section'
+          label='Create Area'
           onPress={handleCreate}
           disabled={!isValid}
           icon={<Ionicons name='add-circle' size={18} color='#fff' />}

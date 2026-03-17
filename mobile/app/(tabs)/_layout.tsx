@@ -86,7 +86,7 @@ export default function TabLayout() {
         name='sections'
         options={{
           headerShown: false,
-          title: 'Sections',
+          title: 'Areas',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'layers' : 'layers-outline'}
