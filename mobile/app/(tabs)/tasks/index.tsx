@@ -2,6 +2,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -34,6 +35,7 @@ import Animated, {
 import * as ImagePicker from 'expo-image-picker'
 import ScreenMotion from '@/components/ui/ScreenMotion'
 import PriorityBadge from '@/components/ui/PriorityBadge'
+import { getTaskActionMode } from '@/utils/taskInteraction'
 
 const formatTime12h = (time24: string) => {
   const [h, m] = time24.split(':').map(Number)
@@ -208,6 +210,7 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
   const [showCompleted, setShowCompleted] = useState(false)
   const [showOneTime, setShowOneTime] = useState(true)
   const [showRecurring, setShowRecurring] = useState(true)
+  const [actionTask, setActionTask] = useState<UserTasks | null>(null)
 
   const launchCamera = useCallback(async (task: UserTasks) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
@@ -272,6 +275,11 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
     [deleteTask]
   )
 
+  const handleOpenActions = useCallback((task: UserTasks) => {
+    if (getTaskActionMode(Platform.OS) !== 'long_press') return
+    setActionTask(task)
+  }, [])
+
   if (total === 0) return null
 
   const allDone = pending.length === 0
@@ -314,6 +322,7 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
                   onOpenDetails={handleOpenDetails}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onOpenActions={handleOpenActions}
                   done={false}
                 />
               ))}
@@ -356,6 +365,7 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
                         onOpenDetails={handleOpenDetails}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onOpenActions={handleOpenActions}
                         done={false}
                       />
                     ))}
@@ -398,11 +408,50 @@ const SectionGroup = ({ section }: { section: SectionProps }) => {
                 onOpenDetails={handleOpenDetails}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onOpenActions={handleOpenActions}
                 done
               />
             ))}
           </Animated.View>
         )}
+
+      <Modal
+        visible={!!actionTask}
+        transparent
+        animationType='fade'
+        onRequestClose={() => setActionTask(null)}
+      >
+        <Pressable style={s.actionOverlay} onPress={() => setActionTask(null)}>
+          <Pressable style={s.actionSheet} onPress={() => {}}>
+            <Text style={s.actionTitle}>{actionTask?.title}</Text>
+            <Pressable
+              style={s.actionRow}
+              onPress={() => {
+                if (!actionTask) return
+                setActionTask(null)
+                handleEdit(actionTask)
+              }}
+            >
+              <Ionicons name='create-outline' size={18} color={colors.primary} />
+              <Text style={s.actionText}>Edit Task</Text>
+            </Pressable>
+            <Pressable
+              style={s.actionRow}
+              onPress={() => {
+                if (!actionTask) return
+                setActionTask(null)
+                handleDelete(actionTask)
+              }}
+            >
+              <Ionicons name='trash-outline' size={18} color={colors.iOSred} />
+              <Text style={[s.actionText, s.actionTextDanger]}>Delete Task</Text>
+            </Pressable>
+            <Pressable style={s.actionCancel} onPress={() => setActionTask(null)}>
+              <Text style={s.actionCancelText}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
@@ -413,6 +462,7 @@ const SwipeableTaskItem = ({
   onOpenDetails,
   onEdit,
   onDelete,
+  onOpenActions,
   done,
 }: {
   task: UserTasks
@@ -420,6 +470,7 @@ const SwipeableTaskItem = ({
   onOpenDetails: (t: UserTasks) => void
   onEdit: (t: UserTasks) => void
   onDelete: (t: UserTasks) => void
+  onOpenActions: (t: UserTasks) => void
   done: boolean
 }) => {
   const swipeableRef = useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null)
@@ -458,20 +509,14 @@ const SwipeableTaskItem = ({
       exiting={FadeOut.duration(140)}
       layout={LinearTransition.springify().damping(18).stiffness(170)}
     >
-      {Platform.OS === 'web' ? (
-        <View>
-          <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
-          <View style={s.webTaskActionsRow}>
-            <Pressable style={s.webTaskActionBtn} onPress={() => onEdit(task)}>
-              <Ionicons name='create-outline' size={14} color={colors.primary} />
-              <Text style={s.webTaskActionText}>Edit</Text>
-            </Pressable>
-            <Pressable style={s.webTaskActionBtn} onPress={() => onDelete(task)}>
-              <Ionicons name='trash-outline' size={14} color={colors.iOSred} />
-              <Text style={[s.webTaskActionText, s.webTaskActionTextDanger]}>Delete</Text>
-            </Pressable>
-          </View>
-        </View>
+      {getTaskActionMode(Platform.OS) === 'long_press' ? (
+        <TaskItem
+          task={task}
+          onToggle={onToggle}
+          onOpenDetails={onOpenDetails}
+          onOpenActions={onOpenActions}
+          done={done}
+        />
       ) : (
       <ReanimatedSwipeable
         ref={swipeableRef}
@@ -482,7 +527,13 @@ const SwipeableTaskItem = ({
         renderRightActions={renderRightActions}
         containerStyle={s.swipeableContainer}
       >
-        <TaskItem task={task} onToggle={onToggle} onOpenDetails={onOpenDetails} done={done} />
+        <TaskItem
+          task={task}
+          onToggle={onToggle}
+          onOpenDetails={onOpenDetails}
+          onOpenActions={onOpenActions}
+          done={done}
+        />
       </ReanimatedSwipeable>
       )}
     </Animated.View>
@@ -511,11 +562,13 @@ const TaskItem = ({
   task,
   onToggle,
   onOpenDetails,
+  onOpenActions,
   done,
 }: {
   task: UserTasks
   onToggle: (t: UserTasks) => void
   onOpenDetails: (t: UserTasks) => void
+  onOpenActions: (t: UserTasks) => void
   done: boolean
 }) => {
   const status = getTaskStatus(task)
@@ -546,7 +599,12 @@ const TaskItem = ({
           {done && <Ionicons name='checkmark' size={14} color='#fff' />}
         </Pressable>
       </Animated.View>
-      <Pressable style={s.taskContent} onPress={() => onOpenDetails(task)}>
+      <Pressable
+        style={s.taskContent}
+        onPress={() => onOpenDetails(task)}
+        onLongPress={() => onOpenActions(task)}
+        delayLongPress={220}
+      >
         <Text style={done ? s.taskTitleDone : s.taskTitle}>{task.title}</Text>
         {/* Due date/time + recurrence info row */}
         <View style={s.metaRow}>
@@ -836,32 +894,53 @@ const s = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-  webTaskActionsRow: {
-    flexDirection: 'row',
+  actionOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
     justifyContent: 'flex-end',
-    gap: 8,
-    paddingHorizontal: spacing.md,
-    paddingBottom: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8f8f8',
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
-  webTaskActionBtn: {
+  actionSheet: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  actionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f7',
+  },
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#f2f2f7',
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
+    gap: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
   },
-  webTaskActionText: {
-    fontSize: 12,
+  actionText: {
+    fontSize: 15,
     fontWeight: '600',
-    color: colors.primary,
+    color: colors.text,
   },
-  webTaskActionTextDanger: {
+  actionTextDanger: {
     color: colors.iOSred,
+  },
+  actionCancel: {
+    borderTopWidth: 1,
+    borderTopColor: '#f2f2f7',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  actionCancelText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.textSecondary ?? '#6B7280',
   },
   completedToggle: {
     paddingVertical: 10,
