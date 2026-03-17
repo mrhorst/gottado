@@ -20,11 +20,11 @@ const SectionsScreenLayout = () => {
     <Stack screenOptions={{ ...baseStackScreenOptions, headerShown: true }}>
       <Stack.Screen
         name='index'
-        options={{ title: 'Sections', headerRight: () => <NewSection /> }}
+        options={{ title: 'Areas', headerRight: () => <NewSection /> }}
       />
       <Stack.Screen
         name='[id]'
-        options={{ title: 'Section' }}
+        options={{ title: 'Area Settings' }}
       />
       <Stack.Screen
         name='add-member'
@@ -38,7 +38,7 @@ export const NewSection = () => {
   return (
     <Link href={'/create-section'} asChild>
       <Pressable style={styles.headerButton} hitSlop={8}>
-        <Text style={styles.headerLink}>New Section</Text>
+        <Text style={styles.headerLink}>New Area</Text>
       </Pressable>
     </Link>
   )

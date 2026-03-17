@@ -174,15 +174,15 @@ const SectionDetailScreen = () => {
         ListHeaderComponent={
           <View style={s.headerContent}>
             <ScreenHeader
-              eyebrow='Section'
-              title={section?.name ?? 'Section'}
-              subtitle='Manage checklists and the people assigned to this section in one place.'
+              eyebrow='Area Settings'
+              title={section?.name ?? 'Area'}
+              subtitle='Manage checklists and the people assigned to this area.'
             />
 
             <AppCard style={s.summaryCard}>
               <View style={s.summaryMetric}>
                 <Text style={s.summaryValue}>{lists.length}</Text>
-                <Text style={s.summaryLabel}>Lists</Text>
+                <Text style={s.summaryLabel}>Checklists</Text>
               </View>
               <View style={s.summaryMetric}>
                 <Text style={s.summaryValue}>
@@ -202,7 +202,7 @@ const SectionDetailScreen = () => {
               <AppCard style={s.createCard}>
                 <View style={s.createHeader}>
                   <View style={s.createCopy}>
-                    <Text style={s.createTitle}>Task Lists</Text>
+                    <Text style={s.createTitle}>Checklists</Text>
                     <Text style={s.createSubtitle}>
                       Add focused checklists like Opening, Closing, or Weekly.
                     </Text>
@@ -213,14 +213,14 @@ const SectionDetailScreen = () => {
                       onPress={() => setIsCreatingList(true)}
                     >
                       <Ionicons name='add' size={16} color='#fff' />
-                      <Text style={s.addListButtonText}>New List</Text>
+                      <Text style={s.addListButtonText}>New Checklist</Text>
                     </Pressable>
                   )}
                 </View>
 
                 {isCreatingList && (
                   <View style={s.createForm}>
-                    <FormField label='List name'>
+                    <FormField label='Checklist name'>
                       <Input
                         value={newListName}
                         onChangeText={setNewListName}
@@ -251,7 +251,7 @@ const SectionDetailScreen = () => {
                         style={s.actionButton}
                       />
                       <AppButton
-                        label='Create List'
+                        label='Create Checklist'
                         onPress={handleCreateList}
                         loading={createListMutation.isPending}
                         disabled={!newListName.trim()}
@@ -270,15 +270,14 @@ const SectionDetailScreen = () => {
             ) : lists.length === 0 ? (
               <EmptyState
                 icon={<Ionicons name='list-outline' size={28} color='#c7c7cc' />}
-                title='No lists yet'
-                description='Create the first checklist for this section to start organizing tasks.'
+                title='No checklists yet'
+                description='Create the first checklist for this area to start organizing tasks.'
               />
             ) : (
               <View style={s.listsWrap}>
                 {lists.map((list) => (
-                  <Pressable
+                  <View
                     key={list.id}
-                    onPress={() => router.push(`/(tabs)/tasks/list/${list.id}`)}
                   >
                     <AppCard style={s.listCard}>
                       <View style={s.listHeader}>
@@ -288,11 +287,6 @@ const SectionDetailScreen = () => {
                             {list.completedTasks}/{list.totalTasks} done
                           </Text>
                         </View>
-                        <Ionicons
-                          name='chevron-forward'
-                          size={18}
-                          color='#c7c7cc'
-                        />
                       </View>
                       <View style={s.progressTrack}>
                         <View
@@ -305,7 +299,7 @@ const SectionDetailScreen = () => {
                         />
                       </View>
                     </AppCard>
-                  </Pressable>
+                  </View>
                 ))}
               </View>
             )}
@@ -379,7 +373,7 @@ const SectionDetailScreen = () => {
               color='#c7c7cc'
             />
             <Text style={s.footerHintText}>
-              Create lists above. Tap a member to change their role. Tap a
+              Create checklists above. Tap a member to change their role. Tap a
               non-member to assign them.
             </Text>
           </View>

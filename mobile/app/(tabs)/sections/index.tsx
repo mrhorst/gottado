@@ -56,7 +56,7 @@ const SectionListScreen = () => {
     if (isViewer(item)) {
       Alert.alert(
         'No Access',
-        'You do not have permission to see this section',
+        'You do not have permission to manage this area',
         []
       )
     } else {
@@ -90,7 +90,7 @@ const SectionListScreen = () => {
     const result = []
 
     if (groups.owner.length > 0) {
-      result.push({ title: 'My Sections', data: sortByTasks(groups.owner) })
+      result.push({ title: 'My Areas', data: sortByTasks(groups.owner) })
     }
     if (groups.editor.length > 0) {
       result.push({ title: 'Shared with me', data: sortByTasks(groups.editor) })
@@ -127,13 +127,13 @@ const SectionListScreen = () => {
 
   const onRename = (item: SectionProps) => {
     if (Platform.OS === 'web') {
-      const newName = window.prompt('Rename section', item.name)
+      const newName = window.prompt('Rename area', item.name)
       if (newName && newName.trim() && newName.trim() !== item.name) {
         renameSection({ id: item.id, name: newName.trim() })
       }
     } else {
       Alert.prompt(
-        'Rename Section',
+        'Rename Area',
         'Enter a new name',
         [
           { text: 'Cancel', style: 'cancel' },
@@ -153,7 +153,7 @@ const SectionListScreen = () => {
   }
 
   const onArchive = (item: SectionProps) => {
-    Alert.alert('Archive', `Would you like to archive "${item.name}"?`, [
+    Alert.alert('Archive', `Would you like to archive area "${item.name}"?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Archive',
@@ -170,7 +170,7 @@ const SectionListScreen = () => {
   const onDelete = (item: SectionProps) => {
     Alert.prompt(
       'DELETE',
-      `You are about to delete "${item.name}". This will also delete ALL tasks associated with this section. Are you sure?`,
+      `You are about to delete area "${item.name}". This will also delete ALL tasks associated with this area. Are you sure?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

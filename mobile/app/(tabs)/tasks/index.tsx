@@ -13,7 +13,7 @@ import ScreenMotion from '@/components/ui/ScreenMotion'
 import AppCard from '@/components/ui/AppCard'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
-import { getSectionDetailPath } from '@/utils/sectionDetailRoute'
+import { getAreaOperationsPath } from '@/utils/areaRoutes'
 import { buildSectionSummaries } from '@/utils/taskHierarchy'
 import { colors, spacing, typography } from '@/styles/theme'
 
@@ -41,30 +41,30 @@ const TasksScreen = () => {
     <ScreenMotion>
       <ScrollView style={s.container} contentContainerStyle={s.content}>
         <View style={s.hero}>
-          <Text style={s.title}>Sections</Text>
+          <Text style={s.title}>Areas</Text>
           <Text style={s.subtitle}>
-            Pick an area to open its task lists and start checking work off.
+            Pick an area to open its checklists and start checking work off.
           </Text>
         </View>
 
         {sectionSummaries.length === 0 ? (
           <View style={s.emptyState}>
             <Ionicons name='layers-outline' size={42} color='#c7c7cc' />
-            <Text style={s.emptyTitle}>No active task sections</Text>
+            <Text style={s.emptyTitle}>No active task areas</Text>
             <Text style={s.emptyText}>Create tasks to populate this workflow.</Text>
           </View>
         ) : (
           sectionSummaries.map((section) => (
             <Pressable
               key={section.id}
-              onPress={() => router.push(getSectionDetailPath(section.id))}
+              onPress={() => router.push(getAreaOperationsPath(section.id))}
             >
               <AppCard style={s.sectionCard}>
                 <View style={s.sectionHeader}>
                   <View style={s.sectionTitleWrap}>
                     <Text style={s.sectionTitle}>{section.name}</Text>
                     <Text style={s.sectionMeta}>
-                      {section.listCount} lists • {section.completedTasks}/{section.totalTasks} done
+                      {section.listCount} checklists • {section.completedTasks}/{section.totalTasks} done
                     </Text>
                   </View>
                   <Ionicons name='chevron-forward' size={18} color='#c7c7cc' />

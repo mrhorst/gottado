@@ -66,7 +66,7 @@ const RootLayoutNav = () => {
         options={{
           presentation: 'modal',
           headerShown: true,
-          title: 'Create New Section',
+          title: 'Create New Area',
         }}
       />
     </Stack>

@@ -24,7 +24,7 @@ import FormField from '@/components/ui/FormField'
 import ScreenHeader from '@/components/ui/ScreenHeader'
 import { useQuery } from '@tanstack/react-query'
 import { getSectionTaskLists } from '@/services/sectionService'
-import { getSectionDetailPath } from '@/utils/sectionDetailRoute'
+import { getAreaSettingsPath } from '@/utils/areaRoutes'
 import { getInitialListId } from '@/utils/taskListSelection'
 
 type TaskMode = 'one_time' | 'recurring'
@@ -173,12 +173,12 @@ const NewTaskScreen = () => {
         </FormField>
 
         <View style={s.fieldGroup}>
-          <Text style={s.label}>Section</Text>
+          <Text style={s.label}>Area</Text>
           {writableSections.length === 0 ? (
             <View style={s.emptyState}>
               <Ionicons name='layers-outline' size={24} color='#c7c7cc' />
               <Text style={s.emptyStateText}>
-                No sections available. Create a section first.
+                No areas available. Create an area first.
               </Text>
             </View>
           ) : (
@@ -226,24 +226,24 @@ const NewTaskScreen = () => {
             <View style={s.emptyState}>
               <Ionicons name='list-outline' size={24} color='#c7c7cc' />
               <Text style={s.emptyStateText}>
-                Choose a section first, then select the checklist this task belongs to.
+                Choose an area first, then select the checklist this task belongs to.
               </Text>
             </View>
           ) : listsLoading ? (
             <View style={s.loadingState}>
-              <Text style={s.emptyStateText}>Loading lists...</Text>
+              <Text style={s.emptyStateText}>Loading checklists...</Text>
             </View>
           ) : sectionLists.length === 0 ? (
             <View style={s.emptyState}>
               <Ionicons name='list-outline' size={24} color='#c7c7cc' />
               <Text style={s.emptyStateText}>
-                This section has no lists yet. Create one first so tasks have a clear home.
+                This area has no checklists yet. Create one first so tasks have a clear home.
               </Text>
               <Pressable
                 style={s.inlineLink}
-                onPress={() => router.push(getSectionDetailPath(selectedSection.id))}
+                onPress={() => router.push(getAreaSettingsPath(selectedSection.id))}
               >
-                <Text style={s.inlineLinkText}>Open Section</Text>
+                <Text style={s.inlineLinkText}>Open Area Settings</Text>
               </Pressable>
             </View>
           ) : (
