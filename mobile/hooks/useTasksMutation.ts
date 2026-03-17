@@ -51,6 +51,7 @@ export const useTasksMutation = () => {
       title: string
       description?: string
       sectionId: number
+      listId?: number
       userId: number
       dueDate?: string
       deadlineTime?: string

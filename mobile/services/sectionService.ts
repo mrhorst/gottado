@@ -1,4 +1,5 @@
 import { MembershipRoles } from '../hooks/useMembershipQuery'
+import { TaskListSummary } from '@/types/section'
 import api from './api'
 
 const createSection = async (name: string, userId: number) => {
@@ -13,6 +14,11 @@ const getSections = async () => {
 
 const getSectionMembers = async (id: number) => {
   const { data } = await api.get(`/sections/${id}`)
+  return data
+}
+
+const getSectionTaskLists = async (id: number): Promise<TaskListSummary[]> => {
+  const { data } = await api.get(`/sections/${id}/task-lists`)
   return data
 }
 
@@ -64,6 +70,7 @@ export {
   createSection,
   getSections,
   getSectionMembers,
+  getSectionTaskLists,
   addMember,
   updateMemberRole,
   removeMember,

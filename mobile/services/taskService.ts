@@ -14,11 +14,14 @@ export type TaskPriority = 'low' | 'medium' | 'high'
 
 export interface UserTasks {
   description: string
-  dueDate: string
+  dueDate: string | null
   id: number
   title: string
   complete: boolean
+  sectionId: number
   sectionName: string
+  listId: number
+  listName: string
   recurrence: Recurrence | null
   lastCompletedAt: string | null
   deadlineTime: string | null
@@ -39,13 +42,13 @@ export interface TaskCompletion {
 
 export interface DailySnapshot {
   date: string
-  completions: Array<
+  completions: (
     TaskCompletion & {
       taskTitle: string
       sectionName: string
       recurrence: Recurrence | null
     }
-  >
+  )[]
   summary: {
     total: number
     onTime: number
@@ -68,6 +71,7 @@ interface CreateTaskPayload {
   title: string
   description?: string
   sectionId: number
+  listId?: number
   userId: number
   dueDate?: string
   deadlineTime?: string
@@ -94,11 +98,11 @@ const getDailySnapshot = async (date?: string): Promise<DailySnapshot> => {
 
 export interface CompletionsByUserResponse {
   days: number
-  users: Array<{
+  users: {
     userId: number
     userName: string
     count: number
-  }>
+  }[]
 }
 
 const getCompletionsByUser = async (days = 7): Promise<CompletionsByUserResponse> => {
@@ -114,6 +118,7 @@ interface UpdateTaskPayload {
   recurrence?: Recurrence | null
   requiresPicture?: boolean
   priority?: TaskPriority
+  listId?: number | null
 }
 
 const updateTask = async (id: number, payload: UpdateTaskPayload) => {
