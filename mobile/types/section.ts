@@ -21,6 +21,9 @@ export interface SectionTaskSummary extends SectionProps {
 export interface TaskListSummary {
   id: number
   name: string
+  description?: string | null
+  sortOrder?: number
+  sectionId?: number
   totalTasks: number
   completedTasks: number
   pendingTasks: number

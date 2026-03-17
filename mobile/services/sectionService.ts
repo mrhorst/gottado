@@ -18,7 +18,18 @@ const getSectionMembers = async (id: number) => {
 }
 
 const getSectionTaskLists = async (id: number): Promise<TaskListSummary[]> => {
-  const { data } = await api.get(`/sections/${id}/task-lists`)
+  const { data } = await api.get<TaskListSummary[]>(`/sections/${id}/task-lists`)
+  return data
+}
+
+const createSectionTaskList = async (
+  sectionId: number,
+  payload: { name: string; description?: string }
+): Promise<TaskListSummary> => {
+  const { data } = await api.post<TaskListSummary>(
+    `/sections/${sectionId}/task-lists`,
+    payload
+  )
   return data
 }
 
@@ -71,6 +82,7 @@ export {
   getSections,
   getSectionMembers,
   getSectionTaskLists,
+  createSectionTaskList,
   addMember,
   updateMemberRole,
   removeMember,

@@ -190,6 +190,46 @@ const getTaskLists = async (
   }
 }
 
+const createTaskList = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const sectionId = Number(req.params.id)
+  const loggedUser = Number(req.user?.sub)
+  const { name, description } = req.body
+
+  try {
+    const requesterRole = await getUserSectionRole(loggedUser, sectionId)
+    if (requesterRole !== 'owner' && requesterRole !== 'editor') {
+      return res
+        .status(403)
+        .send({ error: 'only owners and editors can create task lists' })
+    }
+
+    const [lastList] = await db
+      .select({ sortOrder: taskList.sortOrder })
+      .from(taskList)
+      .where(eq(taskList.sectionId, sectionId))
+      .orderBy(sql`${taskList.sortOrder} desc`)
+      .limit(1)
+
+    const [createdList] = await db
+      .insert(taskList)
+      .values({
+        sectionId,
+        name,
+        description: description ?? null,
+        sortOrder: (lastList?.sortOrder ?? -1) + 1,
+      })
+      .returning()
+
+    res.status(201).send(createdList)
+  } catch (error) {
+    next(error)
+  }
+}
+
 const addMember = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -280,6 +320,7 @@ export {
   deleteSection,
   getSectionInfo,
   getTaskLists,
+  createTaskList,
   addMember,
   updateMemberRole,
   unsubscribeMember,

@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,21 +9,30 @@ import {
   View,
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ionicons } from '@expo/vector-icons'
 import ScreenMotion from '@/components/ui/ScreenMotion'
 import AppCard from '@/components/ui/AppCard'
 import { colors, spacing, typography } from '@/styles/theme'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
-import { getSectionTaskLists } from '@/services/sectionService'
+import { createSectionTaskList, getSectionTaskLists } from '@/services/sectionService'
+import ScreenHeader from '@/components/ui/ScreenHeader'
+import FormField from '@/components/ui/FormField'
+import { Input } from '@/components/ui/Input'
+import AppButton from '@/components/ui/AppButton'
+import EmptyState from '@/components/ui/EmptyState'
 
 const SectionTaskListsScreen = () => {
   const { id } = useLocalSearchParams()
   const sectionId = Number(id)
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { sections } = useSectionQuery()
   const { tasks } = useTasksQuery()
+  const [isCreatingList, setIsCreatingList] = useState(false)
+  const [newListName, setNewListName] = useState('')
+  const [newListDescription, setNewListDescription] = useState('')
 
   const section = useMemo(
     () => (sections ?? []).find((item) => item.id === sectionId),
@@ -35,19 +45,46 @@ const SectionTaskListsScreen = () => {
     enabled: !!sectionId,
   })
 
+  const createListMutation = useMutation({
+    mutationFn: (payload: { name: string; description?: string }) =>
+      createSectionTaskList(sectionId, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['section-task-lists', sectionId],
+      })
+      setNewListName('')
+      setNewListDescription('')
+      setIsCreatingList(false)
+    },
+    onError: (error) => {
+      Alert.alert(
+        'Unable to create list',
+        error instanceof Error ? error.message : 'Please try again.'
+      )
+    },
+  })
+
   const sectionTasks = tasks.filter((task) => task.sectionId === sectionId)
   const completedTasks = sectionTasks.filter((task) => task.complete).length
+  const canManageLists = section?.role === 'owner' || section?.role === 'editor'
+
+  const handleCreateList = () => {
+    if (!newListName.trim()) return
+
+    createListMutation.mutate({
+      name: newListName.trim(),
+      description: newListDescription.trim() || undefined,
+    })
+  }
 
   return (
     <ScreenMotion>
       <ScrollView style={s.container} contentContainerStyle={s.content}>
-        <View style={s.hero}>
-          <Text style={s.sectionLabel}>Section</Text>
-          <Text style={s.title}>{section?.name ?? 'Section'}</Text>
-          <Text style={s.subtitle}>
-            Open a checklist below to get into the actionable task view.
-          </Text>
-        </View>
+        <ScreenHeader
+          eyebrow='Section'
+          title={section?.name ?? 'Section'}
+          subtitle='Open a checklist below to get into the actionable task view.'
+        />
 
         <AppCard style={s.summaryCard}>
           <View style={s.summaryMetric}>
@@ -60,10 +97,75 @@ const SectionTaskListsScreen = () => {
           </View>
         </AppCard>
 
+        {canManageLists && (
+          <AppCard style={s.createCard}>
+            <View style={s.createHeader}>
+              <View style={s.createCopy}>
+                <Text style={s.createTitle}>Task Lists</Text>
+                <Text style={s.createSubtitle}>
+                  Add focused checklists like Opening, Closing, or Weekly.
+                </Text>
+              </View>
+              {!isCreatingList && (
+                <Pressable style={s.addListButton} onPress={() => setIsCreatingList(true)}>
+                  <Ionicons name='add' size={16} color='#fff' />
+                  <Text style={s.addListButtonText}>New List</Text>
+                </Pressable>
+              )}
+            </View>
+
+            {isCreatingList && (
+              <View style={s.createForm}>
+                <FormField label='List name'>
+                  <Input
+                    value={newListName}
+                    onChangeText={setNewListName}
+                    placeholder='e.g., Closing'
+                    autoFocus
+                  />
+                </FormField>
+                <FormField label='Description' hint='Optional context or instructions for this checklist.'>
+                  <Input
+                    value={newListDescription}
+                    onChangeText={setNewListDescription}
+                    placeholder='Add details (optional)'
+                    multiline
+                  />
+                </FormField>
+                <View style={s.createActions}>
+                  <AppButton
+                    label='Cancel'
+                    onPress={() => {
+                      setIsCreatingList(false)
+                      setNewListName('')
+                      setNewListDescription('')
+                    }}
+                    tone='neutral'
+                    style={s.actionButton}
+                  />
+                  <AppButton
+                    label='Create List'
+                    onPress={handleCreateList}
+                    loading={createListMutation.isPending}
+                    disabled={!newListName.trim()}
+                    style={s.actionButton}
+                  />
+                </View>
+              </View>
+            )}
+          </AppCard>
+        )}
+
         {isLoading ? (
           <View style={s.loadingWrap}>
             <ActivityIndicator size='small' color={colors.primary} />
           </View>
+        ) : lists.length === 0 ? (
+          <EmptyState
+            icon={<Ionicons name='list-outline' size={28} color='#c7c7cc' />}
+            title='No lists yet'
+            description='Create the first checklist for this section to start organizing tasks.'
+          />
         ) : (
           lists.map((list) => (
             <Pressable
@@ -109,28 +211,55 @@ const s = StyleSheet.create({
     paddingBottom: 120,
     gap: spacing.md,
   },
-  hero: {
-    gap: 4,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#8e8e93',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  title: {
-    ...typography.h2,
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#8e8e93',
-  },
   summaryCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  createCard: {
+    gap: spacing.md,
+  },
+  createHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  createCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  createTitle: {
+    ...typography.h4,
+    color: colors.text,
+  },
+  createSubtitle: {
+    fontSize: 13,
+    color: '#8e8e93',
+    lineHeight: 18,
+  },
+  addListButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+  },
+  addListButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  createForm: {
+    gap: spacing.md,
+  },
+  createActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  actionButton: {
+    flex: 1,
   },
   summaryMetric: {
     flex: 1,
