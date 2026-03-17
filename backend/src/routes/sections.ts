@@ -4,6 +4,7 @@ import {
   createSection,
   updateSection,
   getSectionInfo,
+  getTaskLists,
   addMember,
   updateMemberRole,
   unsubscribeMember,
@@ -21,6 +22,7 @@ const router = Router()
 
 router.get('/', listSections)
 router.get('/:id', getSectionInfo)
+router.get('/:id/task-lists', getTaskLists)
 router.post('/', validate(createSectionSchema), createSection)
 router.put('/:id', validate(updateSectionSchema), updateSection)
 router.delete('/:id', deleteSection)

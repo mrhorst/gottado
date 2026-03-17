@@ -4,6 +4,7 @@ import type { Express } from 'express'
 import jwt from 'jsonwebtoken'
 import { Client } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
+import { sql } from 'drizzle-orm'
 import * as schema from '../src/db/schema.ts'
 import { cleanDatabase, resetTestDatabase, setupTestDb } from './test-db.ts'
 import bcrypt from 'bcrypt'
@@ -18,6 +19,7 @@ describe('Tasks API E2E', () => {
   let token: string
   let orgId: number
   let sectionId: number
+  let listId: number
   let userId: number
 
   const authHeaders = () => ({
@@ -71,6 +73,13 @@ describe('Tasks API E2E', () => {
       .values({ sectionId, userId, role: 'owner' })
       .returning()
 
+    const listResult = await db.execute(sql`
+      insert into task_lists (section_id, name, sort_order)
+      values (${sectionId}, ${'Daily Checks'}, 0)
+      returning id
+    `)
+    listId = Number(listResult.rows[0].id)
+
     token = jwt.sign(
       { sub: String(userId), email: user.email, name: user.name },
       'secret'
@@ -89,6 +98,7 @@ describe('Tasks API E2E', () => {
         title: 'Close kitchen',
         description: 'Deep clean and lock up',
         sectionId,
+        listId,
         dueDate: '2026-03-16',
         deadlineTime: '22:00',
         priority: 'high',
@@ -96,11 +106,20 @@ describe('Tasks API E2E', () => {
 
     expect(createRes.status).toBe(201)
     expect(createRes.body.priority).toBe('high')
+    expect(createRes.body.listId).toBe(listId)
     const taskId = createRes.body.id as number
 
     const listRes = await request(app).get('/api/tasks').set(authHeaders())
     expect(listRes.status).toBe(200)
-    expect(listRes.body.some((t: { id: number; priority: string }) => t.id === taskId && t.priority === 'high')).toBe(true)
+    expect(
+      listRes.body.some(
+        (t: { id: number; priority: string; listId: number; listName: string }) =>
+          t.id === taskId &&
+          t.priority === 'high' &&
+          t.listId === listId &&
+          t.listName === 'Daily Checks'
+      )
+    ).toBe(true)
 
     const updateRes = await request(app)
       .put(`/api/tasks/${taskId}`)
@@ -132,6 +151,7 @@ describe('Tasks API E2E', () => {
       .send({
         title: 'Verify stock room',
         sectionId,
+        listId,
         requiresPicture: true,
         priority: 'medium',
       })
@@ -153,5 +173,35 @@ describe('Tasks API E2E', () => {
 
     expect(acceptRes.status).toBe(200)
     expect(acceptRes.body.complete).toBe(true)
+  })
+
+  it('lists task lists within a section with progress summary', async () => {
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set(authHeaders())
+      .send({
+        title: 'Prep station check',
+        sectionId,
+        listId,
+        priority: 'medium',
+      })
+
+    expect(createRes.status).toBe(201)
+
+    const listsRes = await request(app)
+      .get(`/api/sections/${sectionId}/task-lists`)
+      .set(authHeaders())
+
+    expect(listsRes.status).toBe(200)
+    expect(listsRes.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: listId,
+          name: 'Daily Checks',
+          totalTasks: 1,
+          completedTasks: 0,
+        }),
+      ])
+    )
   })
 })
