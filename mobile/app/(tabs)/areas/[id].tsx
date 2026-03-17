@@ -48,7 +48,7 @@ const getRoleBadgeStyle = (role: string) => {
   }
 }
 
-const SectionDetailScreen = () => {
+const AreaSettingsScreen = () => {
   const { id } = useLocalSearchParams()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -159,7 +159,7 @@ const SectionDetailScreen = () => {
   }
 
   if (isError) {
-    router.navigate('/(tabs)/sections')
+    router.navigate('/(tabs)/areas')
     return null
   }
 
@@ -198,27 +198,28 @@ const SectionDetailScreen = () => {
               </View>
             </AppCard>
 
-            {canManageLists && (
-              <AppCard style={s.createCard}>
-                <View style={s.createHeader}>
-                  <View style={s.createCopy}>
-                    <Text style={s.createTitle}>Checklists</Text>
-                    <Text style={s.createSubtitle}>
-                      Add focused checklists like Opening, Closing, or Weekly.
-                    </Text>
-                  </View>
-                  {!isCreatingList && (
-                    <Pressable
-                      style={s.addListButton}
-                      onPress={() => setIsCreatingList(true)}
-                    >
-                      <Ionicons name='add' size={16} color='#fff' />
-                      <Text style={s.addListButtonText}>New Checklist</Text>
-                    </Pressable>
-                  )}
+            <View style={s.checklistsSection}>
+              <View style={s.checklistsHeader}>
+                <View style={s.checklistsCopy}>
+                  <Text style={s.checklistsTitle}>Checklists</Text>
+                  <Text style={s.checklistsSubtitle}>
+                    Add focused checklists like Opening, Closing, or Weekly.
+                  </Text>
                 </View>
+                {canManageLists && !isCreatingList && (
+                  <Pressable
+                    accessibilityLabel='Add checklist'
+                    hitSlop={8}
+                    style={s.addListButton}
+                    onPress={() => setIsCreatingList(true)}
+                  >
+                    <Ionicons name='add' size={18} color={colors.textSecondary} />
+                  </Pressable>
+                )}
+              </View>
 
-                {isCreatingList && (
+              {canManageLists && isCreatingList && (
+                <AppCard style={s.createFormCard}>
                   <View style={s.createForm}>
                     <FormField label='Checklist name'>
                       <Input
@@ -259,50 +260,50 @@ const SectionDetailScreen = () => {
                       />
                     </View>
                   </View>
-                )}
-              </AppCard>
-            )}
+                </AppCard>
+              )}
 
-            {listsLoading ? (
-              <View style={s.loadingWrap}>
-                <ActivityIndicator size='small' color={colors.primary} />
-              </View>
-            ) : lists.length === 0 ? (
-              <EmptyState
-                icon={<Ionicons name='list-outline' size={28} color='#c7c7cc' />}
-                title='No checklists yet'
-                description='Create the first checklist for this area to start organizing tasks.'
-              />
-            ) : (
-              <View style={s.listsWrap}>
-                {lists.map((list) => (
-                  <View
-                    key={list.id}
-                  >
-                    <AppCard style={s.listCard}>
-                      <View style={s.listHeader}>
-                        <View style={s.listTitleWrap}>
-                          <Text style={s.listTitle}>{list.name}</Text>
-                          <Text style={s.listMeta}>
-                            {list.completedTasks}/{list.totalTasks} done
-                          </Text>
+              {listsLoading ? (
+                <View style={s.loadingWrap}>
+                  <ActivityIndicator size='small' color={colors.primary} />
+                </View>
+              ) : lists.length === 0 ? (
+                <EmptyState
+                  icon={<Ionicons name='list-outline' size={28} color='#c7c7cc' />}
+                  title='No checklists yet'
+                  description='Create the first checklist for this area to start organizing tasks.'
+                />
+              ) : (
+                <View style={s.listsWrap}>
+                  {lists.map((list) => (
+                    <View
+                      key={list.id}
+                    >
+                      <AppCard style={s.listCard}>
+                        <View style={s.listHeader}>
+                          <View style={s.listTitleWrap}>
+                            <Text style={s.listTitle}>{list.name}</Text>
+                            <Text style={s.listMeta}>
+                              {list.completedTasks}/{list.totalTasks} done
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <View style={s.progressTrack}>
-                        <View
-                          style={[
-                            s.progressFill,
-                            {
-                              width: `${list.totalTasks === 0 ? 0 : (list.completedTasks / list.totalTasks) * 100}%`,
-                            },
-                          ]}
-                        />
-                      </View>
-                    </AppCard>
-                  </View>
-                ))}
-              </View>
-            )}
+                        <View style={s.progressTrack}>
+                          <View
+                            style={[
+                              s.progressFill,
+                              {
+                                width: `${list.totalTasks === 0 ? 0 : (list.completedTasks / list.totalTasks) * 100}%`,
+                              },
+                            ]}
+                          />
+                        </View>
+                      </AppCard>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
 
             {editingUser ? (
               <EditMemberPanel
@@ -373,8 +374,8 @@ const SectionDetailScreen = () => {
               color='#c7c7cc'
             />
             <Text style={s.footerHintText}>
-              Create checklists above. Tap a member to change their role. Tap a
-              non-member to assign them.
+              Use the checklist section above. Tap a member to change their role.
+              Tap a non-member to assign them.
             </Text>
           </View>
         }
@@ -563,41 +564,38 @@ const s = StyleSheet.create({
     fontWeight: '600',
     color: '#8e8e93',
   },
-  createCard: {
+  checklistsSection: {
     gap: spacing.md,
   },
-  createHeader: {
+  checklistsHeader: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  createCopy: {
+  checklistsCopy: {
     flex: 1,
     gap: 4,
   },
-  createTitle: {
+  checklistsTitle: {
     ...typography.h4,
     color: colors.text,
   },
-  createSubtitle: {
+  checklistsSubtitle: {
     fontSize: 13,
     color: '#8e8e93',
     lineHeight: 18,
   },
   addListButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceMuted,
   },
-  addListButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#fff',
+  createFormCard: {
+    gap: spacing.md,
   },
   createForm: {
     gap: spacing.md,
@@ -897,4 +895,4 @@ const s = StyleSheet.create({
   },
 })
 
-export default SectionDetailScreen
+export default AreaSettingsScreen
