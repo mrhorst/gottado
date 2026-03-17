@@ -44,6 +44,11 @@ export const updateSectionSchema = z.object({
   active: z.boolean().optional(),
 })
 
+export const createTaskListSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().max(255).optional(),
+})
+
 export const addSectionMemberSchema = z.object({
   sectionId: z.number().int().positive(),
   userId: z.number().int().positive(),

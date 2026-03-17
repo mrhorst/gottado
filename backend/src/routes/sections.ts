@@ -5,6 +5,7 @@ import {
   updateSection,
   getSectionInfo,
   getTaskLists,
+  createTaskList,
   addMember,
   updateMemberRole,
   unsubscribeMember,
@@ -13,6 +14,7 @@ import {
 import { validate } from '@/middleware/validate.ts'
 import {
   createSectionSchema,
+  createTaskListSchema,
   updateSectionSchema,
   addSectionMemberSchema,
   updateSectionMemberSchema,
@@ -23,6 +25,7 @@ const router = Router()
 router.get('/', listSections)
 router.get('/:id', getSectionInfo)
 router.get('/:id/task-lists', getTaskLists)
+router.post('/:id/task-lists', validate(createTaskListSchema), createTaskList)
 router.post('/', validate(createSectionSchema), createSection)
 router.put('/:id', validate(updateSectionSchema), updateSection)
 router.delete('/:id', deleteSection)

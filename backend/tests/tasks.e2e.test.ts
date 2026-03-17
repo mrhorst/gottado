@@ -204,4 +204,34 @@ describe('Tasks API E2E', () => {
       ])
     )
   })
+
+  it('creates a task list inside a section', async () => {
+    const createListRes = await request(app)
+      .post(`/api/sections/${sectionId}/task-lists`)
+      .set(authHeaders())
+      .send({
+        name: 'Closing',
+        description: 'End-of-day shutdown checklist',
+      })
+
+    expect(createListRes.status).toBe(201)
+    expect(createListRes.body.name).toBe('Closing')
+    expect(createListRes.body.sectionId).toBe(sectionId)
+
+    const listsRes = await request(app)
+      .get(`/api/sections/${sectionId}/task-lists`)
+      .set(authHeaders())
+
+    expect(listsRes.status).toBe(200)
+    expect(listsRes.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: createListRes.body.id,
+          name: 'Closing',
+          totalTasks: 0,
+          completedTasks: 0,
+        }),
+      ])
+    )
+  })
 })
