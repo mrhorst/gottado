@@ -26,6 +26,7 @@ export const radius = {
   sm: 8,
   md: 12,
   lg: 16,
+  xl: 20,
   full: 999,
 }
 
@@ -46,4 +47,11 @@ export const typography = {
 export const shadow = {
   card: '0px 2px 8px rgba(0, 0, 0, 0.06)',
   pop: '0px 6px 16px rgba(0, 0, 0, 0.12)',
+}
+
+export const layout = {
+  screenPadding: spacing.md,
+  screenGap: spacing.md,
+  formGap: spacing.lg,
+  fieldGap: spacing.sm,
 }

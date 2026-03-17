@@ -19,6 +19,9 @@ import * as ImagePicker from 'expo-image-picker'
 import AppCard from '@/components/ui/AppCard'
 import AppButton from '@/components/ui/AppButton'
 import PriorityBadge from '@/components/ui/PriorityBadge'
+import AppChip from '@/components/ui/AppChip'
+import EmptyState from '@/components/ui/EmptyState'
+import ScreenHeader from '@/components/ui/ScreenHeader'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || ''
 
@@ -121,8 +124,10 @@ const TaskDetailsScreen = () => {
   if (!task) {
     return (
       <View style={[s.container, s.centered]}>
-        <Ionicons name='document-text-outline' size={38} color='#c7c7cc' />
-        <Text style={s.emptyTitle}>Task not found</Text>
+        <EmptyState
+          icon={<Ionicons name='document-text-outline' size={38} color='#c7c7cc' />}
+          title='Task not found'
+        />
       </View>
     )
   }
@@ -131,20 +136,24 @@ const TaskDetailsScreen = () => {
     <View style={s.container}>
       <ScrollView contentContainerStyle={s.content}>
         <AppCard>
-          <Text style={s.taskTitle}>{task.title}</Text>
+          <ScreenHeader
+            eyebrow={task.sectionName}
+            title={task.title}
+            subtitle={task.listName}
+          />
           <View style={s.chipsRow}>
-            <PriorityBadge priority={task.priority} />
+            {!!task.priority && <PriorityBadge priority={task.priority} />}
             {task.requiresPicture && (
-              <View style={s.chip}>
-                <Ionicons name='camera-outline' size={12} color='#8e8e93' />
-                <Text style={s.chipText}>Requires photo</Text>
-              </View>
+              <AppChip
+                label='Requires photo'
+                icon={<Ionicons name='camera-outline' size={12} color='#8e8e93' />}
+              />
             )}
-            {task.sectionName && (
-              <View style={s.chip}>
-                <Ionicons name='layers-outline' size={12} color='#8e8e93' />
-                <Text style={s.chipText}>{task.sectionName}</Text>
-              </View>
+            {!!task.dueDate && (
+              <AppChip
+                label={new Date(task.dueDate).toLocaleDateString()}
+                icon={<Ionicons name='calendar-outline' size={12} color='#8e8e93' />}
+              />
             )}
           </View>
         </AppCard>
@@ -228,20 +237,6 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     flexWrap: 'wrap',
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#f2f2f7',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  chipText: {
-    fontSize: 12,
-    color: '#8e8e93',
-    fontWeight: '600',
   },
   blockTitle: {
     fontSize: 13,

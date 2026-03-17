@@ -1,10 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
 import { createUser } from '@/services/userService'
 import api from '@/services/api'
 import { useAuth } from '@/context/auth/AuthContext'
 import { Input } from '@/components/ui/Input'
-import { colors, typography } from '@/styles/theme'
+import { colors, layout, spacing } from '@/styles/theme'
+import AppButton from '@/components/ui/AppButton'
+import ScreenHeader from '@/components/ui/ScreenHeader'
+import FormField from '@/components/ui/FormField'
 
 const styles = StyleSheet.create({
   headerText: {
@@ -24,20 +27,9 @@ const styles = StyleSheet.create({
   screenContainer: {
     justifyContent: 'center',
     flex: 1,
-    padding: 30,
-  },
-  primaryButton: {
-    padding: 15,
-
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  primaryButtonText: {
-    ...typography.button,
-    color: '#fff',
+    padding: layout.screenPadding,
+    backgroundColor: colors.background,
+    gap: spacing.md,
   },
 })
 
@@ -64,32 +56,40 @@ const SignupScreen = () => {
     <View style={styles.screenContainer}>
       <View style={styles.container}>
         <Text style={styles.appName}>gottado</Text>
+        <ScreenHeader
+          title='Create Account'
+          subtitle='Set up your account to join your organization and start completing checklists.'
+        />
       </View>
 
       <View style={styles.container}>
-        <Input
-          value={name}
-          onChangeText={setName}
-          autoCapitalize='none'
-          placeholder='Name'
-        />
-        <Input
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize='none'
-          keyboardType='email-address'
-          placeholder='Email'
-        />
-        <Input
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholder='Password'
-        />
+        <FormField label='Name'>
+          <Input
+            value={name}
+            onChangeText={setName}
+            autoCapitalize='none'
+            placeholder='Name'
+          />
+        </FormField>
+        <FormField label='Email'>
+          <Input
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize='none'
+            keyboardType='email-address'
+            placeholder='Email'
+          />
+        </FormField>
+        <FormField label='Password'>
+          <Input
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholder='Password'
+          />
+        </FormField>
 
-        <Pressable style={styles.primaryButton} onPress={onSubmit}>
-          <Text style={styles.primaryButtonText}>Create Account</Text>
-        </Pressable>
+        <AppButton label='Create Account' onPress={onSubmit} />
       </View>
     </View>
   )

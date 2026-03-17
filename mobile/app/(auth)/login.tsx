@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '@/context/auth/AuthContext'
-import api from '@/services/api'
 import { Input } from '@/components/ui/Input'
 import { useRouter } from 'expo-router'
-import { colors, typography } from '@/styles/theme'
+import { colors, layout, spacing } from '@/styles/theme'
 import { login } from '@/services/userService'
+import AppButton from '@/components/ui/AppButton'
+import ScreenHeader from '@/components/ui/ScreenHeader'
+import FormField from '@/components/ui/FormField'
 
 const styles = StyleSheet.create({
   headerText: {
@@ -25,20 +27,9 @@ const styles = StyleSheet.create({
   screenContainer: {
     justifyContent: 'center',
     flex: 1,
-    padding: 30,
-  },
-  primaryButton: {
-    padding: 15,
-
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  primaryButtonText: {
-    ...typography.button,
-    color: '#fff',
+    padding: layout.screenPadding,
+    backgroundColor: colors.background,
+    gap: spacing.md,
   },
 })
 
@@ -60,23 +51,29 @@ const LoginScreen = () => {
         <Text style={styles.appName}>gottado</Text>
 
         <View style={styles.container}>
-          <Input
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize='none'
-            keyboardType='email-address'
-            placeholder='Email'
+          <ScreenHeader
+            title='Sign In'
+            subtitle='Access your team tasks, checklists, and operations dashboard.'
           />
-          <Input
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholder='Password'
-          />
+          <FormField label='Email'>
+            <Input
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize='none'
+              keyboardType='email-address'
+              placeholder='Email'
+            />
+          </FormField>
+          <FormField label='Password'>
+            <Input
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholder='Password'
+            />
+          </FormField>
         </View>
-        <Pressable style={styles.primaryButton} onPress={onSubmit}>
-          <Text style={styles.primaryButtonText}>Sign In</Text>
-        </Pressable>
+        <AppButton label='Sign In' onPress={onSubmit} />
       </View>
       <View style={{ marginTop: 10 }}>
         <Text>Not a user yet? </Text>
