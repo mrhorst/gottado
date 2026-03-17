@@ -1,8 +1,8 @@
 import { getTaskActionMode } from '@/utils/taskInteraction'
 
 describe('taskInteraction', () => {
-  it('uses long press actions on web to keep task rows uncluttered', () => {
-    expect(getTaskActionMode('web')).toBe('long_press')
+  it('disables row actions on web to avoid text-selection and copy overlays', () => {
+    expect(getTaskActionMode('web')).toBe('none')
   })
 
   it('uses swipe actions on native platforms', () => {
