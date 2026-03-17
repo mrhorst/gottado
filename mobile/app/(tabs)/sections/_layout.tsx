@@ -24,7 +24,7 @@ const SectionsScreenLayout = () => {
       />
       <Stack.Screen
         name='[id]'
-        options={{ title: 'Members' }}
+        options={{ title: 'Section' }}
       />
       <Stack.Screen
         name='add-member'

@@ -13,6 +13,7 @@ import ScreenMotion from '@/components/ui/ScreenMotion'
 import AppCard from '@/components/ui/AppCard'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
+import { getSectionDetailPath } from '@/utils/sectionDetailRoute'
 import { buildSectionSummaries } from '@/utils/taskHierarchy'
 import { colors, spacing, typography } from '@/styles/theme'
 
@@ -56,7 +57,7 @@ const TasksScreen = () => {
           sectionSummaries.map((section) => (
             <Pressable
               key={section.id}
-              onPress={() => router.push(`/(tabs)/tasks/section/${section.id}`)}
+              onPress={() => router.push(getSectionDetailPath(section.id))}
             >
               <AppCard style={s.sectionCard}>
                 <View style={s.sectionHeader}>

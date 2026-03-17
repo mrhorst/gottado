@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native'
-
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   MembershipRoles,
   SectionMembers,
@@ -18,8 +18,20 @@ import {
 } from '@/hooks/useMembershipQuery'
 import { useMembershipMutation } from '@/hooks/useMembershipMutation'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { colors, spacing } from '@/styles/theme'
+import { colors, spacing, typography } from '@/styles/theme'
 import { Ionicons } from '@expo/vector-icons'
+import { useSectionQuery } from '@/hooks/useSectionQuery'
+import { useTasksQuery } from '@/hooks/useTasksQuery'
+import {
+  createSectionTaskList,
+  getSectionTaskLists,
+} from '@/services/sectionService'
+import AppCard from '@/components/ui/AppCard'
+import AppButton from '@/components/ui/AppButton'
+import EmptyState from '@/components/ui/EmptyState'
+import FormField from '@/components/ui/FormField'
+import { Input } from '@/components/ui/Input'
+import ScreenHeader from '@/components/ui/ScreenHeader'
 
 const ROLES: MembershipRoles[] = ['editor', 'viewer']
 
@@ -39,13 +51,49 @@ const getRoleBadgeStyle = (role: string) => {
 const SectionDetailScreen = () => {
   const { id } = useLocalSearchParams()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const sectionId = Number(id)
 
+  const { sections } = useSectionQuery()
+  const { tasks } = useTasksQuery()
   const { sectionMembersResponse, isLoading, isError } = useMembershipQuery()
   const { unsubscribeMember, updateMember } = useMembershipMutation()
 
   const [editingUser, setEditingUser] = useState<SectionMembers | null>(null)
   const [isInteractionLocked, setIsInteractionLocked] = useState(true)
+  const [isCreatingList, setIsCreatingList] = useState(false)
+  const [newListName, setNewListName] = useState('')
+  const [newListDescription, setNewListDescription] = useState('')
+
+  const section = useMemo(
+    () => (sections ?? []).find((item) => item.id === sectionId),
+    [sections, sectionId]
+  )
+
+  const { data: lists = [], isLoading: listsLoading } = useQuery({
+    queryKey: ['section-task-lists', sectionId],
+    queryFn: () => getSectionTaskLists(sectionId),
+    enabled: !!sectionId,
+  })
+
+  const createListMutation = useMutation({
+    mutationFn: (payload: { name: string; description?: string }) =>
+      createSectionTaskList(sectionId, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['section-task-lists', sectionId],
+      })
+      setNewListName('')
+      setNewListDescription('')
+      setIsCreatingList(false)
+    },
+    onError: (error) => {
+      Alert.alert(
+        'Unable to create list',
+        error instanceof Error ? error.message : 'Please try again.'
+      )
+    },
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => setIsInteractionLocked(false), 250)
@@ -75,6 +123,15 @@ const SectionDetailScreen = () => {
     }
   }
 
+  const handleCreateList = () => {
+    if (!newListName.trim()) return
+
+    createListMutation.mutate({
+      name: newListName.trim(),
+      description: newListDescription.trim() || undefined,
+    })
+  }
+
   const groupedMembers = useMemo(() => {
     if (!sectionMembersResponse) return []
     const result = []
@@ -89,9 +146,13 @@ const SectionDetailScreen = () => {
     return result
   }, [sectionMembersResponse])
 
+  const sectionTasks = tasks.filter((task) => task.sectionId === sectionId)
+  const completedTasks = sectionTasks.filter((task) => task.complete).length
+  const canManageLists = section?.role === 'owner' || section?.role === 'editor'
+
   if (isLoading) {
     return (
-      <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[s.container, s.centered]}>
         <ActivityIndicator size='large' color={colors.primary} />
       </View>
     )
@@ -111,14 +172,153 @@ const SectionDetailScreen = () => {
         }
         stickySectionHeadersEnabled
         ListHeaderComponent={
-          editingUser ? (
-            <EditMemberPanel
-              user={editingUser}
-              onChangeRole={handleUpdateRole}
-              onRemove={handleRemoveMember}
-              onCancel={() => setEditingUser(null)}
+          <View style={s.headerContent}>
+            <ScreenHeader
+              eyebrow='Section'
+              title={section?.name ?? 'Section'}
+              subtitle='Manage checklists and the people assigned to this section in one place.'
             />
-          ) : null
+
+            <AppCard style={s.summaryCard}>
+              <View style={s.summaryMetric}>
+                <Text style={s.summaryValue}>{lists.length}</Text>
+                <Text style={s.summaryLabel}>Lists</Text>
+              </View>
+              <View style={s.summaryMetric}>
+                <Text style={s.summaryValue}>
+                  {completedTasks}/{sectionTasks.length}
+                </Text>
+                <Text style={s.summaryLabel}>Tasks Done</Text>
+              </View>
+              <View style={s.summaryMetric}>
+                <Text style={s.summaryValue}>
+                  {sectionMembersResponse?.members?.length ?? 0}
+                </Text>
+                <Text style={s.summaryLabel}>Assigned</Text>
+              </View>
+            </AppCard>
+
+            {canManageLists && (
+              <AppCard style={s.createCard}>
+                <View style={s.createHeader}>
+                  <View style={s.createCopy}>
+                    <Text style={s.createTitle}>Task Lists</Text>
+                    <Text style={s.createSubtitle}>
+                      Add focused checklists like Opening, Closing, or Weekly.
+                    </Text>
+                  </View>
+                  {!isCreatingList && (
+                    <Pressable
+                      style={s.addListButton}
+                      onPress={() => setIsCreatingList(true)}
+                    >
+                      <Ionicons name='add' size={16} color='#fff' />
+                      <Text style={s.addListButtonText}>New List</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {isCreatingList && (
+                  <View style={s.createForm}>
+                    <FormField label='List name'>
+                      <Input
+                        value={newListName}
+                        onChangeText={setNewListName}
+                        placeholder='e.g., Closing'
+                        autoFocus
+                      />
+                    </FormField>
+                    <FormField
+                      label='Description'
+                      hint='Optional context or instructions for this checklist.'
+                    >
+                      <Input
+                        value={newListDescription}
+                        onChangeText={setNewListDescription}
+                        placeholder='Add details (optional)'
+                        multiline
+                      />
+                    </FormField>
+                    <View style={s.createActions}>
+                      <AppButton
+                        label='Cancel'
+                        onPress={() => {
+                          setIsCreatingList(false)
+                          setNewListName('')
+                          setNewListDescription('')
+                        }}
+                        tone='neutral'
+                        style={s.actionButton}
+                      />
+                      <AppButton
+                        label='Create List'
+                        onPress={handleCreateList}
+                        loading={createListMutation.isPending}
+                        disabled={!newListName.trim()}
+                        style={s.actionButton}
+                      />
+                    </View>
+                  </View>
+                )}
+              </AppCard>
+            )}
+
+            {listsLoading ? (
+              <View style={s.loadingWrap}>
+                <ActivityIndicator size='small' color={colors.primary} />
+              </View>
+            ) : lists.length === 0 ? (
+              <EmptyState
+                icon={<Ionicons name='list-outline' size={28} color='#c7c7cc' />}
+                title='No lists yet'
+                description='Create the first checklist for this section to start organizing tasks.'
+              />
+            ) : (
+              <View style={s.listsWrap}>
+                {lists.map((list) => (
+                  <Pressable
+                    key={list.id}
+                    onPress={() => router.push(`/(tabs)/tasks/list/${list.id}`)}
+                  >
+                    <AppCard style={s.listCard}>
+                      <View style={s.listHeader}>
+                        <View style={s.listTitleWrap}>
+                          <Text style={s.listTitle}>{list.name}</Text>
+                          <Text style={s.listMeta}>
+                            {list.completedTasks}/{list.totalTasks} done
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name='chevron-forward'
+                          size={18}
+                          color='#c7c7cc'
+                        />
+                      </View>
+                      <View style={s.progressTrack}>
+                        <View
+                          style={[
+                            s.progressFill,
+                            {
+                              width: `${list.totalTasks === 0 ? 0 : (list.completedTasks / list.totalTasks) * 100}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </AppCard>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
+            {editingUser ? (
+              <EditMemberPanel
+                user={editingUser}
+                onChangeRole={handleUpdateRole}
+                onRemove={handleRemoveMember}
+                onCancel={() => setEditingUser(null)}
+              />
+            ) : null}
+          </View>
         }
         renderSectionHeader={({ section: { title } }) => (
           <View style={s.sectionHeader}>
@@ -152,7 +352,11 @@ const SectionDetailScreen = () => {
                   </View>
                 </View>
                 {!isOwner && (
-                  <Ionicons name='ellipsis-horizontal' size={20} color='#c7c7cc' />
+                  <Ionicons
+                    name='ellipsis-horizontal'
+                    size={20}
+                    color='#c7c7cc'
+                  />
                 )}
               </Pressable>
             )
@@ -169,9 +373,14 @@ const SectionDetailScreen = () => {
         }}
         ListFooterComponent={
           <View style={s.footerHint}>
-            <Ionicons name='information-circle-outline' size={16} color='#c7c7cc' />
+            <Ionicons
+              name='information-circle-outline'
+              size={16}
+              color='#c7c7cc'
+            />
             <Text style={s.footerHintText}>
-              Tap a member to change their role. Tap a non-member to assign them.
+              Create lists above. Tap a member to change their role. Tap a
+              non-member to assign them.
             </Text>
           </View>
         }
@@ -228,7 +437,11 @@ const EditMemberPanel = ({
     </View>
 
     <Pressable style={s.removeButton} onPress={onRemove}>
-      <Ionicons name='person-remove-outline' size={16} color={colors.iOSred} />
+      <Ionicons
+        name='person-remove-outline'
+        size={16}
+        color={colors.iOSred}
+      />
       <Text style={s.removeButtonText}>Remove from section</Text>
     </Pressable>
   </View>
@@ -277,7 +490,11 @@ const NonMemberRow = ({
       {expanded && (
         <View style={s.assignPanel}>
           <View style={s.assignPanelHeader}>
-            <Ionicons name='person-add-outline' size={16} color={colors.primary} />
+            <Ionicons
+              name='person-add-outline'
+              size={16}
+              color={colors.primary}
+            />
             <Text style={s.assignPanelTitle}>
               Add {user.name.split(' ')[0]} to this section
             </Text>
@@ -324,6 +541,118 @@ const s = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f2f2f7',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerContent: {
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  summaryCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  summaryMetric: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  summaryValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8e8e93',
+  },
+  createCard: {
+    gap: spacing.md,
+  },
+  createHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  createCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  createTitle: {
+    ...typography.h4,
+    color: colors.text,
+  },
+  createSubtitle: {
+    fontSize: 13,
+    color: '#8e8e93',
+    lineHeight: 18,
+  },
+  addListButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+  },
+  addListButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  createForm: {
+    gap: spacing.md,
+  },
+  createActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  actionButton: {
+    flex: 1,
+  },
+  loadingWrap: {
+    paddingTop: spacing.xl,
+    alignItems: 'center',
+  },
+  listsWrap: {
+    gap: spacing.sm,
+  },
+  listCard: {
+    gap: spacing.md,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  listTitleWrap: {
+    gap: 3,
+    flex: 1,
+  },
+  listTitle: {
+    ...typography.h4,
+    color: colors.text,
+  },
+  listMeta: {
+    fontSize: 13,
+    color: '#8e8e93',
+    fontWeight: '600',
+  },
+  progressTrack: {
+    height: 6,
+    backgroundColor: '#e5e5ea',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 6,
+    backgroundColor: colors.primary,
+    borderRadius: 999,
   },
   sectionHeader: {
     backgroundColor: '#f2f2f7',
@@ -392,20 +721,13 @@ const s = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
-
-  // Edit panel (replaces modal)
   editPanel: {
     backgroundColor: '#fff',
-    margin: spacing.md,
     borderRadius: 14,
     padding: spacing.md,
     borderWidth: 2,
     borderColor: colors.primary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.10)',
   },
   editPanelHeader: {
     flexDirection: 'row',
@@ -495,8 +817,6 @@ const s = StyleSheet.create({
     fontWeight: '600',
     color: colors.iOSred,
   },
-
-  // Assign panel for non-members
   assignPanel: {
     backgroundColor: '#fff',
     marginHorizontal: spacing.md,
@@ -505,11 +825,7 @@ const s = StyleSheet.create({
     padding: spacing.md,
     borderWidth: 2,
     borderColor: colors.primary + '30',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
   },
   assignPanelHeader: {
     flexDirection: 'row',
@@ -572,7 +888,6 @@ const s = StyleSheet.create({
     fontWeight: '500',
     color: '#8e8e93',
   },
-
   footerHint: {
     flexDirection: 'row',
     alignItems: 'center',

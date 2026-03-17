@@ -24,6 +24,7 @@ import FormField from '@/components/ui/FormField'
 import ScreenHeader from '@/components/ui/ScreenHeader'
 import { useQuery } from '@tanstack/react-query'
 import { getSectionTaskLists } from '@/services/sectionService'
+import { getSectionDetailPath } from '@/utils/sectionDetailRoute'
 import { getInitialListId } from '@/utils/taskListSelection'
 
 type TaskMode = 'one_time' | 'recurring'
@@ -240,7 +241,7 @@ const NewTaskScreen = () => {
               </Text>
               <Pressable
                 style={s.inlineLink}
-                onPress={() => router.push(`/(tabs)/tasks/section/${selectedSection.id}`)}
+                onPress={() => router.push(getSectionDetailPath(selectedSection.id))}
               >
                 <Text style={s.inlineLinkText}>Open Section</Text>
               </Pressable>
