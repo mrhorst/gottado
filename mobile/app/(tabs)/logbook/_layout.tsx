@@ -7,7 +7,8 @@ export default function LogbookLayout() {
       <Stack.Screen name='index' options={{ title: 'Manager Logbook' }} />
       <Stack.Screen name='new' options={{ title: 'New Log Type' }} />
       <Stack.Screen name='[id]' options={{ title: 'Log Entries' }} />
-      <Stack.Screen name='[id]/new-entry' options={{ title: 'New Log Entry' }} />
+      <Stack.Screen name='[id]/past-entries' options={{ title: 'Past Entries' }} />
+      <Stack.Screen name='[id]/history' options={{ title: 'Edit History' }} />
     </Stack>
   )
 }
