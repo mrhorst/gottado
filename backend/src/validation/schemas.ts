@@ -33,6 +33,29 @@ export const updateOrgMemberSchema = z.object({
   role: z.enum(['owner', 'editor', 'viewer']),
 })
 
+// ── Teams ───────────────────────────────────────────────────────────────
+
+export const createTeamSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().max(255).optional(),
+})
+
+export const updateTeamSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(255).nullable().optional(),
+  active: z.boolean().optional(),
+})
+
+export const addTeamMemberSchema = z.object({
+  userId: z.number().int().positive(),
+  role: z.enum(['lead', 'member']).optional().default('member'),
+})
+
+export const updateTeamMemberSchema = z.object({
+  userId: z.number().int().positive(),
+  role: z.enum(['lead', 'member']),
+})
+
 // ── Sections ────────────────────────────────────────────────────────────
 
 export const createSectionSchema = z.object({
@@ -42,6 +65,7 @@ export const createSectionSchema = z.object({
 export const updateSectionSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   active: z.boolean().optional(),
+  teamId: z.number().int().positive().nullable().optional(),
 })
 
 export const createTaskListSchema = z.object({

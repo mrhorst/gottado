@@ -146,6 +146,7 @@ export const section = pgTable(
     orgId: integer('org_id')
       .references(() => organization.id)
       .notNull(),
+    teamId: integer('team_id').references(() => team.id),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
@@ -180,6 +181,55 @@ export const sectionMember = pgTable(
     uniqueIndex('one_owner_per_section_idx')
       .on(table.sectionId)
       .where(sql`${table.role} = 'owner'`),
+  ]
+)
+
+export const team = pgTable(
+  'teams',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar({ length: 255 }).notNull(),
+    description: text(),
+    active: boolean().notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    check('team_name_not_empty', sql`${table.name} <> ''`),
+    index('teams_org_id_idx').on(table.orgId),
+    uniqueIndex('teams_org_id_name_idx').on(table.orgId, table.name),
+  ]
+)
+
+export const teamMember = pgTable(
+  'team_members',
+  {
+    teamId: integer('team_id')
+      .references(() => team.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: integer('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    role: varchar({ length: 20 })
+      .notNull()
+      .default('member')
+      .$type<'lead' | 'member'>(),
+    joinedAt: timestamp('joined_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.teamId, table.userId] }),
+    index('team_members_user_id_idx').on(table.userId),
+    index('team_members_team_id_idx').on(table.teamId),
+    index('team_members_role_idx').on(table.role),
   ]
 )
 

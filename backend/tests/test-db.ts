@@ -107,6 +107,8 @@ export async function cleanDatabase(): Promise<void> {
       'audit_templates',
       'task_completions',
       'tasks',
+      'team_members',
+      'teams',
       'audit_actions',
       'audit_follow_ups',
       'section_members',
