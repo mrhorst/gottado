@@ -99,7 +99,7 @@ const LogbookScreen = () => {
                     </View>
                   )}
                   <View style={s.pill}>
-                    <Text style={s.pillText}>{template.entryCount} entries</Text>
+                    <Text style={s.pillText}>{template.entryCount} days logged</Text>
                   </View>
                 </View>
                 <Text style={s.preview}>{template.lastEntryPreview || 'No entries yet.'}</Text>
