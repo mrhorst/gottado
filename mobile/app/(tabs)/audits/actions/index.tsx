@@ -83,31 +83,31 @@ const ActionItemsScreen = () => {
   return (
     <ScreenMotion>
       <View style={s.container}>
-      <View style={s.summaryBar}>
-        <Text style={s.summaryText}>
-          {actionItems.length} pending action{actionItems.length !== 1 ? 's' : ''}
-        </Text>
-      </View>
-      <FlatList
-        data={actionItems}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={[
-          s.content,
-          isWide && { maxWidth: 800, alignSelf: 'center', width: '100%' },
-        ]}
-        renderItem={({ item }) => (
-          <SwipeableActionItem
-            item={item}
-            onPromote={() => setPromoteItem(item)}
+        <View style={s.summaryBar}>
+          <Text style={s.summaryText}>
+            {actionItems.length} pending action{actionItems.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+        <FlatList
+          data={actionItems}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={[
+            s.content,
+            isWide && { maxWidth: 800, alignSelf: 'center', width: '100%' },
+          ]}
+          renderItem={({ item }) => (
+            <SwipeableActionItem
+              item={item}
+              onPromote={() => setPromoteItem(item)}
+            />
+          )}
+        />
+        {promoteItem && (
+          <PromoteModal
+            item={promoteItem}
+            onClose={() => setPromoteItem(null)}
           />
         )}
-      />
-      {promoteItem && (
-        <PromoteModal
-          item={promoteItem}
-          onClose={() => setPromoteItem(null)}
-        />
-      )}
       </View>
     </ScreenMotion>
   )
@@ -298,125 +298,100 @@ const PromoteModal = ({
             </Pressable>
           </View>
         ) : (
-        <ScrollView contentContainerStyle={s.modalContent} keyboardShouldPersistTaps='handled'>
-          {/* Source info */}
-          <View style={s.sourceCard}>
-            <Ionicons name='clipboard-outline' size={16} color='#8e8e93' />
-            <Text style={s.sourceText}>
-              From: {item.auditName} ({new Date(item.auditDate).toLocaleDateString()})
-            </Text>
-          </View>
-
-          {/* Title */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Task Title</Text>
-            <TextInput
-              style={s.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder='Task title'
-              placeholderTextColor='#c7c7cc'
-            />
-          </View>
-
-          {/* Description */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Description</Text>
-            <TextInput
-              style={[s.input, s.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder='Optional details'
-              placeholderTextColor='#c7c7cc'
-              multiline
-              textAlignVertical='top'
-            />
-          </View>
-
-          {/* Due Date */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Due Date (optional)</Text>
-            <TextInput
-              style={s.input}
-              value={dueDate}
-              onChangeText={setDueDate}
-              placeholder='YYYY-MM-DD'
-              placeholderTextColor='#c7c7cc'
-            />
-          </View>
-
-          {/* Deadline Time */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Deadline Time (optional)</Text>
-            <TextInput
-              style={s.input}
-              value={deadlineTime}
-              onChangeText={setDeadlineTime}
-              placeholder='HH:MM'
-              placeholderTextColor='#c7c7cc'
-            />
-          </View>
-
-          {/* Recurrence */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Recurrence</Text>
-            <View style={s.recurrenceOptions}>
-              <Pressable
-                style={[s.recurrenceChip, !recurrence && s.recurrenceChipSelected]}
-                onPress={() => setRecurrence(null)}
-              >
-                <Text style={[s.recurrenceChipText, !recurrence && s.recurrenceChipTextSelected]}>
-                  One-time
-                </Text>
-              </Pressable>
-              {Object.entries(RECURRENCE_LABELS).map(([key, label]) => {
-                const isSelected = recurrence === key
-                return (
-                  <Pressable
-                    key={key}
-                    style={[s.recurrenceChip, isSelected && s.recurrenceChipSelected]}
-                    onPress={() => setRecurrence(key as Recurrence)}
-                  >
-                    <Text style={[s.recurrenceChipText, isSelected && s.recurrenceChipTextSelected]}>
-                      {label}
-                    </Text>
-                  </Pressable>
-                )
-              })}
+          <ScrollView contentContainerStyle={s.modalContent} keyboardShouldPersistTaps='handled'>
+            <View style={s.sourceCard}>
+              <Ionicons name='clipboard-outline' size={16} color='#8e8e93' />
+              <Text style={s.sourceText}>
+                From: {item.auditName} ({new Date(item.auditDate).toLocaleDateString()})
+              </Text>
             </View>
-          </View>
 
-          {/* Section picker */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Assign to Section</Text>
-            {writableSections.length === 0 ? (
-              <Text style={s.emptySubtext}>No writable sections available.</Text>
-            ) : (
-              <View style={s.sectionList}>
-                {writableSections.map((sec) => {
-                  const isSelected = selectedSection?.id === sec.id
+            <View style={s.fieldGroup}>
+              <Text style={s.label}>Task Title</Text>
+              <TextInput
+                style={s.input}
+                value={title}
+                onChangeText={setTitle}
+                placeholder='Task title'
+                placeholderTextColor='#c7c7cc'
+              />
+            </View>
+
+            <View style={s.fieldGroup}>
+              <Text style={s.label}>Description</Text>
+              <TextInput
+                style={[s.input, s.textArea]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder='Optional details'
+                placeholderTextColor='#c7c7cc'
+                multiline
+                textAlignVertical='top'
+              />
+            </View>
+
+            <View style={s.fieldGroup}>
+              <Text style={s.label}>Due Date (optional)</Text>
+              <TextInput
+                style={s.input}
+                value={dueDate}
+                onChangeText={setDueDate}
+                placeholder='YYYY-MM-DD'
+                placeholderTextColor='#c7c7cc'
+              />
+            </View>
+
+            <View style={s.fieldGroup}>
+              <Text style={s.label}>Deadline Time (optional)</Text>
+              <TextInput
+                style={s.input}
+                value={deadlineTime}
+                onChangeText={setDeadlineTime}
+                placeholder='HH:MM'
+                placeholderTextColor='#c7c7cc'
+              />
+            </View>
+
+            <View style={s.fieldGroup}>
+              <Text style={s.label}>Recurrence</Text>
+              <View style={s.recurrenceGrid}>
+                {(['daily', 'weekly', 'monthly', 'quarterly', 'semi_annual', 'yearly'] as Recurrence[]).map((option) => {
+                  const isSelected = recurrence === option
                   return (
                     <Pressable
-                      key={sec.id}
-                      style={[s.sectionOption, isSelected && s.sectionOptionSelected]}
-                      onPress={() => setSelectedSection(sec)}
+                      key={option}
+                      style={[s.recurrenceChip, isSelected && s.recurrenceChipSelected]}
+                      onPress={() => setRecurrence(isSelected ? null : option)}
                     >
-                      <View style={s.sectionOptionLeft}>
-                        <View style={[s.radioOuter, isSelected && s.radioOuterSelected]}>
-                          {isSelected && <View style={s.radioInner} />}
-                        </View>
-                        <Text style={[s.sectionOptionText, isSelected && s.sectionOptionTextSelected]}>
-                          {sec.name}
-                        </Text>
-                      </View>
-                      <Text style={s.sectionRoleBadge}>{sec.role}</Text>
+                      <Text style={[s.recurrenceChipText, isSelected && s.recurrenceChipTextSelected]}>
+                        {RECURRENCE_LABELS[option]}
+                      </Text>
                     </Pressable>
                   )
                 })}
               </View>
-            )}
-          </View>
-        </ScrollView>
+            </View>
+
+            <View style={s.fieldGroup}>
+              <Text style={s.label}>Area</Text>
+              <View style={s.sectionList}>
+                {writableSections.map((section) => {
+                  const isSelected = selectedSection?.id === section.id
+                  return (
+                    <Pressable
+                      key={section.id}
+                      style={[s.sectionOption, isSelected && s.sectionOptionSelected]}
+                      onPress={() => setSelectedSection(section)}
+                    >
+                      <Text style={[s.sectionOptionText, isSelected && s.sectionOptionTextSelected]}>
+                        {section.name}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </View>
+          </ScrollView>
         )}
       </View>
     </Modal>
@@ -429,336 +404,258 @@ const s = StyleSheet.create({
     backgroundColor: '#f2f2f7',
   },
   summaryBar: {
-    backgroundColor: '#fff',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
   },
   summaryText: {
-    fontSize: 13,
-    color: '#8e8e93',
+    ...typography.caption,
+    color: colors.textMuted,
   },
   content: {
-    padding: spacing.md,
-    paddingBottom: 100,
+    paddingBottom: spacing.xl,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 80,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   emptyText: {
     ...typography.h3,
-    color: '#c7c7cc',
-    marginTop: spacing.md,
+    color: colors.textMuted,
   },
   emptySubtext: {
-    fontSize: 14,
-    color: '#c7c7cc',
-    marginTop: 4,
+    ...typography.body2,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  swipeableContainer: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  swipeActionsRow: {
+    flexDirection: 'row',
+  },
+  swipeBtn: {
+    width: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  swipeBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   itemRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-    overflow: 'hidden',
   },
   priorityStripe: {
-    width: 4,
-    alignSelf: 'stretch',
+    width: 6,
   },
   itemContent: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
+    padding: spacing.md,
+    gap: 6,
   },
   itemTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...typography.body1,
+    fontWeight: '700',
     color: colors.text,
   },
   itemDescription: {
-    fontSize: 13,
-    color: '#8e8e93',
-    marginTop: 2,
+    ...typography.body2,
+    color: colors.textMuted,
   },
   itemMeta: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 6,
     flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'center',
   },
   auditBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-  },
-  assigneeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
   recurrenceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: colors.primary + '12',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    gap: 4,
   },
-  recurrenceText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.primary,
+  assigneeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   metaText: {
-    fontSize: 11,
-    color: '#8e8e93',
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  recurrenceText: {
+    ...typography.caption,
+    color: colors.primary,
   },
   priorityPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    alignSelf: 'center',
     marginRight: spacing.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
   },
   priorityText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
-  swipeActionsRow: {
-    flexDirection: 'row',
-    width: 160,
-  },
-  swipeBtn: {
-    width: 80,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swipeBtnText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  swipeableContainer: {
-    overflow: 'hidden',
-    borderRadius: 12,
-    marginBottom: spacing.sm,
-  },
-  // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#f2f2f7',
+    backgroundColor: '#fff',
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    backgroundColor: '#fff',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    borderBottomColor: colors.border,
   },
   modalCancel: {
-    fontSize: 17,
-    color: colors.primary,
+    color: colors.textMuted,
+    fontSize: 16,
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    ...typography.h4,
     color: colors.text,
   },
   modalDone: {
-    fontSize: 17,
-    fontWeight: '600',
     color: colors.primary,
+    fontSize: 16,
+    fontWeight: '700',
   },
   modalContent: {
-    padding: spacing.lg,
-    paddingBottom: 40,
+    padding: spacing.md,
+    gap: spacing.md,
+    paddingBottom: spacing.xl,
   },
   sourceCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 12,
     padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
   },
   sourceText: {
-    fontSize: 13,
-    color: '#8e8e93',
+    ...typography.body2,
+    color: colors.textMuted,
     flex: 1,
   },
   fieldGroup: {
-    marginBottom: spacing.lg,
+    gap: 8,
   },
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#8e8e93',
+    color: colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginLeft: 4,
+    letterSpacing: 0.4,
   },
   input: {
-    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    paddingVertical: 12,
     fontSize: 16,
     color: colors.text,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
   },
   textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
+    minHeight: 120,
   },
-  recurrenceOptions: {
+  recurrenceGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   recurrenceChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
   },
   recurrenceChipSelected: {
-    backgroundColor: colors.primary + '15',
     borderColor: colors.primary,
+    backgroundColor: colors.primary + '14',
   },
   recurrenceChipText: {
-    fontSize: 14,
-    color: '#8e8e93',
-    fontWeight: '500',
+    ...typography.caption,
+    color: colors.textMuted,
+    fontWeight: '700',
   },
   recurrenceChipTextSelected: {
     color: colors.primary,
+  },
+  sectionList: {
+    gap: 8,
+  },
+  sectionOption: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+  },
+  sectionOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '12',
+  },
+  sectionOptionText: {
+    ...typography.body2,
+    color: colors.text,
     fontWeight: '600',
+  },
+  sectionOptionTextSelected: {
+    color: colors.primary,
   },
   successContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
-    gap: 12,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    gap: spacing.md,
   },
   successTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    ...typography.h3,
     color: colors.text,
   },
   successSubtext: {
-    fontSize: 15,
-    color: '#8e8e93',
+    ...typography.body2,
+    color: colors.textMuted,
     textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 280,
   },
   viewTaskBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
     borderRadius: 12,
-    marginTop: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
   },
   viewTaskBtnText: {
+    ...typography.button,
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   dismissLink: {
-    fontSize: 15,
-    color: '#8e8e93',
-    marginTop: 4,
-  },
-  sectionList: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
-    overflow: 'hidden',
-  },
-  sectionOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
-  },
-  sectionOptionSelected: {
-    backgroundColor: colors.primary + '08',
-  },
-  sectionOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#d1d1d6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: colors.primary,
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  sectionOptionText: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  sectionOptionTextSelected: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  sectionRoleBadge: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#8e8e93',
-    textTransform: 'uppercase',
-    backgroundColor: '#f2f2f7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    overflow: 'hidden',
+    ...typography.body2,
+    color: colors.textMuted,
   },
 })
 

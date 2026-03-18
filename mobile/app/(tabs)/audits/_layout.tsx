@@ -24,6 +24,10 @@ export default function AuditsLayout() {
         options={{ title: 'Conduct Audit', headerBackVisible: false }}
       />
       <Stack.Screen
+        name='actions/index'
+        options={{ title: 'Action Items' }}
+      />
+      <Stack.Screen
         name='actions/[runId]'
         options={{ title: 'Action Plan' }}
       />

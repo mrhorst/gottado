@@ -97,20 +97,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='action-items'
-        options={{
-          headerShown: false,
-          title: 'Actions',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'flash' : 'flash-outline'}
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name='audits'
         options={{
           headerShown: false,
