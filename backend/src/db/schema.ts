@@ -248,6 +248,57 @@ export const organization = pgTable('organizations', {
   deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
 })
 
+export const logbookTemplate = pgTable(
+  'logbook_templates',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    title: varchar({ length: 255 }).notNull(),
+    description: text(),
+    isSystem: boolean('is_system').notNull().default(false),
+    active: boolean().notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('logbook_templates_org_id_idx').on(table.orgId),
+    uniqueIndex('logbook_templates_org_title_idx').on(table.orgId, table.title),
+  ]
+)
+
+export const logbookEntry = pgTable(
+  'logbook_entries',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    templateId: integer('template_id')
+      .references(() => logbookTemplate.id, { onDelete: 'cascade' })
+      .notNull(),
+    authorId: integer('author_id')
+      .references(() => user.id)
+      .notNull(),
+    title: varchar({ length: 255 }),
+    body: text().notNull(),
+    entryDate: date('entry_date').notNull().default(sql`CURRENT_DATE`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('logbook_entries_template_id_idx').on(table.templateId),
+    index('logbook_entries_author_id_idx').on(table.authorId),
+    index('logbook_entries_created_at_idx').on(table.createdAt),
+  ]
+)
+
 export const orgMember = pgTable(
   'organization_members',
   {

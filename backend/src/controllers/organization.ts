@@ -1,4 +1,4 @@
-import { organization, orgMember, user } from '@/db/schema.ts'
+import { logbookTemplate, organization, orgMember, user } from '@/db/schema.ts'
 import { AuthenticatedRequest } from '@/types/index.ts'
 import als from '@/utils/context.ts'
 import db from '@/utils/db.ts'
@@ -66,6 +66,13 @@ export const createOrganization = async (
         orgId: org.id,
         userId,
         role: 'owner',
+      })
+
+      await tx.insert(logbookTemplate).values({
+        orgId: org.id,
+        title: 'General Log',
+        description: 'Daily operating notes and manager handoff context.',
+        isSystem: true,
       })
 
       return org

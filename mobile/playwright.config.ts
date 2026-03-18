@@ -26,7 +26,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `PORT=${backendPort} node --import tsx src/index.ts`,
+      command: `sh -c 'npx drizzle-kit migrate --config drizzle.config.ts && PORT=${backendPort} node --import tsx src/index.ts'`,
       cwd: '../backend',
       url: `http://127.0.0.1:${backendPort}`,
       reuseExistingServer: true,

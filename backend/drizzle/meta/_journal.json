@@ -64,6 +64,13 @@
       "when": 1773822600000,
       "tag": "0008_task_assigned_team",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773828600000,
+      "tag": "0009_logbook",
+      "breakpoints": true
     }
   ]
 }

@@ -111,6 +111,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name='logbook'
+        options={{
+          headerShown: false,
+          title: 'Logbook',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'book' : 'book-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name='user'
         options={{
           title: 'User',
