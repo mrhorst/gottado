@@ -3,6 +3,7 @@ import {
   pgTable,
   varchar,
   date,
+  numeric,
   AnyPgColumn,
   text,
   timestamp,
@@ -173,6 +174,42 @@ export const laborShift = pgTable(
     index('labor_shifts_area_id_idx').on(table.areaId),
     index('labor_shifts_team_id_idx').on(table.assignedTeamId),
     index('labor_shifts_user_id_idx').on(table.assignedUserId),
+  ]
+)
+
+export const costRecord = pgTable(
+  'cost_records',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    kind: varchar({ length: 20 })
+      .$type<'waste' | 'purchase' | 'vendor_issue'>()
+      .notNull(),
+    title: varchar({ length: 255 }).notNull(),
+    entryDate: date('entry_date').notNull(),
+    amount: numeric({ precision: 10, scale: 2 }).notNull(),
+    areaId: integer('area_id').references(() => section.id, { onDelete: 'set null' }),
+    vendorName: varchar('vendor_name', { length: 255 }),
+    quantityLabel: varchar('quantity_label', { length: 255 }),
+    notes: text(),
+    createdBy: integer('created_by')
+      .references(() => user.id)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    check('cost_record_title_not_empty', sql`${table.title} <> ''`),
+    index('cost_records_org_id_idx').on(table.orgId),
+    index('cost_records_entry_date_idx').on(table.entryDate),
+    index('cost_records_kind_idx').on(table.kind),
+    index('cost_records_area_id_idx').on(table.areaId),
   ]
 )
 
