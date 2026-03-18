@@ -2,3 +2,6 @@
 .env.test
 backend/.env.test
 backend/uploads/
+mobile/.playwright-browsers/
+mobile/playwright-report/
+mobile/test-results/
