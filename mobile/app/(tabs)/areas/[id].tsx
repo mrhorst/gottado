@@ -22,9 +22,11 @@ import { colors, spacing, typography } from '@/styles/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
 import { useTasksQuery } from '@/hooks/useTasksQuery'
+import { useTeamsQuery } from '@/hooks/useTeamsQuery'
 import {
   createSectionTaskList,
   getSectionTaskLists,
+  updateSection,
 } from '@/services/sectionService'
 import AppCard from '@/components/ui/AppCard'
 import AppButton from '@/components/ui/AppButton'
@@ -56,6 +58,7 @@ const AreaSettingsScreen = () => {
 
   const { sections } = useSectionQuery()
   const { tasks } = useTasksQuery()
+  const { teams } = useTeamsQuery()
   const { sectionMembersResponse, isLoading, isError } = useMembershipQuery()
   const { unsubscribeMember, updateMember } = useMembershipMutation()
 
@@ -90,6 +93,19 @@ const AreaSettingsScreen = () => {
     onError: (error) => {
       Alert.alert(
         'Unable to create list',
+        error instanceof Error ? error.message : 'Please try again.'
+      )
+    },
+  })
+
+  const updateAreaMutation = useMutation({
+    mutationFn: (teamId: number | null) => updateSection(sectionId, { teamId }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sections'] })
+    },
+    onError: (error) => {
+      Alert.alert(
+        'Unable to update team',
         error instanceof Error ? error.message : 'Please try again.'
       )
     },
@@ -149,6 +165,21 @@ const AreaSettingsScreen = () => {
   const sectionTasks = tasks.filter((task) => task.sectionId === sectionId)
   const completedTasks = sectionTasks.filter((task) => task.complete).length
   const canManageLists = section?.role === 'owner' || section?.role === 'editor'
+  const canManageTeam = section?.role === 'owner'
+  const activeTeams = teams.filter((team) => team.active)
+
+  const handleChangeTeam = () => {
+    if (!canManageTeam) return
+
+    Alert.alert('Primary Team', 'Choose the team responsible for this area.', [
+      ...activeTeams.map((team) => ({
+        text: team.name,
+        onPress: () => updateAreaMutation.mutate(team.id),
+      })),
+      { text: 'Clear Team', onPress: () => updateAreaMutation.mutate(null) },
+      { text: 'Cancel', style: 'cancel' as const },
+    ])
+  }
 
   if (isLoading) {
     return (
@@ -195,6 +226,25 @@ const AreaSettingsScreen = () => {
                   {sectionMembersResponse?.members?.length ?? 0}
                 </Text>
                 <Text style={s.summaryLabel}>Assigned</Text>
+              </View>
+            </AppCard>
+
+            <AppCard style={s.teamCard}>
+              <View style={s.teamHeader}>
+                <View style={s.teamCopy}>
+                  <Text style={s.teamLabel}>Primary Team</Text>
+                  <Text style={s.teamName}>
+                    {section?.teamName ?? 'No team assigned'}
+                  </Text>
+                </View>
+                {canManageTeam && (
+                  <AppButton
+                    label='Change Team'
+                    tone='neutral'
+                    onPress={handleChangeTeam}
+                    loading={updateAreaMutation.isPending}
+                  />
+                )}
               </View>
             </AppCard>
 
@@ -553,6 +603,30 @@ const s = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 2,
+  },
+  teamCard: {
+    gap: spacing.sm,
+  },
+  teamHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  teamCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  teamLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#8e8e93',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  teamName: {
+    ...typography.h4,
+    color: colors.text,
   },
   summaryValue: {
     fontSize: 24,

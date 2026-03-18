@@ -7,6 +7,8 @@ export interface SectionProps {
   name: string
   id: number
   role: 'owner' | 'editor' | 'viewer'
+  teamId?: number | null
+  teamName?: string | null
 }
 
 export interface SectionTaskSummary extends SectionProps {
