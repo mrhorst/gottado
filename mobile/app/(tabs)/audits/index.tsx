@@ -257,6 +257,14 @@ export default function AuditsHome() {
 
       <Pressable
         style={styles.outlineButton}
+        accessibilityLabel='Open action items'
+        onPress={() => router.push('/(tabs)/audits/actions')}
+      >
+        <Text style={styles.outlineButtonText}>Action Items</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.outlineButton}
         onPress={() => router.push('/(tabs)/audits/runs')}
       >
         <Text style={styles.outlineButtonText}>View History</Text>
