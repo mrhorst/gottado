@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import AppCard from '@/components/ui/AppCard'
+import AppButton from '@/components/ui/AppButton'
 import EmptyState from '@/components/ui/EmptyState'
 import ScreenMotion from '@/components/ui/ScreenMotion'
 import { useTeamsQuery } from '@/hooks/useTeamsQuery'
@@ -46,6 +47,15 @@ const TeamsScreen = () => {
           <Text style={s.subtitle}>
             Manage ownership across areas without changing access control.
           </Text>
+          <View style={s.heroAction}>
+            <AppButton
+              label='New Team'
+              onPress={() => router.push('/(tabs)/areas/teams/new')}
+              accessibilityLabel='Create team'
+              icon={<Ionicons name='add-circle' size={18} color='#fff' />}
+              style={s.createButton}
+            />
+          </View>
         </View>
 
         {teams.length === 0 ? (
@@ -112,6 +122,13 @@ const s = StyleSheet.create({
     lineHeight: 20,
     color: colors.textSecondary,
     maxWidth: 360,
+  },
+  heroAction: {
+    marginTop: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  createButton: {
+    minWidth: 132,
   },
   teamCard: {
     gap: spacing.sm,

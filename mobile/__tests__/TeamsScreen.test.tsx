@@ -32,7 +32,7 @@ jest.mock('@expo/vector-icons', () => ({
 }))
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: pushMock }),
 }))
 
 jest.mock('@/hooks/useTeamsQuery', () => ({
@@ -48,6 +48,7 @@ jest.mock('@/components/ui/ScreenMotion', () => ({
 const { useTeamsQuery } = jest.requireMock('@/hooks/useTeamsQuery') as {
   useTeamsQuery: jest.Mock
 }
+const pushMock = jest.fn()
 
 const getTextNodes = (tree: any) =>
   tree.root.findAll((node: any) => node.type === 'Text')
@@ -56,6 +57,7 @@ describe('TeamsScreen', () => {
   let consoleErrorSpy: jest.SpyInstance
 
   beforeEach(() => {
+    pushMock.mockReset()
     useTeamsQuery.mockReturnValue({
       teams: [
         { id: 12, name: 'AM Kitchen Team', description: 'Morning crew', memberCount: 4, active: true },
@@ -79,7 +81,7 @@ describe('TeamsScreen', () => {
     consoleErrorSpy.mockRestore()
   })
 
-  it('renders teams inside the areas module', () => {
+  it('renders teams inside the areas module and exposes a create entry point', () => {
     let tree: any
 
     renderer.act(() => {
@@ -87,10 +89,17 @@ describe('TeamsScreen', () => {
     })
 
     const texts = getTextNodes(tree).map((node: any) => node.props.children)
+    const createButton = tree.root.findByProps({ accessibilityLabel: 'Create team' })
 
     expect(texts).toContain('Teams')
     expect(texts).toContain('AM Kitchen Team')
     expect(texts).toContain('PM Kitchen Team')
     expect(texts).toContain('Manage ownership across areas without changing access control.')
+
+    renderer.act(() => {
+      createButton.props.onPress()
+    })
+
+    expect(pushMock).toHaveBeenCalledWith('/(tabs)/areas/teams/new')
   })
 })
