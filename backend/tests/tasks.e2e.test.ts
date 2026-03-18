@@ -175,6 +175,48 @@ describe('Tasks API E2E', () => {
     expect(acceptRes.body.complete).toBe(true)
   })
 
+  it('returns completion audit details in the daily snapshot', async () => {
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set(authHeaders())
+      .send({
+        title: 'Clean fryers',
+        sectionId,
+        listId,
+        requiresPicture: true,
+        priority: 'high',
+      })
+
+    expect(createRes.status).toBe(201)
+    const taskId = createRes.body.id as number
+
+    const completeRes = await request(app)
+      .put(`/api/tasks/${taskId}`)
+      .set(authHeaders())
+      .send({ complete: true, pictureUrl: '/uploads/fryers-clean.jpg' })
+
+    expect(completeRes.status).toBe(200)
+
+    const today = new Date().toISOString().split('T')[0]
+    const snapshotRes = await request(app)
+      .get(`/api/tasks/snapshot?date=${today}`)
+      .set(authHeaders())
+
+    expect(snapshotRes.status).toBe(200)
+    expect(snapshotRes.body.completions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          taskId,
+          taskTitle: 'Clean fryers',
+          completedBy: userId,
+          completedByName: 'E2E User',
+          requiresPicture: true,
+          pictureUrl: '/uploads/fryers-clean.jpg',
+        }),
+      ])
+    )
+  })
+
   it('lists task lists within a section with progress summary', async () => {
     const createRes = await request(app)
       .post('/api/tasks')

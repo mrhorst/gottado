@@ -388,15 +388,20 @@ const getDailySnapshot = async (
         taskId: taskCompletion.taskId,
         taskTitle: task.title,
         sectionName: section.name,
+        completedBy: taskCompletion.completedBy,
+        completedByName: user.name,
         completedAt: taskCompletion.completedAt,
         dueDate: taskCompletion.dueDate,
         deadlineTime: taskCompletion.deadlineTime,
         onTime: taskCompletion.onTime,
         recurrence: task.recurrence,
+        requiresPicture: task.requiresPicture,
+        pictureUrl: taskCompletion.pictureUrl,
       })
       .from(taskCompletion)
       .innerJoin(task, eq(taskCompletion.taskId, task.id))
       .innerJoin(section, eq(task.sectionId, section.id))
+      .innerJoin(user, eq(taskCompletion.completedBy, user.id))
       .where(
         and(
           eq(section.orgId, orgId),

@@ -56,10 +56,22 @@ const TaskDetailsScreen = () => {
     useTasksMutation()
 
   const task = tasks.find((t) => t.id === taskId)
-  const photoCompletions = useMemo(
-    () => completions.filter((c) => !!c.pictureUrl),
-    [completions]
-  )
+  const currentEvidence = useMemo(() => {
+    if (!task) return null
+
+    const photoCompletions = completions.filter((c) => !!c.pictureUrl)
+    if (photoCompletions.length === 0) return null
+
+    if (!task.recurrence) {
+      return photoCompletions[0] ?? null
+    }
+
+    const currentCycleCompletion = photoCompletions.find(
+      (completion) => completion.dueDate === task.dueDate
+    )
+
+    return currentCycleCompletion ?? null
+  }, [completions, task])
   const isSubmitting = isTogglingComplete || isUploadingPicture
 
   const pickCompletionImage = async () => {
@@ -166,23 +178,23 @@ const TaskDetailsScreen = () => {
         </AppCard>
 
         <AppCard>
-          <Text style={s.blockTitle}>Completion Photos</Text>
+          <Text style={s.blockTitle}>Current Evidence</Text>
           {historyLoading ? (
             <ActivityIndicator size='small' color={colors.primary} />
-          ) : photoCompletions.length === 0 ? (
-            <Text style={s.emptyText}>No photo uploads for this task yet.</Text>
+          ) : !currentEvidence ? (
+            <Text style={s.emptyText}>
+              {task.recurrence
+                ? 'No photo uploaded for the current cycle yet.'
+                : 'No photo uploaded for this task yet.'}
+            </Text>
           ) : (
-            <View style={s.photoList}>
-              {photoCompletions.map((completion) => (
-                <View key={completion.id} style={s.photoCard}>
-                  <Image
-                    source={{ uri: resolveImageUrl(String(completion.pictureUrl)) }}
-                    style={s.photo}
-                    resizeMode='cover'
-                  />
-                  <Text style={s.photoCaption}>{formatDateTime(completion.completedAt)}</Text>
-                </View>
-              ))}
+            <View style={s.photoCard}>
+              <Image
+                source={{ uri: resolveImageUrl(String(currentEvidence.pictureUrl)) }}
+                style={s.photo}
+                resizeMode='cover'
+              />
+              <Text style={s.photoCaption}>{formatDateTime(currentEvidence.completedAt)}</Text>
             </View>
           )}
         </AppCard>
