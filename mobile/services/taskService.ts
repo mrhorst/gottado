@@ -22,6 +22,8 @@ export interface UserTasks {
   sectionName: string
   listId: number
   listName: string
+  assignedTeamId?: number | null
+  assignedTeamName?: string | null
   recurrence: Recurrence | null
   lastCompletedAt: string | null
   deadlineTime: string | null
@@ -75,6 +77,7 @@ interface CreateTaskPayload {
   description?: string
   sectionId: number
   listId?: number
+  assignedTeamId?: number | null
   userId: number
   dueDate?: string
   deadlineTime?: string
@@ -122,6 +125,7 @@ interface UpdateTaskPayload {
   requiresPicture?: boolean
   priority?: TaskPriority
   listId?: number | null
+  assignedTeamId?: number | null
 }
 
 const updateTask = async (id: number, payload: UpdateTaskPayload) => {

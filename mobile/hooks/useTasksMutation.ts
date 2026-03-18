@@ -52,6 +52,7 @@ export const useTasksMutation = () => {
       description?: string
       sectionId: number
       listId?: number
+      assignedTeamId?: number | null
       userId: number
       dueDate?: string
       deadlineTime?: string

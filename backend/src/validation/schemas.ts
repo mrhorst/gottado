@@ -101,6 +101,7 @@ export const createTaskSchema = z.object({
   priority: taskPriorityEnum.optional(),
   sectionId: z.number().int().positive(),
   listId: z.number().int().positive().optional(),
+  assignedTeamId: z.number().int().positive().nullable().optional(),
 })
 
 export const updateTaskSchema = z.object({
@@ -112,6 +113,7 @@ export const updateTaskSchema = z.object({
   requiresPicture: z.boolean().optional(),
   priority: taskPriorityEnum.nullable().optional(),
   listId: z.number().int().positive().nullable().optional(),
+  assignedTeamId: z.number().int().positive().nullable().optional(),
   complete: z.boolean().optional(),
   pictureUrl: z.string().max(500).nullable().optional(),
 })
