@@ -162,6 +162,29 @@ export const dayPart = pgTable(
   ]
 )
 
+export const scheduleDay = pgTable(
+  'schedule_days',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    scheduleDate: date('schedule_date').notNull(),
+    status: varchar({ length: 20 }).notNull().default('draft'),
+    publishedBy: integer('published_by').references(() => user.id),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex('schedule_days_org_date_idx').on(table.orgId, table.scheduleDate),
+  ]
+)
+
 export const laborShift = pgTable(
   'labor_shifts',
   {
@@ -184,6 +207,7 @@ export const laborShift = pgTable(
     createdBy: integer('created_by')
       .references(() => user.id)
       .notNull(),
+    updatedBy: integer('updated_by').references(() => user.id),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),

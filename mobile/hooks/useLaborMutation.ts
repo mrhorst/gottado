@@ -4,15 +4,21 @@ import {
   createDayPart as createDayPartApi,
   createLaborShift as createLaborShiftApi,
   deleteDayPart as deleteDayPartApi,
+  deleteLaborShift as deleteLaborShiftApi,
+  publishScheduleDay as publishApi,
+  unpublishScheduleDay as unpublishApi,
   updateDayPart as updateDayPartApi,
+  updateLaborShift as updateLaborShiftApi,
 } from '@/services/laborService'
-import type { UpdateDayPartPayload } from '@/types/labor'
+import type { UpdateDayPartPayload, UpdateLaborShiftPayload } from '@/types/labor'
+
+// ── Shifts ─────────────────────────────────────────────────────────────
 
 export const useCreateShiftMutation = () => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  const createShiftMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: createLaborShiftApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['labor-shifts', user?.id] })
@@ -20,10 +26,83 @@ export const useCreateShiftMutation = () => {
   })
 
   return {
-    createShift: createShiftMutation.mutate,
-    isPending: createShiftMutation.isPending,
+    createShift: mutation.mutate,
+    isPending: mutation.isPending,
   }
 }
+
+export const useUpdateShiftMutation = () => {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateLaborShiftPayload }) =>
+      updateLaborShiftApi(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labor-shifts', user?.id] })
+    },
+  })
+
+  return {
+    updateShift: mutation.mutate,
+    isPending: mutation.isPending,
+  }
+}
+
+export const useDeleteShiftMutation = () => {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: deleteLaborShiftApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labor-shifts', user?.id] })
+    },
+  })
+
+  return {
+    deleteShift: mutation.mutate,
+    isPending: mutation.isPending,
+  }
+}
+
+// ── Schedule status ────────────────────────────────────────────────────
+
+export const usePublishDayMutation = () => {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: publishApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labor-shifts', user?.id] })
+    },
+  })
+
+  return {
+    publishDay: mutation.mutate,
+    isPending: mutation.isPending,
+  }
+}
+
+export const useUnpublishDayMutation = () => {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: unpublishApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labor-shifts', user?.id] })
+    },
+  })
+
+  return {
+    unpublishDay: mutation.mutate,
+    isPending: mutation.isPending,
+  }
+}
+
+// ── Day parts ──────────────────────────────────────────────────────────
 
 export const useCreateDayPartMutation = () => {
   const { user } = useAuth()

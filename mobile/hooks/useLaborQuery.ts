@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useAuth } from '@/context/auth/AuthContext'
 import { getDayParts, getLaborReferences, getLaborShifts } from '@/services/laborService'
+import type { ScheduleStatus } from '@/types/labor'
 
 const getToday = () => new Date().toISOString().slice(0, 10)
 
@@ -16,7 +17,8 @@ export const useLaborShiftsQuery = () => {
   })
 
   return {
-    shifts: query.data ?? [],
+    shifts: query.data?.shifts ?? [],
+    scheduleStatus: (query.data?.scheduleStatus ?? 'draft') as ScheduleStatus,
     selectedDate,
     setSelectedDate,
     isLoading: query.isLoading,

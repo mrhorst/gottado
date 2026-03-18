@@ -5,7 +5,9 @@ import type {
   DayPart,
   LaborReferencesResponse,
   LaborShift,
+  LaborShiftsResponse,
   UpdateDayPartPayload,
+  UpdateLaborShiftPayload,
 } from '@/types/labor'
 
 export const getLaborReferences = async (): Promise<LaborReferencesResponse> => {
@@ -13,8 +15,10 @@ export const getLaborReferences = async (): Promise<LaborReferencesResponse> => 
   return data
 }
 
-export const getLaborShifts = async (date: string): Promise<LaborShift[]> => {
-  const { data } = await api.get<LaborShift[]>(`/labor/shifts?date=${encodeURIComponent(date)}`)
+export const getLaborShifts = async (date: string): Promise<LaborShiftsResponse> => {
+  const { data } = await api.get<LaborShiftsResponse>(
+    `/labor/shifts?date=${encodeURIComponent(date)}`
+  )
   return data
 }
 
@@ -23,6 +27,28 @@ export const createLaborShift = async (
 ): Promise<LaborShift> => {
   const { data } = await api.post<LaborShift>('/labor/shifts', payload)
   return data
+}
+
+export const updateLaborShift = async (
+  id: number,
+  payload: UpdateLaborShiftPayload
+): Promise<LaborShift> => {
+  const { data } = await api.put<LaborShift>(`/labor/shifts/${id}`, payload)
+  return data
+}
+
+export const deleteLaborShift = async (id: number): Promise<void> => {
+  await api.delete(`/labor/shifts/${id}`)
+}
+
+// Schedule status
+
+export const publishScheduleDay = async (date: string): Promise<void> => {
+  await api.post('/labor/schedule-day/publish', { date })
+}
+
+export const unpublishScheduleDay = async (date: string): Promise<void> => {
+  await api.post('/labor/schedule-day/unpublish', { date })
 }
 
 // Day parts

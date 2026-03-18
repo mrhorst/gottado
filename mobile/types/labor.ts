@@ -64,6 +64,13 @@ export interface UpdateDayPartPayload {
   sortOrder?: number
 }
 
+export type ScheduleStatus = 'draft' | 'published'
+
+export interface LaborShiftsResponse {
+  shifts: LaborShift[]
+  scheduleStatus: ScheduleStatus
+}
+
 export interface CreateLaborShiftPayload {
   title: string
   shiftDate: string
@@ -73,4 +80,15 @@ export interface CreateLaborShiftPayload {
   assignedTeamId?: number | null
   assignedUserId?: number | null
   notes?: string
+}
+
+export interface UpdateLaborShiftPayload {
+  title?: string
+  shiftDate?: string
+  startTime?: string
+  endTime?: string
+  areaId?: number | null
+  assignedTeamId?: number | null
+  assignedUserId?: number | null
+  notes?: string | null
 }

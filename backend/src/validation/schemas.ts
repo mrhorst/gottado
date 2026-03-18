@@ -98,6 +98,21 @@ export const createLaborShiftSchema = z.object({
   notes: z.string().max(5000).optional(),
 })
 
+export const updateLaborShiftSchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  shiftDate: z.string().min(1).max(10).optional(),
+  startTime: z.string().min(1).max(5).optional(),
+  endTime: z.string().min(1).max(5).optional(),
+  areaId: z.number().int().positive().nullable().optional(),
+  assignedTeamId: z.number().int().positive().nullable().optional(),
+  assignedUserId: z.number().int().positive().nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+})
+
+export const publishScheduleDaySchema = z.object({
+  date: z.string().min(1).max(10),
+})
+
 // ── Costs ───────────────────────────────────────────────────────────────
 
 export const createCostRecordSchema = z.object({
