@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import AppButton from '@/components/ui/AppButton'
 import AppCard from '@/components/ui/AppCard'
@@ -25,16 +25,27 @@ const getToday = () => new Date().toISOString().slice(0, 10)
 
 export default function NewShiftScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{ date?: string; startTime?: string; teamId?: string }>()
   const { areas, teams, members, isLoading, isError, error } = useLaborReferencesQuery()
   const { createShift, isPending } = useCreateShiftMutation()
 
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
-  const [shiftDate, setShiftDate] = useState(getToday)
-  const [startTime, setStartTime] = useState('09:00')
-  const [endTime, setEndTime] = useState('17:00')
+  const [shiftDate, setShiftDate] = useState(params.date ?? getToday)
+  const [startTime, setStartTime] = useState(params.startTime ?? '09:00')
+  const [endTime, setEndTime] = useState(() => {
+    if (params.startTime) {
+      // Default to 4 hours after start
+      const [h, m] = params.startTime.split(':').map(Number)
+      const endH = Math.min(h + 4, 23)
+      return `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    }
+    return '17:00'
+  })
   const [areaId, setAreaId] = useState<number | null>(null)
-  const [assignedTeamId, setAssignedTeamId] = useState<number | null>(null)
+  const [assignedTeamId, setAssignedTeamId] = useState<number | null>(
+    params.teamId ? Number(params.teamId) : null
+  )
   const [assignedUserId, setAssignedUserId] = useState<number | null>(null)
 
   useEffect(() => {

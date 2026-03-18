@@ -1,26 +1,46 @@
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import AppButton from '@/components/ui/AppButton'
 import AppCard from '@/components/ui/AppCard'
 import EmptyState from '@/components/ui/EmptyState'
-import ScreenHeader from '@/components/ui/ScreenHeader'
 import ScreenMotion from '@/components/ui/ScreenMotion'
-import { useLaborShiftsQuery } from '@/hooks/useLaborQuery'
+import DateStrip from '@/components/labor/DateStrip'
+import ShiftTimeline from '@/components/labor/ShiftTimeline'
+import { usePublishDayMutation, useUnpublishDayMutation } from '@/hooks/useLaborMutation'
+import { useDayPartsQuery, useLaborReferencesQuery, useLaborShiftsQuery } from '@/hooks/useLaborQuery'
 import { colors, layout, radius, spacing, typography } from '@/styles/theme'
-
-const formatDateLabel = (value: string) => {
-  const parsed = new Date(`${value}T12:00:00`)
-  return parsed.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
-}
+import type { LaborShift } from '@/types/labor'
 
 export default function LaborScreen() {
   const router = useRouter()
-  const { shifts, selectedDate, isLoading, isError, error } = useLaborShiftsQuery()
+  const { shifts, scheduleStatus, selectedDate, setSelectedDate, isLoading, isError, error } =
+    useLaborShiftsQuery()
+  const { teams } = useLaborReferencesQuery()
+  const { dayParts } = useDayPartsQuery()
+  const { publishDay, isPending: isPublishing } = usePublishDayMutation()
+  const { unpublishDay, isPending: isUnpublishing } = useUnpublishDayMutation()
+
+  const handleShiftPress = (shift: LaborShift) => {
+    router.push(`/(tabs)/labor/${shift.id}`)
+  }
+
+  const handleEmptyPress = (time: string, teamId: number) => {
+    router.push({
+      pathname: '/(tabs)/labor/new',
+      params: { date: selectedDate, startTime: time, teamId: String(teamId) },
+    })
+  }
+
+  const handlePublish = () => {
+    publishDay(selectedDate)
+  }
+
+  const handleUnpublish = () => {
+    Alert.alert('Revert to Draft', 'Team members will no longer see this schedule.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Revert', style: 'destructive', onPress: () => unpublishDay(selectedDate) },
+    ])
+  }
 
   if (isLoading) {
     return (
@@ -42,83 +62,123 @@ export default function LaborScreen() {
     )
   }
 
+  const isDraft = scheduleStatus === 'draft'
+
   return (
     <ScreenMotion>
       <ScrollView style={s.container} contentContainerStyle={s.content}>
-        <ScreenHeader
-          eyebrow='Manager Planning'
-          title='Labor'
-          subtitle='Plan coverage by day, area, and owner before service starts.'
-          action={
-            <AppButton
-              label='New Shift'
-              accessibilityLabel='Create shift'
-              onPress={() => router.push('/(tabs)/labor/new')}
-              icon={<Ionicons name='add-circle' size={18} color='#fff' />}
-              style={s.createButton}
-            />
-          }
-        />
-
-        <AppCard style={s.summaryCard}>
-          <View>
-            <Text style={s.summaryEyebrow}>Schedule Date</Text>
-            <Text style={s.summaryTitle}>{formatDateLabel(selectedDate)}</Text>
+        {/* Header row with settings gear */}
+        <View style={s.headerRow}>
+          <View style={s.headerLeft}>
+            <Text style={s.eyebrow}>Manager Planning</Text>
+            <Text style={s.title}>Labor</Text>
           </View>
-          <View style={s.summaryPill}>
-            <Text style={s.summaryPillValue}>{shifts.length}</Text>
-            <Text style={s.summaryPillLabel}>shifts</Text>
-          </View>
-        </AppCard>
+          <Pressable
+            onPress={() => router.push('/(tabs)/labor/settings')}
+            hitSlop={12}
+            accessibilityLabel='Day parts settings'
+          >
+            <Ionicons name='settings-outline' size={22} color={colors.textSecondary} />
+          </Pressable>
+        </View>
 
-        {shifts.length === 0 ? (
+        {/* Date selector */}
+        <DateStrip selectedDate={selectedDate} onSelect={setSelectedDate} />
+
+        {/* Status banner */}
+        {isDraft ? (
+          <Pressable
+            style={s.draftBanner}
+            onPress={handlePublish}
+            disabled={isPublishing}
+          >
+            <View style={s.bannerLeft}>
+              <Ionicons name='eye-off-outline' size={16} color={colors.warning} />
+              <Text style={s.draftText}>Draft — only managers can see this</Text>
+            </View>
+            <View style={s.publishChip}>
+              <Text style={s.publishChipText}>
+                {isPublishing ? 'Publishing…' : 'Publish'}
+              </Text>
+            </View>
+          </Pressable>
+        ) : (
+          <Pressable style={s.publishedBanner} onPress={handleUnpublish} disabled={isUnpublishing}>
+            <Ionicons name='checkmark-circle' size={16} color={colors.success} />
+            <Text style={s.publishedText}>Published</Text>
+          </Pressable>
+        )}
+
+        {/* Timeline or empty state */}
+        {shifts.length === 0 && teams.length === 0 ? (
           <AppCard>
             <EmptyState
               title='No shifts planned yet'
-              description='Add the first shift plan for this day so managers can see coverage.'
+              description='Tap + to add the first shift for this day.'
               icon='time-outline'
             />
           </AppCard>
         ) : (
-          shifts.map((shift) => (
-            <Pressable key={shift.id}>
-              <AppCard style={s.shiftCard}>
-                <View style={s.shiftHeader}>
-                  <View style={s.shiftCopy}>
-                    <Text style={s.shiftTitle}>{shift.title}</Text>
-                    <Text style={s.shiftTime}>
-                      {shift.startTime} - {shift.endTime}
-                    </Text>
-                  </View>
-                  <Ionicons name='time-outline' size={18} color={colors.primary} />
-                </View>
+          <ShiftTimeline
+            shifts={shifts}
+            dayParts={dayParts}
+            teams={teams}
+            scheduleStatus={scheduleStatus}
+            onShiftPress={handleShiftPress}
+            onEmptyPress={handleEmptyPress}
+          />
+        )}
 
-                <View style={s.metaRow}>
-                  {!!shift.areaName && <MetaPill label={shift.areaName} icon='layers-outline' />}
-                  {!!shift.assignedTeamName && (
-                    <MetaPill label={shift.assignedTeamName} icon='people-outline' />
-                  )}
-                  {!!shift.assignedUserName && (
-                    <MetaPill label={shift.assignedUserName} icon='person-outline' />
-                  )}
+        {/* Shift list summary below timeline */}
+        {shifts.length > 0 && (
+          <View style={s.shiftList}>
+            <Text style={s.listHeader}>
+              {shifts.length} shift{shifts.length !== 1 ? 's' : ''} planned
+            </Text>
+            {shifts.map((shift) => (
+              <Pressable
+                key={shift.id}
+                style={s.shiftRow}
+                onPress={() => handleShiftPress(shift)}
+              >
+                <View
+                  style={[
+                    s.shiftDot,
+                    { backgroundColor: shift.teamColor ?? colors.textMuted },
+                  ]}
+                />
+                <View style={s.shiftInfo}>
+                  <Text style={s.shiftTitle} numberOfLines={1}>
+                    {shift.title}
+                  </Text>
+                  <Text style={s.shiftMeta}>
+                    {shift.startTime}–{shift.endTime}
+                    {shift.assignedUserName ? ` · ${shift.assignedUserName}` : ''}
+                  </Text>
                 </View>
-
-                {!!shift.notes && <Text style={s.notes}>{shift.notes}</Text>}
-              </AppCard>
-            </Pressable>
-          ))
+                <Ionicons name='chevron-forward' size={16} color={colors.textMuted} />
+              </Pressable>
+            ))}
+          </View>
         )}
       </ScrollView>
+
+      {/* FAB */}
+      <Pressable
+        style={s.fab}
+        onPress={() =>
+          router.push({
+            pathname: '/(tabs)/labor/new',
+            params: { date: selectedDate },
+          })
+        }
+        accessibilityLabel='Create new shift'
+      >
+        <Ionicons name='add' size={28} color='#fff' />
+      </Pressable>
     </ScreenMotion>
   )
 }
-
-const MetaPill = ({ label, icon }: { label: string; icon: keyof typeof Ionicons.glyphMap }) => (
-  <View style={s.metaPill}>
-    <Ionicons name={icon} size={14} color={colors.textSecondary} />
-    <Text style={s.metaPillText}>{label}</Text>
-  </View>
-)
 
 const s = StyleSheet.create({
   container: {
@@ -133,91 +193,130 @@ const s = StyleSheet.create({
   content: {
     padding: layout.screenPadding,
     paddingBottom: 120,
-    gap: layout.screenGap,
-  },
-  createButton: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-  },
-  summaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: spacing.md,
   },
-  summaryEyebrow: {
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    gap: 2,
+  },
+  eyebrow: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  summaryTitle: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: 4,
-  },
-  summaryPill: {
-    borderRadius: radius.full,
-    backgroundColor: colors.surfaceMuted,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    gap: 6,
-  },
-  summaryPillValue: {
-    fontSize: 12,
-    fontWeight: '800',
+  title: {
+    ...typography.h2,
     color: colors.text,
   },
-  summaryPillLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  shiftCard: {
-    gap: spacing.sm,
-  },
-  shiftHeader: {
+  draftBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    backgroundColor: '#FFF8E1',
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#FFE082',
   },
-  shiftCopy: {
-    flex: 1,
-    gap: 4,
-  },
-  shiftTitle: {
-    ...typography.h4,
-    color: colors.text,
-  },
-  shiftTime: {
-    ...typography.body2,
-    color: colors.textSecondary,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  metaPill: {
+  bannerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.surfaceMuted,
+    gap: 8,
+    flex: 1,
+  },
+  draftText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#F57F17',
+  },
+  publishChip: {
+    backgroundColor: colors.primary,
     borderRadius: radius.full,
-    paddingHorizontal: 10,
+    paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  metaPillText: {
+  publishChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  publishedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#E8F5E9',
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#A5D6A7',
+  },
+  publishedText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  shiftList: {
+    gap: 2,
+  },
+  listHeader: {
     fontSize: 12,
     fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  shiftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 2,
+  },
+  shiftDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  shiftInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  shiftTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  shiftMeta: {
+    fontSize: 12,
     color: colors.textSecondary,
   },
-  notes: {
-    ...typography.body2,
-    color: colors.textSecondary,
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.xl + 60,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   errorText: {
     fontSize: 16,
