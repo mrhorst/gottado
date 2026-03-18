@@ -57,6 +57,13 @@
       "when": 1773790200000,
       "tag": "0007_teams",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773822600000,
+      "tag": "0008_task_assigned_team",
+      "breakpoints": true
     }
   ]
 }

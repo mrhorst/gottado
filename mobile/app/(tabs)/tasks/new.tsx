@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router'
 import { useTasksMutation } from '@/hooks/useTasksMutation'
 import { colors, layout, spacing } from '@/styles/theme'
 import { useSectionQuery } from '@/hooks/useSectionQuery'
+import { useTeamsQuery } from '@/hooks/useTeamsQuery'
 import { useAuth } from '@/context/auth/AuthContext'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -75,9 +76,11 @@ const NewTaskScreen = () => {
   const [requiresPicture, setRequiresPicture] = useState(false)
   const [priority, setPriority] = useState<TaskPriority | null>(null)
   const [selectedListId, setSelectedListId] = useState<number | null>(null)
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
 
   const { user } = useAuth()
   const { sections } = useSectionQuery()
+  const { teams } = useTeamsQuery()
   const router = useRouter()
   const { createTask } = useTasksMutation()
 
@@ -100,6 +103,10 @@ const NewTaskScreen = () => {
     )
   }, [selectedSection?.id, sectionLists])
 
+  useEffect(() => {
+    setSelectedTeamId(selectedSection?.teamId ?? null)
+  }, [selectedSection?.id, selectedSection?.teamId])
+
   if (!user) return null
 
   const handleCreate = () => {
@@ -111,6 +118,7 @@ const NewTaskScreen = () => {
         description: description.trim() || undefined,
         sectionId: selectedSection.id,
         listId: selectedListId,
+        assignedTeamId: selectedTeamId,
         userId: user.id,
         dueDate: dueDate ? dueDate.toISOString().split('T')[0] : undefined,
         deadlineTime: deadlineTime || undefined,
@@ -123,6 +131,7 @@ const NewTaskScreen = () => {
         description: description.trim() || undefined,
         sectionId: selectedSection.id,
         listId: selectedListId,
+        assignedTeamId: selectedTeamId,
         userId: user.id,
         recurrence,
         deadlineTime: deadlineTime || undefined,
@@ -311,6 +320,42 @@ const NewTaskScreen = () => {
               )
             })}
           </View>
+        </View>
+
+        <View style={s.fieldGroup}>
+          <Text style={s.label}>Ownership</Text>
+          <View style={s.priorityRow}>
+            <Pressable
+              style={[
+                s.priorityChip,
+                selectedTeamId === null && s.priorityChipSelectedNeutral,
+              ]}
+              onPress={() => setSelectedTeamId(null)}
+            >
+              <View style={[s.priorityDot, { backgroundColor: '#8e8e93' }]} />
+              <Text style={s.priorityChipText}>Unassigned</Text>
+            </Pressable>
+            {teams.filter((team) => team.active).map((team) => {
+              const selected = selectedTeamId === team.id
+              return (
+                <Pressable
+                  key={team.id}
+                  style={[s.priorityChip, selected && s.sectionOptionSelected]}
+                  onPress={() => setSelectedTeamId(team.id)}
+                >
+                  <View style={[s.priorityDot, { backgroundColor: colors.primary }]} />
+                  <Text style={[s.priorityChipText, selected && s.sectionOptionTextSelected]}>
+                    {team.name}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+          <Text style={s.helperText}>
+            {selectedSection?.teamName
+              ? `This area defaults to ${selectedSection.teamName}. You can override it per task.`
+              : 'Choose which team owns this task, or leave it unassigned.'}
+          </Text>
         </View>
 
         {/* Mode toggle: One-time / Recurring */}
@@ -565,6 +610,16 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#8e8e93',
+  },
+  priorityChipSelectedNeutral: {
+    borderColor: '#8e8e93',
+    backgroundColor: '#8e8e9315',
+  },
+  helperText: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textMuted,
   },
   segmentedControl: {
     flexDirection: 'row',

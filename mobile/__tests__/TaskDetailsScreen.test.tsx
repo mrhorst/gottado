@@ -87,6 +87,8 @@ describe('TaskDetailsScreen', () => {
           sectionName: 'Kitchen Operations',
           listId: 2,
           listName: 'Closing',
+          assignedTeamId: 12,
+          assignedTeamName: 'AM Kitchen Team',
           recurrence: 'daily',
           lastCompletedAt: '2026-03-17T14:30:00.000Z',
           deadlineTime: '15:00',
@@ -154,5 +156,18 @@ describe('TaskDetailsScreen', () => {
     expect(texts).not.toContain('Completion Photos')
     expect(imageUris).toContain('/uploads/today.jpg')
     expect(imageUris).not.toContain('/uploads/yesterday.jpg')
+  })
+
+  it('shows the assigned team in task ownership details', () => {
+    let tree: any
+
+    renderer.act(() => {
+      tree = renderer.create(<TaskDetailsScreen />)
+    })
+
+    const texts = getTextNodes(tree).map((node: any) => node.props.children)
+
+    expect(texts).toContain('Ownership')
+    expect(texts).toContain('AM Kitchen Team')
   })
 })

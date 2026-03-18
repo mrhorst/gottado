@@ -1,6 +1,6 @@
 import db from '../utils/db.ts'
 import { NextFunction, Response } from 'express'
-import { section, sectionMember, task, taskActivity, taskCompletion, taskList, user } from '../db/schema.ts'
+import { section, sectionMember, task, taskActivity, taskCompletion, taskList, team, user } from '../db/schema.ts'
 
 import { and, eq, desc, gte, lte, sql } from 'drizzle-orm'
 import { getUserSectionRole } from '@/utils/controllerHelpers.ts'
@@ -46,11 +46,14 @@ const listTasks = async (
         requiresPicture: task.requiresPicture,
         relevanceTag: task.relevanceTag,
         priority: task.priority,
+        assignedTeamId: task.assignedTeamId,
+        assignedTeamName: team.name,
       })
       .from(task)
       .innerJoin(section, eq(task.sectionId, section.id))
       .innerJoin(taskList, eq(task.listId, taskList.id))
       .innerJoin(sectionMember, eq(section.id, sectionMember.sectionId))
+      .leftJoin(team, eq(task.assignedTeamId, team.id))
       .where(and(eq(section.orgId, orgId), eq(sectionMember.userId, userId)))
 
     // Auto-reset completed recurring tasks whose due date has passed
@@ -92,6 +95,20 @@ const createTask = async (
         .send({ error: 'only owners and editors can create tasks' })
     }
 
+    const [sectionRecord] = await db
+      .select({
+        id: section.id,
+        orgId: section.orgId,
+        teamId: section.teamId,
+      })
+      .from(section)
+      .where(eq(section.id, Number(body.sectionId)))
+      .limit(1)
+
+    if (!sectionRecord) {
+      return res.status(400).send({ error: 'section not found' })
+    }
+
     let listId = body.listId as number | undefined
     if (!listId) {
       const [defaultList] = await db
@@ -122,7 +139,22 @@ const createTask = async (
       }
     }
 
-    const taskPayload = { ...body, listId }
+    let assignedTeamId = body.assignedTeamId as number | null | undefined
+    if (assignedTeamId === undefined) {
+      assignedTeamId = sectionRecord.teamId ?? null
+    } else if (assignedTeamId !== null) {
+      const [matchingTeam] = await db
+        .select({ id: team.id })
+        .from(team)
+        .where(and(eq(team.id, Number(assignedTeamId)), eq(team.orgId, sectionRecord.orgId)))
+        .limit(1)
+
+      if (!matchingTeam) {
+        return res.status(400).send({ error: 'assigned team does not belong to this organization' })
+      }
+    }
+
+    const taskPayload = { ...body, listId, assignedTeamId }
 
     const [taskRecord] = await db.insert(task).values(taskPayload).returning()
     await logActivity(taskRecord.id, userId, 'created', { title: taskRecord.title })
@@ -178,6 +210,34 @@ const updateTask = async (
   const userId = Number(req.user?.sub)
 
   try {
+    if (Object.prototype.hasOwnProperty.call(req.body, 'assignedTeamId')) {
+      const [existingTask] = await db
+        .select({
+          id: task.id,
+          sectionId: task.sectionId,
+          orgId: section.orgId,
+        })
+        .from(task)
+        .innerJoin(section, eq(task.sectionId, section.id))
+        .where(eq(task.id, Number(taskIdToBeUpdated)))
+        .limit(1)
+
+      if (!existingTask) return res.sendStatus(404)
+
+      const assignedTeamId = req.body.assignedTeamId as number | null
+      if (assignedTeamId !== null) {
+        const [matchingTeam] = await db
+          .select({ id: team.id })
+          .from(team)
+          .where(and(eq(team.id, Number(assignedTeamId)), eq(team.orgId, existingTask.orgId)))
+          .limit(1)
+
+        if (!matchingTeam) {
+          return res.status(400).send({ error: 'assigned team does not belong to this organization' })
+        }
+      }
+    }
+
     // If completing a task, log the completion (only if not already complete)
     if (req.body.complete === true) {
       const [existing] = await db

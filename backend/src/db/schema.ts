@@ -42,6 +42,8 @@ export const task = pgTable('tasks', {
   listId: integer('list_id')
     .references((): AnyPgColumn => taskList.id)
     .notNull(),
+  assignedTeamId: integer('assigned_team_id')
+    .references((): AnyPgColumn => team.id),
   measurableCriteria: text('measurable_criteria'),
   relevanceTag: varchar('relevance_tag', { length: 100 }),
   recurrence: varchar({ length: 20 }).$type<
@@ -50,10 +52,10 @@ export const task = pgTable('tasks', {
   lastCompletedAt: timestamp('last_completed_at', { withTimezone: true }),
   deadlineTime: varchar('deadline_time', { length: 5 }), // HH:MM format, e.g. "16:00"
   requiresPicture: boolean('requires_picture').notNull().default(false),
-  priority: varchar({ length: 20 })
-    .notNull()
-    .default('medium')
-    .$type<'low' | 'medium' | 'high'>(),
+    priority: varchar({ length: 20 })
+      .notNull()
+      .default('medium')
+      .$type<'low' | 'medium' | 'high'>(),
 })
 
 export const taskList = pgTable(

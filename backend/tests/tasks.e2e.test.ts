@@ -144,6 +144,68 @@ describe('Tasks API E2E', () => {
     expect(historyRes.body.length).toBeGreaterThan(0)
   })
 
+  it('defaults task ownership from the area team and allows overriding it later', async () => {
+    const [primaryTeam] = await db
+      .insert(schema.team)
+      .values({
+        orgId,
+        name: `Kitchen Team ${Date.now()}`,
+        description: 'Primary kitchen ownership',
+      })
+      .returning()
+
+    const [secondaryTeam] = await db
+      .insert(schema.team)
+      .values({
+        orgId,
+        name: `Closing Team ${Date.now()}`,
+        description: 'Secondary ownership',
+      })
+      .returning()
+
+    await db
+      .update(schema.section)
+      .set({ teamId: primaryTeam.id })
+      .where(sql`${schema.section.id} = ${sectionId}`)
+
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set(authHeaders())
+      .send({
+        title: 'Reset line',
+        sectionId,
+        listId,
+        priority: 'medium',
+      })
+
+    expect(createRes.status).toBe(201)
+    expect(createRes.body.assignedTeamId).toBe(primaryTeam.id)
+    const taskId = createRes.body.id as number
+
+    const listRes = await request(app).get('/api/tasks').set(authHeaders())
+    expect(listRes.status).toBe(200)
+    expect(
+      listRes.body.some(
+        (t: {
+          id: number
+          assignedTeamId: number | null
+          assignedTeamName: string | null
+        }) =>
+          t.id === taskId &&
+          t.assignedTeamId === primaryTeam.id &&
+          t.assignedTeamName === primaryTeam.name
+      )
+    ).toBe(true)
+
+    const overrideRes = await request(app)
+      .put(`/api/tasks/${taskId}`)
+      .set(authHeaders())
+      .send({ assignedTeamId: secondaryTeam.id })
+
+    expect(overrideRes.status).toBe(200)
+    expect(overrideRes.body.assignedTeamId).toBe(secondaryTeam.id)
+  })
+
   it('enforces photo-required completion', async () => {
     const createRes = await request(app)
       .post('/api/tasks')

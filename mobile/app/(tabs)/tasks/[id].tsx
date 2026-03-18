@@ -22,6 +22,7 @@ import { getTaskActivities } from '@/services/taskService'
 import AppButton from '@/components/ui/AppButton'
 import { getSectionTaskLists } from '@/services/sectionService'
 import { getInitialListId } from '@/utils/taskListSelection'
+import { useTeamsQuery } from '@/hooks/useTeamsQuery'
 
 type TaskMode = 'one_time' | 'recurring'
 
@@ -97,6 +98,7 @@ const EditTaskScreen = () => {
   const router = useRouter()
   const { tasks } = useTasksQuery()
   const { updateTask } = useTasksMutation()
+  const { teams } = useTeamsQuery()
 
   const task = tasks.find((t) => t.id === taskId)
 
@@ -117,6 +119,7 @@ const EditTaskScreen = () => {
   const [requiresPicture, setRequiresPicture] = useState(false)
   const [priority, setPriority] = useState<TaskPriority | null>(null)
   const [selectedListId, setSelectedListId] = useState<number | null>(null)
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
 
   const { data: sectionLists = [], isLoading: listsLoading } = useQuery({
     queryKey: ['section-task-lists', task?.sectionId],
@@ -130,6 +133,7 @@ const EditTaskScreen = () => {
     setDescription(task.description || '')
     setRequiresPicture(task.requiresPicture)
     setPriority(task.priority ?? null)
+    setSelectedTeamId(task.assignedTeamId ?? null)
     if (task.recurrence) {
       setMode('recurring')
       setRecurrence(task.recurrence)
@@ -166,6 +170,7 @@ const EditTaskScreen = () => {
         requiresPicture,
         priority: priority || undefined,
         listId: selectedListId,
+        assignedTeamId: selectedTeamId,
       })
     } else {
       updateTask({
@@ -178,6 +183,7 @@ const EditTaskScreen = () => {
         requiresPicture,
         priority: priority || undefined,
         listId: selectedListId,
+        assignedTeamId: selectedTeamId,
       })
     }
     router.back()
@@ -238,6 +244,37 @@ const EditTaskScreen = () => {
                   <View style={[s.priorityDot, { backgroundColor: opt.color }]} />
                   <Text style={[s.priorityChipText, selected && { color: opt.color }]}>
                     {opt.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+
+        <View style={s.fieldGroup}>
+          <Text style={s.label}>Ownership</Text>
+          <View style={s.priorityRow}>
+            <Pressable
+              style={[
+                s.priorityChip,
+                selectedTeamId === null && s.priorityChipSelectedNeutral,
+              ]}
+              onPress={() => setSelectedTeamId(null)}
+            >
+              <View style={[s.priorityDot, { backgroundColor: '#8e8e93' }]} />
+              <Text style={s.priorityChipText}>Unassigned</Text>
+            </Pressable>
+            {teams.filter((team) => team.active).map((team) => {
+              const selected = selectedTeamId === team.id
+              return (
+                <Pressable
+                  key={team.id}
+                  style={[s.priorityChip, selected && s.sectionOptionSelected]}
+                  onPress={() => setSelectedTeamId(team.id)}
+                >
+                  <View style={[s.priorityDot, { backgroundColor: colors.primary }]} />
+                  <Text style={[s.priorityChipText, selected && s.sectionOptionTextSelected]}>
+                    {team.name}
                   </Text>
                 </Pressable>
               )
@@ -610,6 +647,10 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#8e8e93',
+  },
+  priorityChipSelectedNeutral: {
+    borderColor: '#8e8e93',
+    backgroundColor: '#8e8e9315',
   },
   segmentedControl: {
     flexDirection: 'row',

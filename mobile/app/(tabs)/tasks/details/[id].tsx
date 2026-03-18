@@ -178,6 +178,13 @@ const TaskDetailsScreen = () => {
         </AppCard>
 
         <AppCard>
+          <Text style={s.blockTitle}>Ownership</Text>
+          <Text style={task.assignedTeamName ? s.bodyText : s.emptyText}>
+            {task.assignedTeamName || 'No team assigned'}
+          </Text>
+        </AppCard>
+
+        <AppCard>
           <Text style={s.blockTitle}>Current Evidence</Text>
           {historyLoading ? (
             <ActivityIndicator size='small' color={colors.primary} />
