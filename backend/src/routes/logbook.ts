@@ -1,21 +1,25 @@
 import { Router } from 'express'
 import { validate } from '@/middleware/validate.ts'
 import {
-  createLogbookEntrySchema,
   createLogbookTemplateSchema,
+  upsertLogbookEntrySchema,
 } from '@/validation/schemas.ts'
 import {
-  createLogbookEntry,
   createLogbookTemplate,
-  getLogbookEntries,
+  getEntryByDate,
+  getEntryDates,
+  getEntryHistory,
   listLogbookTemplates,
+  upsertTodayEntry,
 } from '@/controllers/logbook.ts'
 
 const router = Router()
 
 router.get('/templates', listLogbookTemplates)
 router.post('/templates', validate(createLogbookTemplateSchema), createLogbookTemplate)
-router.get('/templates/:id/entries', getLogbookEntries)
-router.post('/templates/:id/entries', validate(createLogbookEntrySchema), createLogbookEntry)
+router.get('/templates/:id/entries/:date', getEntryByDate)
+router.put('/templates/:id/entries/today', validate(upsertLogbookEntrySchema), upsertTodayEntry)
+router.get('/templates/:id/entries/:date/history', getEntryHistory)
+router.get('/templates/:id/entry-dates', getEntryDates)
 
 export default router

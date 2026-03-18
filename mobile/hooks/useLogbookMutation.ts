@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/auth/AuthContext'
 import {
-  createLogbookEntry as createLogbookEntryApi,
   createLogbookTemplate as createLogbookTemplateApi,
+  upsertTodayEntry as upsertTodayEntryApi,
 } from '@/services/logbookService'
 
 export const useLogbookMutation = () => {
@@ -18,26 +18,27 @@ export const useLogbookMutation = () => {
     },
   })
 
-  const createEntryMutation = useMutation({
-    mutationFn: ({
-      templateId,
-      payload,
-    }: {
-      templateId: number
-      payload: { title?: string; body: string; entryDate?: string }
-    }) => createLogbookEntryApi(templateId, payload),
+  const upsertEntryMutation = useMutation({
+    mutationFn: ({ templateId, body }: { templateId: number; body: string }) =>
+      upsertTodayEntryApi(templateId, body),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: templatesKey })
       queryClient.invalidateQueries({
-        queryKey: ['logbook-entries', user?.id, variables.templateId],
+        queryKey: ['logbook-day', user?.id, variables.templateId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['logbook-entry-dates', user?.id, variables.templateId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['logbook-history', user?.id, variables.templateId],
       })
     },
   })
 
   return {
     createTemplate: createTemplateMutation.mutate,
-    createEntry: createEntryMutation.mutate,
+    upsertEntry: upsertEntryMutation.mutate,
     isCreatingTemplate: createTemplateMutation.isPending,
-    isCreatingEntry: createEntryMutation.isPending,
+    isUpsertingEntry: upsertEntryMutation.isPending,
   }
 }

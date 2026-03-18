@@ -63,10 +63,8 @@ export const createLogbookTemplateSchema = z.object({
   description: z.string().max(255).optional(),
 })
 
-export const createLogbookEntrySchema = z.object({
-  title: z.string().min(1).max(255).optional(),
+export const upsertLogbookEntrySchema = z.object({
   body: z.string().min(1).max(5000),
-  entryDate: z.string().optional(),
 })
 
 // ── Labor ───────────────────────────────────────────────────────────────
