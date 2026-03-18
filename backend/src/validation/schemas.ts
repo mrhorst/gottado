@@ -56,6 +56,19 @@ export const updateTeamMemberSchema = z.object({
   role: z.enum(['lead', 'member']),
 })
 
+// ── Logbook ─────────────────────────────────────────────────────────────
+
+export const createLogbookTemplateSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(255).optional(),
+})
+
+export const createLogbookEntrySchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  body: z.string().min(1).max(5000),
+  entryDate: z.string().optional(),
+})
+
 // ── Sections ────────────────────────────────────────────────────────────
 
 export const createSectionSchema = z.object({
