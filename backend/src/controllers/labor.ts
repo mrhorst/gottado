@@ -53,6 +53,7 @@ export const listLaborReferences = async (
       .select({
         id: team.id,
         name: team.name,
+        color: team.color,
         description: team.description,
       })
       .from(team)
@@ -102,6 +103,7 @@ export const listLaborShifts = async (
         areaName: section.name,
         assignedTeamId: laborShift.assignedTeamId,
         assignedTeamName: team.name,
+        teamColor: team.color,
         assignedUserId: laborShift.assignedUserId,
         assignedUserName: user.name,
         notes: laborShift.notes,
@@ -198,6 +200,7 @@ export const createLaborShift = async (
         areaName: section.name,
         assignedTeamId: laborShift.assignedTeamId,
         assignedTeamName: team.name,
+        teamColor: team.color,
         assignedUserId: laborShift.assignedUserId,
         assignedUserName: user.name,
         notes: laborShift.notes,

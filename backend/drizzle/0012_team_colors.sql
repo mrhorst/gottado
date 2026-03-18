@@ -1,0 +1,1 @@
+ALTER TABLE "teams" ADD COLUMN "color" varchar(7) NOT NULL DEFAULT '#6B7280';

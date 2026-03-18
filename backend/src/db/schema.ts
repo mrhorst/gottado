@@ -270,6 +270,7 @@ export const team = pgTable(
       .references(() => organization.id, { onDelete: 'cascade' })
       .notNull(),
     name: varchar({ length: 255 }).notNull(),
+    color: varchar({ length: 7 }).notNull().default('#6B7280'),
     description: text(),
     active: boolean().notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true })

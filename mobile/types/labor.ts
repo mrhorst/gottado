@@ -8,6 +8,7 @@ export interface LaborShift {
   areaName?: string | null
   assignedTeamId?: number | null
   assignedTeamName?: string | null
+  teamColor?: string | null
   assignedUserId?: number | null
   assignedUserName?: string | null
   notes?: string | null
@@ -24,6 +25,7 @@ export interface LaborReferenceArea {
 export interface LaborReferenceTeam {
   id: number
   name: string
+  color: string
   description?: string | null
 }
 
