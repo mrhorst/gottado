@@ -65,6 +65,14 @@ const renameSection = async (sectionId: number, name: string) => {
   return await api.put(`/sections/${sectionId}`, { name })
 }
 
+const updateSection = async (
+  sectionId: number,
+  payload: { name?: string; active?: boolean; teamId?: number | null }
+) => {
+  const { data } = await api.put(`/sections/${sectionId}`, payload)
+  return data
+}
+
 const archiveSection = async (sectionId: number) => {
   return await api.put(`/sections/${sectionId}`, { active: false })
 }
@@ -87,6 +95,7 @@ export {
   updateMemberRole,
   removeMember,
   renameSection,
+  updateSection,
   archiveSection,
   unarchiveSection,
   deleteSection,

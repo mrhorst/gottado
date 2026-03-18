@@ -26,17 +26,6 @@ type AreaGroup = {
   data: SectionProps[]
 }
 
-const getRoleBadgeStyle = (role: SectionProps['role']) => {
-  switch (role) {
-    case 'owner':
-      return { bg: '#1c1c1e', text: '#fff' }
-    case 'editor':
-      return { bg: colors.primary + '18', text: colors.primary }
-    case 'viewer':
-      return { bg: '#e5e5ea', text: '#666' }
-  }
-}
-
 const AreasScreen = () => {
   const { sections, archivedSections, isLoading, isError, error } = useSectionQuery()
   const { tasks } = useTasksQuery()
@@ -62,24 +51,15 @@ const AreasScreen = () => {
     const shared = activeAreas.filter((area) => area.role === 'editor')
     const readOnly = activeAreas.filter((area) => area.role === 'viewer')
 
-    if (owned.length > 0) groups.push({ title: 'Owned by you', data: owned })
-    if (shared.length > 0) groups.push({ title: 'Shared with you', data: shared })
-    if (readOnly.length > 0) groups.push({ title: 'Read only', data: readOnly })
+    if (owned.length > 0) groups.push({ title: 'My Areas', data: owned })
+    if (shared.length > 0) groups.push({ title: 'Shared', data: shared })
+    if (readOnly.length > 0) groups.push({ title: 'Read Only', data: readOnly })
     if ((archivedSections ?? []).length > 0) {
       groups.push({ title: 'Archived', data: archivedSections ?? [] })
     }
 
     return groups
   }, [sections, archivedSections])
-
-  const overview = useMemo(
-    () => ({
-      active: sections?.length ?? 0,
-      archived: archivedSections?.length ?? 0,
-      owned: (sections ?? []).filter((area) => area.role === 'owner').length,
-    }),
-    [sections, archivedSections]
-  )
 
   const handleRename = (area: SectionProps) => {
     if (Platform.OS === 'web') {
@@ -173,11 +153,19 @@ const AreasScreen = () => {
           </Text>
         </View>
 
-        <View style={s.summaryRow}>
-          <SummaryCard label='Active' value={overview.active} />
-          <SummaryCard label='Owned' value={overview.owned} />
-          <SummaryCard label='Archived' value={overview.archived} />
-        </View>
+        <Pressable onPress={() => router.push('/(tabs)/areas/teams')}>
+          <AppCard style={s.teamsCard}>
+            <View style={s.teamsCardHeader}>
+              <View style={s.teamsCopy}>
+                <Text style={s.teamsTitle}>Teams</Text>
+                <Text style={s.teamsText}>
+                  Browse ownership groups and connect them to areas.
+                </Text>
+              </View>
+              <Ionicons name='people-outline' size={20} color={colors.primary} />
+            </View>
+          </AppCard>
+        </Pressable>
 
         {areaGroups.length === 0 ? (
           <View style={s.emptyState}>
@@ -191,7 +179,6 @@ const AreasScreen = () => {
               <Text style={s.groupTitle}>{group.title}</Text>
               {group.data.map((area) => {
                 const summary = summaryByAreaId.get(area.id)
-                const roleBadge = getRoleBadgeStyle(area.role)
                 const isViewer = area.role === 'viewer'
 
                 return (
@@ -213,11 +200,9 @@ const AreasScreen = () => {
                         <View style={s.areaCopy}>
                           <Text style={s.areaName}>{area.name}</Text>
                           <View style={s.metaRow}>
-                            <View style={[s.roleBadge, { backgroundColor: roleBadge.bg }]}>
-                              <Text style={[s.roleText, { color: roleBadge.text }]}>
-                                {area.role}
-                              </Text>
-                            </View>
+                            {!!summary?.listCount && (
+                              <MetaPill label='Checklists' value={summary.listCount} />
+                            )}
                             <MetaPill label='Tasks' value={summary?.totalTasks ?? 0} />
                             <MetaPill label='Open' value={summary?.pendingTasks ?? 0} />
                           </View>
@@ -259,13 +244,6 @@ const AreasScreen = () => {
   )
 }
 
-const SummaryCard = ({ label, value }: { label: string; value: number }) => (
-  <AppCard style={s.summaryCard}>
-    <Text style={s.summaryValue}>{value}</Text>
-    <Text style={s.summaryLabel}>{label}</Text>
-  </AppCard>
-)
-
 const MetaPill = ({ label, value }: { label: string; value: number }) => (
   <View style={s.pill}>
     <Text style={s.pillValue}>{value}</Text>
@@ -301,28 +279,30 @@ const s = StyleSheet.create({
     color: colors.textSecondary,
     maxWidth: 360,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  summaryCard: {
-    flex: 1,
-    gap: 2,
-  },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
   group: {
     gap: spacing.sm,
+  },
+  teamsCard: {
+    gap: spacing.sm,
+  },
+  teamsCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  teamsCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  teamsTitle: {
+    ...typography.h4,
+    color: colors.text,
+  },
+  teamsText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSecondary,
   },
   groupTitle: {
     fontSize: 12,
@@ -353,16 +333,6 @@ const s = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.xs,
     alignItems: 'center',
-  },
-  roleBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  roleText: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'capitalize',
   },
   pill: {
     backgroundColor: colors.surfaceMuted,

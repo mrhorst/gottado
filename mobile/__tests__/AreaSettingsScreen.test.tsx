@@ -98,6 +98,10 @@ jest.mock('@/hooks/useMembershipMutation', () => ({
   useMembershipMutation: jest.fn(),
 }))
 
+jest.mock('@/hooks/useTeamsQuery', () => ({
+  useTeamsQuery: jest.fn(),
+}))
+
 const getTextNodes = (tree: any) =>
   tree.root.findAll((node: any) => node.type === 'Text')
 
@@ -118,6 +122,9 @@ const { useMembershipQuery } = jest.requireMock('@/hooks/useMembershipQuery') as
 const { useMembershipMutation } = jest.requireMock('@/hooks/useMembershipMutation') as {
   useMembershipMutation: jest.Mock
 }
+const { useTeamsQuery } = jest.requireMock('@/hooks/useTeamsQuery') as {
+  useTeamsQuery: jest.Mock
+}
 
 describe('AreaSettingsScreen', () => {
   let consoleErrorSpy: jest.SpyInstance
@@ -125,7 +132,15 @@ describe('AreaSettingsScreen', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     useSectionQuery.mockReturnValue({
-      sections: [{ id: 7, name: 'Kitchen Operations', role: 'editor' }],
+      sections: [
+        {
+          id: 7,
+          name: 'Kitchen Operations',
+          role: 'owner',
+          teamId: 12,
+          teamName: 'AM Kitchen Team',
+        },
+      ],
     })
     useTasksQuery.mockReturnValue({
       tasks: [],
@@ -149,6 +164,10 @@ describe('AreaSettingsScreen', () => {
     useMutation.mockReturnValue({
       mutate: jest.fn(),
       isPending: false,
+    })
+    useTeamsQuery.mockReturnValue({
+      teams: [{ id: 12, name: 'AM Kitchen Team', memberCount: 4, active: true }],
+      isLoading: false,
     })
     useQueryClient.mockReturnValue({
       invalidateQueries: jest.fn(),
@@ -184,5 +203,21 @@ describe('AreaSettingsScreen', () => {
     expect(texts).toContain('Checklists')
     expect(texts).not.toContain('New Checklist')
     expect(addButton).toBeDefined()
+  })
+
+  it('shows the area primary team and a way to change it', () => {
+    let tree: any
+
+    renderer.act(() => {
+      tree = renderer.create(<AreaSettingsScreen />)
+      jest.runOnlyPendingTimers()
+    })
+
+    const texts = getTextNodes(tree).map((node: any) => node.props.children)
+    const changeTeamButton = tree.root.findByProps({ label: 'Change Team' })
+
+    expect(texts).toContain('Primary Team')
+    expect(texts).toContain('AM Kitchen Team')
+    expect(changeTeamButton).toBeDefined()
   })
 })

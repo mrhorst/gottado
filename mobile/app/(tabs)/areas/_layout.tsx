@@ -27,6 +27,14 @@ const AreasScreenLayout = () => {
         options={{ title: 'Area Settings' }}
       />
       <Stack.Screen
+        name='teams/index'
+        options={{ title: 'Teams' }}
+      />
+      <Stack.Screen
+        name='teams/[id]'
+        options={{ title: 'Team' }}
+      />
+      <Stack.Screen
         name='add-member'
         options={{ title: 'Add Member', presentation: 'modal' }}
       />

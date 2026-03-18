@@ -121,7 +121,7 @@ describe('AreasScreen', () => {
     consoleErrorSpy.mockRestore()
   })
 
-  it('renders the new management overview hero and summary cards', () => {
+  it('renders the areas hero with the teams entry point', () => {
     let tree: any
 
     renderer.act(() => {
@@ -132,8 +132,8 @@ describe('AreasScreen', () => {
 
     expect(texts).toContain('Areas')
     expect(texts).toContain('Manage checklists, members, and structure in one place.')
-    expect(texts).toContain('Active')
+    expect(texts).toContain('Teams')
     expect(texts).toContain('Archived')
-    expect(texts).toContain('Owned by you')
+    expect(texts).toContain('My Areas')
   })
 })
