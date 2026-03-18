@@ -1,26 +1,48 @@
 # AGENTS.md - Gottado Engineering Rules
 
 ## Development Workflow (Mandatory)
-- Follow TDD for every feature, fix, and refactor:
-- 1. Write or update failing tests first (RED).
-- 2. Implement the smallest change to pass tests (GREEN).
-- 3. Refactor while keeping tests green (REFACTOR).
-- No feature is considered complete without automated test coverage for the critical path.
+
+* **Behavior-First TDD:** Follow TDD for every feature, fix, and refactor.
+1. **RED:** Write a test describing the *expected outcome* (e.g., "The list should display exactly 5 items").
+2. **GREEN:** Implement the smallest change to satisfy that specific outcome.
+3. **REFACTOR:** Clean the code while ensuring the semantic outcome remains unchanged.
+
+
+* No feature is considered complete without automated test coverage for the **critical path**.
+
+## Testing & Semantic Correctness
+
+* **State-to-UI Mapping:** Tests must verify that the UI state is a direct reflection of the data.
+* *Example:* if the database/store contains 3 projects, the test must assert that 3 project components are rendered.
+
+
+* **Assertion Quality:** Avoid "shallow" tests. Do not just test that a component "exists"; test that it contains the correct data, labels, and accessibility roles.
+* **Regressions:** Every bug fix must include a test case that reproduces the specific failure before the fix is applied.
 
 ## Testing Standards
-- Backend behavior changes require API/integration or E2E tests in `backend/tests`.
-- Mobile UI behavior changes require at least one automated test path (unit/integration/E2E where feasible).
-- Regressions must be covered by a test that would have failed before the fix.
-- Before merge/ship, run:
-- `backend`: `npm run test:e2e` (and relevant unit/integration suites)
-- `mobile`: lint + relevant UI tests
+
+* **Backend:** Behavior changes require API/integration tests in `backend/tests`. Ensure status codes and payload structures match the business logic.
+* **Mobile UI:** - Use `data-testid` or accessibility labels for reliable element selection.
+* Verify semantic correctness: if a task is marked "High Priority," the UI must reflect the "High Priority" style/token.
+* **Frontend Actionability Check:** Every new user-facing feature must include verification that the flow is actually performable from the frontend, not just reachable in backend tests or service-layer tests.
+* For any feature that adds a new creation, edit, assignment, completion, or navigation flow, tests must cover the UI entry point and the happy-path interaction that a user would take to complete it.
+* Prefer browser-level acceptance coverage for multi-screen web flows. If Playwright is available, add or update a Playwright test for the critical path. If it is not yet available, add the strongest feasible frontend test now and note the Playwright gap explicitly.
+* A feature is not done if the backend supports it but the frontend does not expose a usable path to perform it.
+
+
+* **Pre-flight Check:** Before merge, run:
+* `backend`: `npm run test:e2e`
+* `mobile`: `npm run test` (Unit/Integration) + Lint
+
+
 
 ## Design System Policy
-- Reuse shared tokens from `mobile/styles/theme.ts`.
-- Reuse shared primitives from `mobile/components/ui/*` before creating ad-hoc styles.
-- Keep visual patterns consistent:
-- cards, spacing, typography scale, button sizes, and status/priority badges should come from shared styles/components.
 
-## Commit Policy
-- Commit each feature/refactor/bug fix separately.
-- Keep commit messages scoped and explicit.
+* **Token Consistency:** Reuse shared tokens from `mobile/styles/theme.ts`.
+* **Component Primitives:** Use `mobile/components/ui/*` before creating ad-hoc styles.
+* **Visual Logic:** Status colors and priority badges must be driven by the design system's semantic mapping (e.g., `theme.colors.danger` for overdue tasks).
+
+## Commit & Quality Policy
+
+* **Atomic Commits:** Commit each feature, refactor, or bug fix separately.
+* **Descriptive Scoping:** Commit messages should describe *what* changed and *why* (e.g., `feat(mobile): ensure project count in dashboard matches store state`).
