@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express'
-import { section, sectionMember, task, taskList } from '@/db/schema.ts'
+import { section, sectionMember, task, taskList, team } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { and, eq, sql } from 'drizzle-orm'
 import {
@@ -90,8 +90,42 @@ const updateSection = async (
     if (requesterRole !== 'owner') {
       return res.status(403).send({ error: 'you are not the owner' })
     }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'teamId')) {
+      const teamId = req.body.teamId as number | null
+
+      if (teamId !== null) {
+        const [sectionRecord] = await db
+          .select({ orgId: section.orgId })
+          .from(section)
+          .where(eq(section.id, sectionId))
+          .limit(1)
+
+        const [selectedTeam] = await db
+          .select({ id: team.id })
+          .from(team)
+          .where(and(eq(team.id, teamId), eq(team.orgId, sectionRecord.orgId)))
+          .limit(1)
+
+        if (!selectedTeam) {
+          return res.status(400).send({ error: 'team does not belong to this organization' })
+        }
+      }
+    }
+
     await db.update(section).set(req.body).where(eq(section.id, sectionId))
-    res.send(200)
+    const [updatedSection] = await db
+      .select({
+        id: section.id,
+        name: section.name,
+        teamId: section.teamId,
+        teamName: team.name,
+      })
+      .from(section)
+      .leftJoin(team, eq(team.id, section.teamId))
+      .where(eq(section.id, sectionId))
+      .limit(1)
+    res.status(200).send(updatedSection)
   } catch (e) {
     next(e)
   }
