@@ -25,6 +25,7 @@ const AppButton = ({
   disabled,
   loading,
   style,
+  accessibilityLabel,
 }: {
   label: string
   onPress: () => void
@@ -33,6 +34,7 @@ const AppButton = ({
   disabled?: boolean
   loading?: boolean
   style?: StyleProp<ViewStyle>
+  accessibilityLabel?: string
 }) => {
   const isDisabled = !!disabled || !!loading
 
@@ -43,6 +45,7 @@ const AppButton = ({
         { backgroundColor: isDisabled ? colors.border : TONE_BG[tone] },
         style,
       ]}
+      accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       disabled={isDisabled}
     >
