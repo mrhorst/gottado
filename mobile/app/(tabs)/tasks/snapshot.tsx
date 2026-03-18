@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -10,6 +11,13 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useDailySnapshotQuery } from '@/hooks/useTaskHistoryQuery'
 import { colors, spacing, typography } from '@/styles/theme'
+const API_URL = process.env.EXPO_PUBLIC_API_URL || ''
+
+const resolveImageUrl = (url: string) => {
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/')) return `${API_URL}${url}`
+  return url
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -55,11 +63,36 @@ const styles = StyleSheet.create({
     ...typography.caption,
     marginTop: 4,
   },
-  completionCard: {
+  areaCard: {
     backgroundColor: '#fff',
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
-    borderRadius: 12,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  areaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  areaHeaderLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  areaTitle: {
+    ...typography.h4,
+    color: colors.text,
+  },
+  areaCount: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  completionCard: {
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
     padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -87,6 +120,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  completionIndicators: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  indicatorPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.surfaceMuted,
+  },
+  indicatorText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
   empty: {
     alignItems: 'center',
     paddingTop: 60,
@@ -95,6 +148,76 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: '#c7c7cc',
     marginTop: spacing.md,
+  },
+  overlay: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(28, 28, 30, 0.28)',
+    justifyContent: 'flex-end',
+  },
+  detailSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  detailCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  detailEyebrow: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  detailTitle: {
+    ...typography.h3,
+    color: colors.text,
+  },
+  detailMeta: {
+    ...typography.body2,
+    color: colors.textMuted,
+  },
+  detailClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceMuted,
+  },
+  detailGrid: {
+    gap: spacing.sm,
+  },
+  detailRow: {
+    gap: 4,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  detailValue: {
+    ...typography.body1,
+    color: colors.text,
+  },
+  detailPhoto: {
+    width: '100%',
+    height: 220,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceMuted,
   },
 })
 
@@ -120,7 +243,41 @@ const formatDisplayDate = (dateStr: string): string => {
 
 export default function SnapshotScreen() {
   const [date, setDate] = useState(formatDate(new Date()))
+  const [selectedCompletionId, setSelectedCompletionId] = useState<number | null>(null)
+  const [expandedAreas, setExpandedAreas] = useState<Record<string, boolean>>({})
   const { snapshot, isLoading } = useDailySnapshotQuery(date)
+  const selectedCompletion = useMemo(
+    () =>
+      snapshot?.completions.find((completion) => completion.id === selectedCompletionId) ?? null,
+    [selectedCompletionId, snapshot]
+  )
+  const groupedAreas = useMemo(() => {
+    if (!snapshot) return []
+
+    const grouped = new Map<string, typeof snapshot.completions>()
+    snapshot.completions.forEach((completion) => {
+      const existing = grouped.get(completion.sectionName) ?? []
+      existing.push(completion)
+      grouped.set(completion.sectionName, existing)
+    })
+
+    return Array.from(grouped.entries()).map(([sectionName, completions]) => ({
+      sectionName,
+      completions,
+    }))
+  }, [snapshot])
+
+  useEffect(() => {
+    setExpandedAreas((current) => {
+      const next = { ...current }
+      groupedAreas.forEach((group) => {
+        if (next[group.sectionName] == null) {
+          next[group.sectionName] = true
+        }
+      })
+      return next
+    })
+  }, [groupedAreas])
 
   const shiftDate = (days: number) => {
     const d = new Date(date + 'T12:00:00')
@@ -153,8 +310,8 @@ export default function SnapshotScreen() {
         </View>
       ) : (
         <FlatList
-          data={snapshot?.completions || []}
-          keyExtractor={(item) => String(item.id)}
+          data={groupedAreas}
+          keyExtractor={(item) => item.sectionName}
           ListHeaderComponent={
             snapshot ? (
               <View style={styles.summaryCard}>
@@ -189,70 +346,189 @@ export default function SnapshotScreen() {
               <Text style={styles.emptyText}>No completions this day</Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <View style={styles.completionCard}>
-              <View
-                style={[
-                  styles.statusIcon,
-                  {
-                    backgroundColor:
-                      item.onTime === true
-                        ? '#34C75920'
-                        : item.onTime === false
-                          ? colors.iOSred + '20'
-                          : '#8e8e9320',
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={
-                    item.onTime === true
-                      ? 'checkmark'
-                      : item.onTime === false
-                        ? 'time-outline'
-                        : 'remove'
+          renderItem={({ item }) => {
+            const isExpanded = expandedAreas[item.sectionName] ?? true
+            const taskCountLabel = `${item.completions.length} task${item.completions.length === 1 ? '' : 's'}`
+
+            return (
+              <View style={styles.areaCard}>
+                <Pressable
+                  accessibilityLabel={`Toggle area ${item.sectionName}`}
+                  style={styles.areaHeader}
+                  onPress={() =>
+                    setExpandedAreas((current) => ({
+                      ...current,
+                      [item.sectionName]: !isExpanded,
+                    }))
                   }
-                  size={18}
-                  color={
-                    item.onTime === true
-                      ? '#34C759'
-                      : item.onTime === false
-                        ? colors.iOSred
-                        : '#8e8e93'
-                  }
-                />
+                >
+                  <View style={styles.areaHeaderLeft}>
+                    <Text style={styles.areaTitle}>{item.sectionName}</Text>
+                    <Text style={styles.areaCount}>{taskCountLabel}</Text>
+                  </View>
+                  <Ionicons
+                    name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+                    size={18}
+                    color={colors.textMuted}
+                  />
+                </Pressable>
+
+                {isExpanded &&
+                  item.completions.map((completion) => (
+                    <Pressable
+                      key={completion.id}
+                      accessibilityLabel={`Open completion details for ${completion.taskTitle}`}
+                      onPress={() => setSelectedCompletionId(completion.id)}
+                    >
+                      <View style={styles.completionCard}>
+                        <View
+                          style={[
+                            styles.statusIcon,
+                            {
+                              backgroundColor:
+                                completion.onTime === true
+                                  ? '#34C75920'
+                                  : completion.onTime === false
+                                    ? colors.iOSred + '20'
+                                    : '#8e8e9320',
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name={
+                              completion.onTime === true
+                                ? 'checkmark'
+                                : completion.onTime === false
+                                  ? 'time-outline'
+                                  : 'remove'
+                            }
+                            size={18}
+                            color={
+                              completion.onTime === true
+                                ? '#34C759'
+                                : completion.onTime === false
+                                  ? colors.iOSred
+                                  : '#8e8e93'
+                            }
+                          />
+                        </View>
+                        <View style={styles.completionInfo}>
+                          <Text style={styles.completionTitle}>{completion.taskTitle}</Text>
+                          <Text style={styles.completionMeta}>
+                            {completion.recurrence
+                              ? `${completion.recurrence.replace('_', ' ')} \u2022 `
+                              : ''}
+                            {completion.completedByName}
+                          </Text>
+                          <View style={styles.completionIndicators}>
+                            {completion.requiresPicture && (
+                              <IndicatorPill
+                                icon='camera-outline'
+                                label='Requires photo'
+                              />
+                            )}
+                            {!!completion.pictureUrl && (
+                              <IndicatorPill
+                                icon='image-outline'
+                                label='Photo uploaded'
+                              />
+                            )}
+                          </View>
+                        </View>
+                        <Text
+                          style={[
+                            styles.completionTime,
+                            {
+                              color:
+                                completion.onTime === true
+                                  ? '#34C759'
+                                  : completion.onTime === false
+                                    ? colors.iOSred
+                                    : '#8e8e93',
+                            },
+                          ]}
+                        >
+                          {new Date(completion.completedAt).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
               </View>
-              <View style={styles.completionInfo}>
-                <Text style={styles.completionTitle}>{item.taskTitle}</Text>
-                <Text style={styles.completionMeta}>
-                  {item.sectionName}
-                  {item.recurrence
-                    ? ` \u2022 ${item.recurrence.replace('_', ' ')}`
-                    : ''}
+            )
+          }}
+        />
+      )}
+
+      {selectedCompletion && (
+        <Pressable style={styles.overlay} onPress={() => setSelectedCompletionId(null)}>
+          <Pressable style={styles.detailSheet} onPress={() => undefined}>
+            <View style={styles.detailHeader}>
+              <View style={styles.detailCopy}>
+                <Text style={styles.detailEyebrow}>{selectedCompletion.sectionName}</Text>
+                <Text style={styles.detailTitle}>{selectedCompletion.taskTitle}</Text>
+                <Text style={styles.detailMeta}>
+                  {new Date(selectedCompletion.completedAt).toLocaleString()}
                 </Text>
               </View>
-              <Text
-                style={[
-                  styles.completionTime,
-                  {
-                    color:
-                      item.onTime === true
-                        ? '#34C759'
-                        : item.onTime === false
-                          ? colors.iOSred
-                          : '#8e8e93',
-                  },
-                ]}
+              <Pressable
+                accessibilityLabel='Close completion details'
+                style={styles.detailClose}
+                onPress={() => setSelectedCompletionId(null)}
               >
-                {new Date(item.completedAt).toLocaleTimeString(undefined, {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
+                <Ionicons name='close' size={18} color={colors.textSecondary} />
+              </Pressable>
             </View>
-          )}
-        />
+
+            <View style={styles.detailGrid}>
+              <DetailRow label='Completed by' value={selectedCompletion.completedByName} />
+              <DetailRow
+                label='Status'
+                value={
+                  selectedCompletion.onTime === true
+                    ? 'Completed on time'
+                    : selectedCompletion.onTime === false
+                      ? 'Completed late'
+                      : 'Completed with no deadline'
+                }
+              />
+              <DetailRow
+                label='Photo requirement'
+                value={selectedCompletion.requiresPicture ? 'Requires photo' : 'No photo required'}
+              />
+            </View>
+
+            {!!selectedCompletion.pictureUrl ? (
+              <View style={styles.detailGrid}>
+                <Text style={styles.detailLabel}>Photo uploaded</Text>
+                <Image
+                  source={{ uri: resolveImageUrl(String(selectedCompletion.pictureUrl)) }}
+                  style={styles.detailPhoto}
+                  resizeMode='cover'
+                />
+              </View>
+            ) : selectedCompletion.requiresPicture ? (
+              <DetailRow label='Photo uploaded' value='No photo uploaded' />
+            ) : null}
+          </Pressable>
+        </Pressable>
       )}
     </View>
   )
 }
+
+const IndicatorPill = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) => (
+  <View style={styles.indicatorPill}>
+    <Ionicons name={icon} size={12} color={colors.textSecondary} />
+    <Text style={styles.indicatorText}>{label}</Text>
+  </View>
+)
+
+const DetailRow = ({ label, value }: { label: string; value: string }) => (
+  <View style={styles.detailRow}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue}>{value}</Text>
+  </View>
+)

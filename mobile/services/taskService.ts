@@ -47,6 +47,9 @@ export interface DailySnapshot {
       taskTitle: string
       sectionName: string
       recurrence: Recurrence | null
+      completedBy: number
+      completedByName: string
+      requiresPicture: boolean
     }
   )[]
   summary: {
