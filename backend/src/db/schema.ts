@@ -137,6 +137,45 @@ export const taskActivity = pgTable(
   ]
 )
 
+export const laborShift = pgTable(
+  'labor_shifts',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    title: varchar({ length: 255 }).notNull(),
+    shiftDate: date('shift_date').notNull(),
+    startTime: varchar('start_time', { length: 5 }).notNull(),
+    endTime: varchar('end_time', { length: 5 }).notNull(),
+    areaId: integer('area_id').references(() => section.id, { onDelete: 'set null' }),
+    assignedTeamId: integer('assigned_team_id').references(() => team.id, {
+      onDelete: 'set null',
+    }),
+    assignedUserId: integer('assigned_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    notes: text(),
+    createdBy: integer('created_by')
+      .references(() => user.id)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    check('labor_shift_title_not_empty', sql`${table.title} <> ''`),
+    index('labor_shifts_org_id_idx').on(table.orgId),
+    index('labor_shifts_shift_date_idx').on(table.shiftDate),
+    index('labor_shifts_area_id_idx').on(table.areaId),
+    index('labor_shifts_team_id_idx').on(table.assignedTeamId),
+    index('labor_shifts_user_id_idx').on(table.assignedUserId),
+  ]
+)
+
 export const section = pgTable(
   'sections',
   {

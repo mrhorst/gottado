@@ -69,6 +69,19 @@ export const createLogbookEntrySchema = z.object({
   entryDate: z.string().optional(),
 })
 
+// ── Labor ───────────────────────────────────────────────────────────────
+
+export const createLaborShiftSchema = z.object({
+  title: z.string().min(1).max(255),
+  shiftDate: z.string().min(1).max(10),
+  startTime: z.string().min(1).max(5),
+  endTime: z.string().min(1).max(5),
+  areaId: z.number().int().positive().nullable().optional(),
+  assignedTeamId: z.number().int().positive().nullable().optional(),
+  assignedUserId: z.number().int().positive().nullable().optional(),
+  notes: z.string().max(5000).optional(),
+})
+
 // ── Sections ────────────────────────────────────────────────────────────
 
 export const createSectionSchema = z.object({
