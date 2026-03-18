@@ -71,6 +71,13 @@
       "when": 1773828600000,
       "tag": "0009_logbook",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773900000000,
+      "tag": "0010_labor_shifts",
+      "breakpoints": true
     }
   ]
 }
