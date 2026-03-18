@@ -2,7 +2,10 @@ import { expect, test } from '@playwright/test'
 
 const backendBaseUrl = 'http://127.0.0.1:3100'
 
-test('manager can create a waste record from the frontend', async ({ page, request }) => {
+test('manager can create, filter, and export cost records from the frontend', async ({
+  page,
+  request,
+}) => {
   const stamp = Date.now()
   const email = `costs-playwright-${stamp}@example.com`
   const password = 'password123'
@@ -66,4 +69,11 @@ test('manager can create a waste record from the frontend', async ({ page, reque
   await expect(page).toHaveURL(/\/costs$/)
   await expect(page.getByText(recordTitle)).toBeVisible()
   await expect(page.getByText('Fresh Greens Co.')).toBeVisible()
+  await page.getByLabel('Filter costs by Waste').click()
+
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByLabel('Export cost records').click()
+  const download = await downloadPromise
+
+  expect(download.suggestedFilename()).toContain('cost-records')
 })
