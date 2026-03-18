@@ -261,6 +261,48 @@ export const costRecord = pgTable(
   ]
 )
 
+export const issueRecord = pgTable(
+  'issue_records',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    category: varchar({ length: 20 })
+      .$type<'guest' | 'staffing' | 'maintenance' | 'inventory' | 'financial'>()
+      .notNull(),
+    severity: varchar({ length: 20 })
+      .$type<'low' | 'medium' | 'high' | 'critical'>()
+      .notNull(),
+    title: varchar({ length: 255 }).notNull(),
+    entryDate: date('entry_date').notNull(),
+    areaId: integer('area_id').references(() => section.id, { onDelete: 'set null' }),
+    followUpRequired: boolean('follow_up_required').notNull().default(false),
+    status: varchar({ length: 20 })
+      .$type<'open' | 'resolved'>()
+      .notNull()
+      .default('open'),
+    notes: text(),
+    createdBy: integer('created_by')
+      .references(() => user.id)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    check('issue_record_title_not_empty', sql`${table.title} <> ''`),
+    index('issue_records_org_id_idx').on(table.orgId),
+    index('issue_records_entry_date_idx').on(table.entryDate),
+    index('issue_records_category_idx').on(table.category),
+    index('issue_records_severity_idx').on(table.severity),
+    index('issue_records_area_id_idx').on(table.areaId),
+  ]
+)
+
 export const section = pgTable(
   'sections',
   {
