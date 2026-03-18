@@ -19,14 +19,30 @@ export interface LogbookTemplateDetail {
 
 export interface LogbookEntry {
   id: number
-  title?: string | null
   body: string
   entryDate: string
   createdAt: string
+  updatedAt: string
   authorName: string
+  isEditable: boolean
 }
 
-export interface LogbookEntriesResponse {
+export interface LogbookEntryEdit {
+  id: number
+  previousBody: string
+  editorName: string
+  createdAt: string
+}
+
+export interface LogbookDayResponse {
   template: LogbookTemplateDetail
-  entries: LogbookEntry[]
+  entry: LogbookEntry | null
+}
+
+export interface LogbookHistoryResponse {
+  edits: LogbookEntryEdit[]
+}
+
+export interface LogbookEntryDatesResponse {
+  dates: string[]
 }
