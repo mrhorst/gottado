@@ -1,22 +1,36 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useAuth } from '@/context/auth/AuthContext'
-import { getCostRecords, getCostReferences } from '@/services/costsService'
+import { getCostReferences, getFilteredCostRecords } from '@/services/costsService'
+import type { CostFilter } from '@/types/costs'
 
 const getToday = () => new Date().toISOString().slice(0, 10)
 
 export const useCostRecordsQuery = () => {
   const { user } = useAuth()
-  const [selectedDate] = useState(getToday)
+  const [selectedDate, setSelectedDate] = useState(getToday)
+  const [kindFilter, setKindFilter] = useState<CostFilter>('all')
 
   const query = useQuery({
-    queryKey: ['cost-records', user?.id, selectedDate],
-    queryFn: () => getCostRecords(selectedDate),
+    queryKey: ['cost-records', user?.id, selectedDate, kindFilter],
+    queryFn: () => getFilteredCostRecords({ date: selectedDate, kind: kindFilter }),
     enabled: !!user,
   })
 
   return {
     selectedDate,
+    kindFilter,
+    setKindFilter,
+    goToPreviousDate: () => {
+      const date = new Date(`${selectedDate}T12:00:00`)
+      date.setDate(date.getDate() - 1)
+      setSelectedDate(date.toISOString().slice(0, 10))
+    },
+    goToNextDate: () => {
+      const date = new Date(`${selectedDate}T12:00:00`)
+      date.setDate(date.getDate() + 1)
+      setSelectedDate(date.toISOString().slice(0, 10))
+    },
     records: query.data?.records ?? [],
     summary: query.data?.summary ?? {
       totalAmount: '0.00',

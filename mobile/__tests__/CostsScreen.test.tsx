@@ -26,6 +26,7 @@ jest.mock('react-native', () => {
     Pressable: host('Pressable'),
     ActivityIndicator: host('ActivityIndicator'),
     StyleSheet: { create: (styles: unknown) => styles },
+    Platform: { OS: 'web' },
   }
 })
 
@@ -41,6 +42,10 @@ jest.mock('@/hooks/useCostsQuery', () => ({
   useCostRecordsQuery: jest.fn(),
 }))
 
+jest.mock('@/services/costsService', () => ({
+  exportCostRecordsCsv: jest.fn(),
+}))
+
 jest.mock('@/components/ui/ScreenMotion', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) =>
@@ -49,6 +54,9 @@ jest.mock('@/components/ui/ScreenMotion', () => ({
 
 const { useCostRecordsQuery } = jest.requireMock('@/hooks/useCostsQuery') as {
   useCostRecordsQuery: jest.Mock
+}
+const { exportCostRecordsCsv } = jest.requireMock('@/services/costsService') as {
+  exportCostRecordsCsv: jest.Mock
 }
 
 const getTextNodes = (tree: any) => tree.root.findAll((node: any) => node.type === 'Text')
@@ -72,16 +80,21 @@ describe('CostsScreen', () => {
           notes: 'Walk-in cooler issue overnight.',
         },
       ],
+      kindFilter: 'all',
+      setKindFilter: jest.fn(),
       summary: {
         totalAmount: '86.50',
         wasteCount: 1,
         purchaseCount: 0,
         vendorIssueCount: 0,
       },
+      goToPreviousDate: jest.fn(),
+      goToNextDate: jest.fn(),
       isLoading: false,
       isError: false,
       error: null,
     })
+    exportCostRecordsCsv.mockResolvedValue('entryDate,kind,title\n2026-03-18,waste,Spoiled produce')
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((message?: unknown) => {
       if (typeof message === 'string' && message.includes('react-test-renderer is deprecated')) {
         return
@@ -93,25 +106,38 @@ describe('CostsScreen', () => {
     consoleErrorSpy.mockRestore()
   })
 
-  it('shows cost records and exposes a create entry point', () => {
+  it('shows cost records, supports filters, and exposes create/export actions', async () => {
     let tree: any
 
-    renderer.act(() => {
+    await renderer.act(async () => {
       tree = renderer.create(<CostsScreen />)
     })
 
     const texts = getTextNodes(tree).map((node: any) => node.props.children)
     const createButton = tree.root.findByProps({ accessibilityLabel: 'Create cost record' })
+    const exportButton = tree.root.findByProps({ accessibilityLabel: 'Export cost records' })
 
     expect(texts).toContain('Costs')
     expect(texts).toContain('Spoiled produce')
     expect(texts).toContain('Kitchen Ops')
     expect(texts).toContain('Fresh Greens Co.')
+    expect(texts).toContain('All')
+    expect(texts).toContain('Waste')
 
     renderer.act(() => {
       createButton.props.onPress()
     })
 
     expect(pushMock).toHaveBeenCalledWith('/(tabs)/costs/new')
+
+    await renderer.act(async () => {
+      await exportButton.props.onPress()
+    })
+
+    expect(exportCostRecordsCsv).toHaveBeenCalledWith({
+      from: '2026-03-18',
+      to: '2026-03-18',
+      kind: 'all',
+    })
   })
 })

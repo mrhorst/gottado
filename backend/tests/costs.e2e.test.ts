@@ -136,5 +136,40 @@ describe('Costs API E2E', () => {
         }),
       ])
     )
+
+    const createPurchaseRes = await request(app)
+      .post('/api/costs/records')
+      .set(authHeaders())
+      .send({
+        kind: 'purchase',
+        title: 'Emergency dairy order',
+        entryDate: '2026-03-17',
+        amount: '45.00',
+        areaId,
+        vendorName: 'City Dairy',
+        notes: 'Same-day make-good order.',
+      })
+
+    expect(createPurchaseRes.status).toBe(201)
+
+    const filteredRes = await request(app)
+      .get('/api/costs/records')
+      .query({ date: '2026-03-18', kind: 'waste' })
+      .set(authHeaders())
+
+    expect(filteredRes.status).toBe(200)
+    expect(filteredRes.body.records).toHaveLength(1)
+    expect(filteredRes.body.records[0].kind).toBe('waste')
+
+    const exportRes = await request(app)
+      .get('/api/costs/records/export')
+      .query({ from: '2026-03-17', to: '2026-03-18', kind: 'all' })
+      .set(authHeaders())
+
+    expect(exportRes.status).toBe(200)
+    expect(exportRes.headers['content-type']).toContain('text/csv')
+    expect(exportRes.text).toContain('entryDate,kind,title,amount,areaName,vendorName,quantityLabel,notes')
+    expect(exportRes.text).toContain('Spoiled produce')
+    expect(exportRes.text).toContain('Emergency dairy order')
   })
 })

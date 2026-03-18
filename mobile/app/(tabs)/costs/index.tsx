@@ -1,4 +1,12 @@
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import AppButton from '@/components/ui/AppButton'
@@ -7,8 +15,9 @@ import EmptyState from '@/components/ui/EmptyState'
 import ScreenHeader from '@/components/ui/ScreenHeader'
 import ScreenMotion from '@/components/ui/ScreenMotion'
 import { useCostRecordsQuery } from '@/hooks/useCostsQuery'
+import { exportCostRecordsCsv } from '@/services/costsService'
 import { colors, layout, radius, spacing, typography } from '@/styles/theme'
-import type { CostKind } from '@/types/costs'
+import type { CostFilter, CostKind } from '@/types/costs'
 
 const formatDateLabel = (value: string) =>
   new Date(`${value}T12:00:00`).toLocaleDateString(undefined, {
@@ -25,7 +34,38 @@ const KIND_LABEL: Record<CostKind, string> = {
 
 export default function CostsScreen() {
   const router = useRouter()
-  const { selectedDate, records, summary, isLoading, isError, error } = useCostRecordsQuery()
+  const {
+    selectedDate,
+    kindFilter,
+    setKindFilter,
+    goToPreviousDate,
+    goToNextDate,
+    records,
+    summary,
+    isLoading,
+    isError,
+    error,
+  } = useCostRecordsQuery()
+
+  const handleExport = async () => {
+    const csv = await exportCostRecordsCsv({
+      from: selectedDate,
+      to: selectedDate,
+      kind: kindFilter,
+    })
+
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `cost-records-${selectedDate}-${kindFilter}.csv`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -66,15 +106,65 @@ export default function CostsScreen() {
         />
 
         <AppCard style={s.summaryCard}>
-          <View style={s.summaryBlock}>
-            <Text style={s.summaryEyebrow}>Entry Date</Text>
-            <Text style={s.summaryTitle}>{formatDateLabel(selectedDate)}</Text>
+          <View style={s.summaryDateRow}>
+            <Pressable
+              accessibilityLabel='Previous cost date'
+              onPress={goToPreviousDate}
+              style={s.iconCircle}
+            >
+              <Ionicons name='chevron-back' size={16} color={colors.text} />
+            </Pressable>
+            <View style={s.summaryBlock}>
+              <Text style={s.summaryEyebrow}>Entry Date</Text>
+              <Text style={s.summaryTitle}>{formatDateLabel(selectedDate)}</Text>
+            </View>
+            <Pressable
+              accessibilityLabel='Next cost date'
+              onPress={goToNextDate}
+              style={s.iconCircle}
+            >
+              <Ionicons name='chevron-forward' size={16} color={colors.text} />
+            </Pressable>
           </View>
-          <View style={s.amountPill}>
-            <Text style={s.amountPillValue}>${summary.totalAmount}</Text>
-            <Text style={s.amountPillLabel}>tracked</Text>
+          <View style={s.summaryRight}>
+            <View style={s.amountPill}>
+              <Text style={s.amountPillValue}>${summary.totalAmount}</Text>
+              <Text style={s.amountPillLabel}>tracked</Text>
+            </View>
+            <Pressable
+              accessibilityLabel='Export cost records'
+              onPress={handleExport}
+              style={s.exportButton}
+            >
+              <Ionicons name='download-outline' size={16} color={colors.primary} />
+              <Text style={s.exportButtonText}>Export</Text>
+            </Pressable>
           </View>
         </AppCard>
+
+        <View style={s.filterRow}>
+          {(['all', 'waste', 'purchase', 'vendor_issue'] as CostFilter[]).map((value) => {
+            const isSelected = value === kindFilter
+            const label =
+              value === 'all'
+                ? 'All'
+                : value === 'vendor_issue'
+                  ? 'Vendor Issues'
+                  : KIND_LABEL[value]
+            return (
+              <Pressable
+                key={value}
+                onPress={() => setKindFilter(value)}
+                accessibilityLabel={`Filter costs by ${label}`}
+                style={[s.filterChip, isSelected && s.filterChipSelected]}
+              >
+                <Text style={[s.filterChipText, isSelected && s.filterChipTextSelected]}>
+                  {label}
+                </Text>
+              </Pressable>
+            )
+          })}
+        </View>
 
         <View style={s.kpiRow}>
           <Kpi label='Waste' value={summary.wasteCount} />
@@ -157,7 +247,17 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
+  summaryDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
   summaryBlock: { gap: 4 },
+  summaryRight: {
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
   summaryEyebrow: {
     fontSize: 12,
     fontWeight: '700',
@@ -175,6 +275,49 @@ const s = StyleSheet.create({
   },
   amountPillValue: { fontSize: 14, fontWeight: '800', color: colors.text },
   amountPillLabel: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceMuted,
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  exportButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  filterChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
+  filterChipTextSelected: {
+    color: '#fff',
+  },
   kpiRow: { flexDirection: 'row', gap: spacing.sm },
   kpiCard: { flex: 1, gap: 4, alignItems: 'center' },
   kpiValue: { ...typography.h4, color: colors.text },

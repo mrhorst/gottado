@@ -26,6 +26,8 @@ export interface CostRecordsResponse {
   records: CostRecord[]
 }
 
+export type CostFilter = CostKind | 'all'
+
 export interface CostReferenceArea {
   id: number
   name: string
@@ -44,4 +46,10 @@ export interface CreateCostRecordPayload {
   vendorName?: string
   quantityLabel?: string
   notes?: string
+}
+
+export interface ExportCostRecordsParams {
+  from: string
+  to: string
+  kind: CostFilter
 }

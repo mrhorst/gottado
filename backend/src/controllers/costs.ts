@@ -20,6 +20,32 @@ const ensureOrgManager = async (userId: number, orgId: number) => {
 }
 
 const getEntryDate = (value?: string) => value ?? new Date().toISOString().slice(0, 10)
+const getKindFilter = (value?: string) =>
+  value === 'waste' || value === 'purchase' || value === 'vendor_issue' ? value : 'all'
+
+const buildCostFilter = (
+  orgId: number,
+  from: string,
+  to?: string,
+  kind: 'all' | 'waste' | 'purchase' | 'vendor_issue' = 'all'
+) => {
+  const filters = [
+    eq(costRecord.orgId, orgId),
+    sql`${costRecord.entryDate} >= ${from}`,
+    sql`${costRecord.entryDate} <= ${to ?? from}`,
+  ]
+
+  if (kind !== 'all') {
+    filters.push(eq(costRecord.kind, kind))
+  }
+
+  return and(...filters)
+}
+
+const csvEscape = (value: string | null | undefined) => {
+  const safeValue = value ?? ''
+  return `"${safeValue.replaceAll('"', '""')}"`
+}
 
 export const listCostReferences = async (
   req: AuthenticatedRequest,
@@ -57,6 +83,7 @@ export const listCostRecords = async (
   const entryDate = getEntryDate(
     typeof req.query.date === 'string' ? req.query.date : undefined
   )
+  const kind = getKindFilter(typeof req.query.kind === 'string' ? req.query.kind : undefined)
 
   try {
     await ensureOrgAccess(userId, orgId)
@@ -77,7 +104,7 @@ export const listCostRecords = async (
       })
       .from(costRecord)
       .leftJoin(section, eq(section.id, costRecord.areaId))
-      .where(and(eq(costRecord.orgId, orgId), eq(costRecord.entryDate, entryDate)))
+      .where(buildCostFilter(orgId, entryDate, entryDate, kind))
       .orderBy(asc(costRecord.kind), asc(costRecord.title))
 
     const [summary] = await db
@@ -88,7 +115,7 @@ export const listCostRecords = async (
         vendorIssueCount: sql<number>`count(*) filter (where ${costRecord.kind} = 'vendor_issue')::int`,
       })
       .from(costRecord)
-      .where(and(eq(costRecord.orgId, orgId), eq(costRecord.entryDate, entryDate)))
+      .where(buildCostFilter(orgId, entryDate, entryDate, kind))
 
     res.send({
       summary: {
@@ -99,6 +126,65 @@ export const listCostRecords = async (
       },
       records,
     })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const exportCostRecords = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const orgId = Number(req.headers['x-org-id'])
+  const userId = Number(req.user?.sub)
+  const from = getEntryDate(typeof req.query.from === 'string' ? req.query.from : undefined)
+  const to =
+    typeof req.query.to === 'string' && req.query.to.trim().length > 0 ? req.query.to : from
+  const kind = getKindFilter(typeof req.query.kind === 'string' ? req.query.kind : undefined)
+
+  try {
+    await ensureOrgAccess(userId, orgId)
+
+    const records = await db
+      .select({
+        entryDate: costRecord.entryDate,
+        kind: costRecord.kind,
+        title: costRecord.title,
+        amount: costRecord.amount,
+        areaName: section.name,
+        vendorName: costRecord.vendorName,
+        quantityLabel: costRecord.quantityLabel,
+        notes: costRecord.notes,
+      })
+      .from(costRecord)
+      .leftJoin(section, eq(section.id, costRecord.areaId))
+      .where(buildCostFilter(orgId, from, to, kind))
+      .orderBy(asc(costRecord.entryDate), asc(costRecord.kind), asc(costRecord.title))
+
+    const header =
+      'entryDate,kind,title,amount,areaName,vendorName,quantityLabel,notes'
+    const rows = records.map((record) =>
+      [
+        record.entryDate,
+        record.kind,
+        record.title,
+        record.amount,
+        record.areaName,
+        record.vendorName,
+        record.quantityLabel,
+        record.notes,
+      ]
+        .map((value) => csvEscape(value == null ? '' : String(value)))
+        .join(',')
+    )
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="cost-records-${from}-to-${to}.csv"`
+    )
+    res.send([header, ...rows].join('\n'))
   } catch (error) {
     next(error)
   }
