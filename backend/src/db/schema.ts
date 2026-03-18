@@ -358,7 +358,6 @@ export const logbookEntry = pgTable(
     authorId: integer('author_id')
       .references(() => user.id)
       .notNull(),
-    title: varchar({ length: 255 }),
     body: text().notNull(),
     entryDate: date('entry_date').notNull().default(sql`CURRENT_DATE`),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -369,9 +368,30 @@ export const logbookEntry = pgTable(
       .default(sql`now()`),
   },
   (table) => [
+    uniqueIndex('logbook_entries_template_date_idx').on(table.templateId, table.entryDate),
     index('logbook_entries_template_id_idx').on(table.templateId),
     index('logbook_entries_author_id_idx').on(table.authorId),
     index('logbook_entries_created_at_idx').on(table.createdAt),
+  ]
+)
+
+export const logbookEntryEdit = pgTable(
+  'logbook_entry_edits',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    entryId: integer('entry_id')
+      .references(() => logbookEntry.id, { onDelete: 'cascade' })
+      .notNull(),
+    editorId: integer('editor_id')
+      .references(() => user.id)
+      .notNull(),
+    previousBody: text('previous_body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('logbook_entry_edits_entry_id_idx').on(table.entryId),
   ]
 )
 

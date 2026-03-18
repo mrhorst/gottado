@@ -44,5 +44,8 @@
 
 ## Commit & Quality Policy
 
+* **Branch-First Workflow:** Never work directly on `main`. Start every feature, fix, or refactor on a dedicated branch.
+* **Merge Discipline:** After verification passes, merge the feature branch back into `main`. This is mandatory because multiple AI agents may be working in the repository concurrently.
+* **Branch Scope:** Use one focused branch per workstream so parallel agents do not step on each other.
 * **Atomic Commits:** Commit each feature, refactor, or bug fix separately.
 * **Descriptive Scoping:** Commit messages should describe *what* changed and *why* (e.g., `feat(mobile): ensure project count in dashboard matches store state`).

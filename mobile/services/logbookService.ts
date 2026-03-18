@@ -1,6 +1,8 @@
 import api from './api'
 import type {
-  LogbookEntriesResponse,
+  LogbookDayResponse,
+  LogbookEntryDatesResponse,
+  LogbookHistoryResponse,
   LogbookTemplateSummary,
 } from '@/types/logbook'
 
@@ -17,15 +19,39 @@ export const createLogbookTemplate = async (payload: {
   return data
 }
 
-export const getLogbookEntries = async (templateId: number): Promise<LogbookEntriesResponse> => {
-  const { data } = await api.get<LogbookEntriesResponse>(`/logbook/templates/${templateId}/entries`)
+export const getLogbookEntryByDate = async (
+  templateId: number,
+  date: string
+): Promise<LogbookDayResponse> => {
+  const { data } = await api.get<LogbookDayResponse>(
+    `/logbook/templates/${templateId}/entries/${date}`
+  )
   return data
 }
 
-export const createLogbookEntry = async (
+export const upsertTodayEntry = async (
   templateId: number,
-  payload: { title?: string; body: string; entryDate?: string }
+  body: string
 ) => {
-  const { data } = await api.post(`/logbook/templates/${templateId}/entries`, payload)
+  const { data } = await api.put(`/logbook/templates/${templateId}/entries/today`, { body })
+  return data
+}
+
+export const getEntryHistory = async (
+  templateId: number,
+  date: string
+): Promise<LogbookHistoryResponse> => {
+  const { data } = await api.get<LogbookHistoryResponse>(
+    `/logbook/templates/${templateId}/entries/${date}/history`
+  )
+  return data
+}
+
+export const getEntryDates = async (
+  templateId: number
+): Promise<LogbookEntryDatesResponse> => {
+  const { data } = await api.get<LogbookEntryDatesResponse>(
+    `/logbook/templates/${templateId}/entry-dates`
+  )
   return data
 }
