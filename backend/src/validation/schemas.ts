@@ -82,6 +82,19 @@ export const createLaborShiftSchema = z.object({
   notes: z.string().max(5000).optional(),
 })
 
+// ── Costs ───────────────────────────────────────────────────────────────
+
+export const createCostRecordSchema = z.object({
+  kind: z.enum(['waste', 'purchase', 'vendor_issue']),
+  title: z.string().min(1).max(255),
+  entryDate: z.string().min(1).max(10),
+  amount: z.string().min(1).max(20),
+  areaId: z.number().int().positive().nullable().optional(),
+  vendorName: z.string().max(255).optional(),
+  quantityLabel: z.string().max(255).optional(),
+  notes: z.string().max(5000).optional(),
+})
+
 // ── Sections ────────────────────────────────────────────────────────────
 
 export const createSectionSchema = z.object({

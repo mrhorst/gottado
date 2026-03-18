@@ -100,6 +100,7 @@ export async function cleanDatabase(): Promise<void> {
     // Delete in order to respect foreign keys (table names in DB)
     const tables = [
       'audit_photos',
+      'cost_records',
       'labor_shifts',
       'task_activities',
       'audit_findings',

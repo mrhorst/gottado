@@ -9,6 +9,7 @@ import auditsRouter from './audits.ts'
 import uploadsRouter from './uploads.ts'
 import logbookRouter from './logbook.ts'
 import laborRouter from './labor.ts'
+import costsRouter from './costs.ts'
 
 import { protect, setOrg } from '../middleware/authentication.ts'
 
@@ -25,6 +26,7 @@ api.use('/sections', sectionsRouter)
 api.use('/teams', teamsRouter)
 api.use('/logbook', logbookRouter)
 api.use('/labor', laborRouter)
+api.use('/costs', costsRouter)
 api.use('/audits', auditsRouter)
 
 export default api
