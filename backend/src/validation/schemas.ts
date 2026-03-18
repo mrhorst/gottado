@@ -69,6 +69,22 @@ export const upsertLogbookEntrySchema = z.object({
   body: z.string().min(1).max(5000),
 })
 
+// ── Day Parts ──────────────────────────────────────────────────────────
+
+export const createDayPartSchema = z.object({
+  name: z.string().min(1).max(100),
+  startTime: z.string().min(1).max(5),
+  endTime: z.string().min(1).max(5),
+  sortOrder: z.number().int().optional(),
+})
+
+export const updateDayPartSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  startTime: z.string().min(1).max(5).optional(),
+  endTime: z.string().min(1).max(5).optional(),
+  sortOrder: z.number().int().optional(),
+})
+
 // ── Labor ───────────────────────────────────────────────────────────────
 
 export const createLaborShiftSchema = z.object({

@@ -42,6 +42,28 @@ export interface LaborReferencesResponse {
   members: LaborReferenceMember[]
 }
 
+export interface DayPart {
+  id: number
+  name: string
+  startTime: string
+  endTime: string
+  sortOrder: number
+}
+
+export interface CreateDayPartPayload {
+  name: string
+  startTime: string
+  endTime: string
+  sortOrder?: number
+}
+
+export interface UpdateDayPartPayload {
+  name?: string
+  startTime?: string
+  endTime?: string
+  sortOrder?: number
+}
+
 export interface CreateLaborShiftPayload {
   title: string
   shiftDate: string

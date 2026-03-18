@@ -138,6 +138,30 @@ export const taskActivity = pgTable(
   ]
 )
 
+export const dayPart = pgTable(
+  'day_parts',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    orgId: integer('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar({ length: 100 }).notNull(),
+    startTime: varchar('start_time', { length: 5 }).notNull(),
+    endTime: varchar('end_time', { length: 5 }).notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('day_parts_org_id_idx').on(table.orgId),
+    uniqueIndex('day_parts_org_id_name_idx').on(table.orgId, table.name),
+  ]
+)
+
 export const laborShift = pgTable(
   'labor_shifts',
   {
