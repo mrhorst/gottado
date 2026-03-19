@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express'
 import { and, asc, eq } from 'drizzle-orm'
 import { AuthenticatedRequest } from '@/types/index.ts'
 import { getUserOrgRole } from '@/utils/auditHelpers.ts'
-import { laborShift, orgMember, section, team, user } from '@/db/schema.ts'
+import { laborShift, orgMember, scheduleDay, section, team, user } from '@/db/schema.ts'
 import db from '@/utils/db.ts'
 import { AppError } from '@/utils/AppError.ts'
 
@@ -25,6 +25,42 @@ const getShiftDate = (value?: string) => {
   if (value) return value
   return new Date().toISOString().slice(0, 10)
 }
+
+const shiftSelectFields = {
+  id: laborShift.id,
+  title: laborShift.title,
+  shiftDate: laborShift.shiftDate,
+  startTime: laborShift.startTime,
+  endTime: laborShift.endTime,
+  areaId: laborShift.areaId,
+  areaName: section.name,
+  assignedTeamId: laborShift.assignedTeamId,
+  assignedTeamName: team.name,
+  teamColor: team.color,
+  assignedUserId: laborShift.assignedUserId,
+  assignedUserName: user.name,
+  notes: laborShift.notes,
+  createdAt: laborShift.createdAt,
+}
+
+const shiftWithJoins = () =>
+  db
+    .select(shiftSelectFields)
+    .from(laborShift)
+    .leftJoin(section, eq(section.id, laborShift.areaId))
+    .leftJoin(team, eq(team.id, laborShift.assignedTeamId))
+    .leftJoin(user, eq(user.id, laborShift.assignedUserId))
+
+const getScheduleStatus = async (orgId: number, date: string) => {
+  const [row] = await db
+    .select({ status: scheduleDay.status })
+    .from(scheduleDay)
+    .where(and(eq(scheduleDay.orgId, orgId), eq(scheduleDay.scheduleDate, date)))
+    .limit(1)
+  return (row?.status as 'draft' | 'published') ?? 'draft'
+}
+
+// ── References ─────────────────────────────────────────────────────────
 
 export const listLaborReferences = async (
   req: AuthenticatedRequest,
@@ -53,6 +89,7 @@ export const listLaborReferences = async (
       .select({
         id: team.id,
         name: team.name,
+        color: team.color,
         description: team.description,
       })
       .from(team)
@@ -77,6 +114,8 @@ export const listLaborReferences = async (
   }
 }
 
+// ── List shifts ────────────────────────────────────────────────────────
+
 export const listLaborShifts = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -89,36 +128,26 @@ export const listLaborShifts = async (
   )
 
   try {
-    await ensureOrgAccess(userId, orgId)
+    const role = await ensureOrgAccess(userId, orgId)
+    const status = await getScheduleStatus(orgId, shiftDate)
 
-    const shifts = await db
-      .select({
-        id: laborShift.id,
-        title: laborShift.title,
-        shiftDate: laborShift.shiftDate,
-        startTime: laborShift.startTime,
-        endTime: laborShift.endTime,
-        areaId: laborShift.areaId,
-        areaName: section.name,
-        assignedTeamId: laborShift.assignedTeamId,
-        assignedTeamName: team.name,
-        assignedUserId: laborShift.assignedUserId,
-        assignedUserName: user.name,
-        notes: laborShift.notes,
-        createdAt: laborShift.createdAt,
-      })
-      .from(laborShift)
-      .leftJoin(section, eq(section.id, laborShift.areaId))
-      .leftJoin(team, eq(team.id, laborShift.assignedTeamId))
-      .leftJoin(user, eq(user.id, laborShift.assignedUserId))
+    // Viewers can only see published schedules
+    if (role === 'viewer' && status !== 'published') {
+      res.send({ shifts: [], scheduleStatus: status })
+      return
+    }
+
+    const shifts = await shiftWithJoins()
       .where(and(eq(laborShift.orgId, orgId), eq(laborShift.shiftDate, shiftDate)))
       .orderBy(asc(laborShift.startTime), asc(laborShift.title))
 
-    res.send(shifts)
+    res.send({ shifts, scheduleStatus: status })
   } catch (error) {
     next(error)
   }
 }
+
+// ── Create shift ───────────────────────────────────────────────────────
 
 export const createLaborShift = async (
   req: AuthenticatedRequest,
@@ -187,30 +216,150 @@ export const createLaborShift = async (
       })
       .returning()
 
-    const [fullShift] = await db
-      .select({
-        id: laborShift.id,
-        title: laborShift.title,
-        shiftDate: laborShift.shiftDate,
-        startTime: laborShift.startTime,
-        endTime: laborShift.endTime,
-        areaId: laborShift.areaId,
-        areaName: section.name,
-        assignedTeamId: laborShift.assignedTeamId,
-        assignedTeamName: team.name,
-        assignedUserId: laborShift.assignedUserId,
-        assignedUserName: user.name,
-        notes: laborShift.notes,
-        createdAt: laborShift.createdAt,
-      })
-      .from(laborShift)
-      .leftJoin(section, eq(section.id, laborShift.areaId))
-      .leftJoin(team, eq(team.id, laborShift.assignedTeamId))
-      .leftJoin(user, eq(user.id, laborShift.assignedUserId))
+    const [fullShift] = await shiftWithJoins()
       .where(eq(laborShift.id, created.id))
       .limit(1)
 
     res.status(201).send(fullShift)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ── Update shift ───────────────────────────────────────────────────────
+
+export const updateLaborShift = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const orgId = Number(req.headers['x-org-id'])
+  const userId = Number(req.user?.sub)
+  const shiftId = Number(req.params.id)
+
+  try {
+    await ensureOrgManager(userId, orgId)
+
+    const [updated] = await db
+      .update(laborShift)
+      .set({
+        ...req.body,
+        updatedBy: userId,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(laborShift.id, shiftId), eq(laborShift.orgId, orgId)))
+      .returning()
+
+    if (!updated) throw new AppError('shift not found', 404)
+
+    const [fullShift] = await shiftWithJoins()
+      .where(eq(laborShift.id, updated.id))
+      .limit(1)
+
+    res.send(fullShift)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ── Delete shift ───────────────────────────────────────────────────────
+
+export const deleteLaborShift = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const orgId = Number(req.headers['x-org-id'])
+  const userId = Number(req.user?.sub)
+  const shiftId = Number(req.params.id)
+
+  try {
+    await ensureOrgManager(userId, orgId)
+
+    const [deleted] = await db
+      .delete(laborShift)
+      .where(and(eq(laborShift.id, shiftId), eq(laborShift.orgId, orgId)))
+      .returning()
+
+    if (!deleted) throw new AppError('shift not found', 404)
+
+    res.sendStatus(204)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ── Publish / Unpublish ────────────────────────────────────────────────
+
+export const publishScheduleDay = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const orgId = Number(req.headers['x-org-id'])
+  const userId = Number(req.user?.sub)
+  const { date } = req.body
+
+  try {
+    await ensureOrgManager(userId, orgId)
+
+    const now = new Date()
+    const [result] = await db
+      .insert(scheduleDay)
+      .values({
+        orgId,
+        scheduleDate: date,
+        status: 'published',
+        publishedBy: userId,
+        publishedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [scheduleDay.orgId, scheduleDay.scheduleDate],
+        set: {
+          status: 'published',
+          publishedBy: userId,
+          publishedAt: now,
+          updatedAt: now,
+        },
+      })
+      .returning()
+
+    res.send(result)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const unpublishScheduleDay = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const orgId = Number(req.headers['x-org-id'])
+  const userId = Number(req.user?.sub)
+  const { date } = req.body
+
+  try {
+    await ensureOrgManager(userId, orgId)
+
+    const now = new Date()
+    const [result] = await db
+      .insert(scheduleDay)
+      .values({
+        orgId,
+        scheduleDate: date,
+        status: 'draft',
+      })
+      .onConflictDoUpdate({
+        target: [scheduleDay.orgId, scheduleDay.scheduleDate],
+        set: {
+          status: 'draft',
+          updatedAt: now,
+        },
+      })
+      .returning()
+
+    res.send(result)
   } catch (error) {
     next(error)
   }

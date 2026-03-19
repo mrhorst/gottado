@@ -38,11 +38,13 @@ export const updateOrgMemberSchema = z.object({
 export const createTeamSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().max(255).optional(),
+  color: z.string().length(7).regex(/^#[0-9a-fA-F]{6}$/).optional(),
 })
 
 export const updateTeamSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().max(255).nullable().optional(),
+  color: z.string().length(7).regex(/^#[0-9a-fA-F]{6}$/).optional(),
   active: z.boolean().optional(),
 })
 
@@ -67,6 +69,22 @@ export const upsertLogbookEntrySchema = z.object({
   body: z.string().min(1).max(5000),
 })
 
+// ── Day Parts ──────────────────────────────────────────────────────────
+
+export const createDayPartSchema = z.object({
+  name: z.string().min(1).max(100),
+  startTime: z.string().min(1).max(5),
+  endTime: z.string().min(1).max(5),
+  sortOrder: z.number().int().optional(),
+})
+
+export const updateDayPartSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  startTime: z.string().min(1).max(5).optional(),
+  endTime: z.string().min(1).max(5).optional(),
+  sortOrder: z.number().int().optional(),
+})
+
 // ── Labor ───────────────────────────────────────────────────────────────
 
 export const createLaborShiftSchema = z.object({
@@ -78,6 +96,21 @@ export const createLaborShiftSchema = z.object({
   assignedTeamId: z.number().int().positive().nullable().optional(),
   assignedUserId: z.number().int().positive().nullable().optional(),
   notes: z.string().max(5000).optional(),
+})
+
+export const updateLaborShiftSchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  shiftDate: z.string().min(1).max(10).optional(),
+  startTime: z.string().min(1).max(5).optional(),
+  endTime: z.string().min(1).max(5).optional(),
+  areaId: z.number().int().positive().nullable().optional(),
+  assignedTeamId: z.number().int().positive().nullable().optional(),
+  assignedUserId: z.number().int().positive().nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+})
+
+export const publishScheduleDaySchema = z.object({
+  date: z.string().min(1).max(10),
 })
 
 // ── Costs ───────────────────────────────────────────────────────────────
