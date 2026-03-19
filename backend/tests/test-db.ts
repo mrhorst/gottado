@@ -1,6 +1,6 @@
+import { execSync } from 'child_process'
 import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Client } from 'pg'
 import * as schema from '../src/db/schema.ts'
 
@@ -63,21 +63,15 @@ export async function resetTestDatabase(): Promise<void> {
 }
 
 /**
- * Run migrations on test database
+ * Push schema to test database using drizzle-kit push
  */
 export async function migrateTestDatabase(): Promise<void> {
-  const client = new Client({ connectionString: TEST_DB_URL })
-  
-  try {
-    await client.connect()
-    const db = drizzle(client, { schema })
-    
-    console.log('Running migrations...')
-    await migrate(db, { migrationsFolder: './drizzle' })
-    console.log('Migrations complete')
-  } finally {
-    await client.end()
-  }
+  console.log('Pushing schema to test database...')
+  execSync(`npx drizzle-kit push --force --url "${TEST_DB_URL}"`, {
+    stdio: 'inherit',
+    cwd: import.meta.dirname ? `${import.meta.dirname}/..` : process.cwd(),
+  })
+  console.log('Schema push complete')
 }
 
 /**
@@ -101,7 +95,9 @@ export async function cleanDatabase(): Promise<void> {
     const tables = [
       'audit_photos',
       'cost_records',
+      'schedule_days',
       'labor_shifts',
+      'day_parts',
       'task_activities',
       'audit_findings',
       'audit_checkpoints',
@@ -109,6 +105,7 @@ export async function cleanDatabase(): Promise<void> {
       'audit_templates',
       'task_completions',
       'tasks',
+      'logbook_entry_edits',
       'logbook_entries',
       'logbook_templates',
       'team_members',
