@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,87 +18,76 @@ import FormField from '@/components/ui/FormField'
 import { Input } from '@/components/ui/Input'
 import ScreenHeader from '@/components/ui/ScreenHeader'
 import ScreenMotion from '@/components/ui/ScreenMotion'
-import { useCreateShiftMutation } from '@/hooks/useLaborMutation'
-import { useLaborReferencesQuery } from '@/hooks/useLaborQuery'
+import { useDeleteShiftMutation, useUpdateShiftMutation } from '@/hooks/useLaborMutation'
+import { useLaborReferencesQuery, useLaborShiftsQuery } from '@/hooks/useLaborQuery'
 import { colors, layout, radius, spacing, typography } from '@/styles/theme'
 
-const getToday = () => new Date().toISOString().slice(0, 10)
-
-export default function NewShiftScreen() {
+export default function EditShiftScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const shiftId = Number(id)
   const router = useRouter()
-  const params = useLocalSearchParams<{ date?: string; startTime?: string; teamId?: string }>()
-  const { areas, teams, members, isLoading, isError, error } = useLaborReferencesQuery()
-  const { createShift, isPending } = useCreateShiftMutation()
+
+  const { shifts, isLoading: shiftsLoading } = useLaborShiftsQuery()
+  const { areas, teams, members, isLoading: refsLoading } = useLaborReferencesQuery()
+  const { updateShift, isPending: isUpdating } = useUpdateShiftMutation()
+  const { deleteShift, isPending: isDeleting } = useDeleteShiftMutation()
+
+  const shift = useMemo(() => shifts.find((s) => s.id === shiftId), [shifts, shiftId])
 
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
-  const [shiftDate, setShiftDate] = useState(params.date ?? getToday)
-  const [startTime, setStartTime] = useState(params.startTime ?? '09:00')
-  const [endTime, setEndTime] = useState(() => {
-    if (params.startTime) {
-      // Default to 4 hours after start
-      const [h, m] = params.startTime.split(':').map(Number)
-      const endH = Math.min(h + 4, 23)
-      return `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-    }
-    return '17:00'
-  })
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [areaId, setAreaId] = useState<number | null>(null)
-  const [assignedTeamId, setAssignedTeamId] = useState<number | null>(
-    params.teamId ? Number(params.teamId) : null
-  )
+  const [assignedTeamId, setAssignedTeamId] = useState<number | null>(null)
   const [assignedUserId, setAssignedUserId] = useState<number | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (areaId == null && areas.length > 0) {
-      setAreaId(areas[0].id)
+    if (shift && !initialized) {
+      setTitle(shift.title)
+      setNotes(shift.notes ?? '')
+      setStartTime(shift.startTime)
+      setEndTime(shift.endTime)
+      setAreaId(shift.areaId ?? null)
+      setAssignedTeamId(shift.assignedTeamId ?? null)
+      setAssignedUserId(shift.assignedUserId ?? null)
+      setInitialized(true)
     }
-  }, [areaId, areas])
+  }, [shift, initialized])
 
-  const selectedArea = useMemo(
-    () => areas.find((area) => area.id === areaId) ?? null,
-    [areaId, areas]
-  )
-
-  useEffect(() => {
-    if (assignedTeamId == null) {
-      if (selectedArea?.teamId) {
-        setAssignedTeamId(selectedArea.teamId)
-        return
-      }
-      if (teams.length > 0) {
-        setAssignedTeamId(teams[0].id)
-      }
-    }
-  }, [assignedTeamId, selectedArea, teams])
-
-  useEffect(() => {
-    if (assignedUserId == null && members.length > 0) {
-      setAssignedUserId(members[0].id)
-    }
-  }, [assignedUserId, members])
-
-  const handleSubmit = () => {
+  const handleSave = () => {
     if (!title.trim()) return
 
-    createShift(
+    updateShift(
       {
-        title: title.trim(),
-        shiftDate,
-        startTime,
-        endTime,
-        areaId,
-        assignedTeamId,
-        assignedUserId,
-        notes: notes.trim() || undefined,
+        id: shiftId,
+        payload: {
+          title: title.trim(),
+          startTime,
+          endTime,
+          areaId,
+          assignedTeamId,
+          assignedUserId,
+          notes: notes.trim() || null,
+        },
       },
-      {
-        onSuccess: () => router.back(),
-      }
+      { onSuccess: () => router.back() }
     )
   }
 
-  if (isLoading) {
+  const handleDelete = () => {
+    Alert.alert('Delete Shift', 'Remove this shift? This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteShift(shiftId, { onSuccess: () => router.back() }),
+      },
+    ])
+  }
+
+  if (shiftsLoading || refsLoading) {
     return (
       <ScreenMotion>
         <View style={[s.container, s.centered]}>
@@ -107,11 +97,11 @@ export default function NewShiftScreen() {
     )
   }
 
-  if (isError) {
+  if (!shift) {
     return (
       <ScreenMotion>
         <View style={[s.container, s.centered]}>
-          <Text style={s.errorText}>Error: {error?.message}</Text>
+          <Text style={s.errorText}>Shift not found</Text>
         </View>
       </ScreenMotion>
     )
@@ -125,24 +115,13 @@ export default function NewShiftScreen() {
         keyboardVerticalOffset={100}
       >
         <ScrollView contentContainerStyle={s.content}>
-          <ScreenHeader
-            title='Create a Shift'
-            subtitle='Plan who is covering what, when, and where for this day.'
-          />
+          <ScreenHeader title='Edit Shift' subtitle='Update shift details or delete it.' />
 
           <FormField label='Shift Title'>
-            <Input
-              value={title}
-              onChangeText={setTitle}
-              placeholder='e.g., Open kitchen line'
-              autoFocus
-            />
+            <Input value={title} onChangeText={setTitle} placeholder='e.g., Open kitchen line' />
           </FormField>
 
           <View style={s.inlineGrid}>
-            <FormField label='Date'>
-              <Input value={shiftDate} onChangeText={setShiftDate} placeholder='YYYY-MM-DD' />
-            </FormField>
             <FormField label='Start Time'>
               <Input value={startTime} onChangeText={setStartTime} placeholder='09:00' />
             </FormField>
@@ -151,59 +130,56 @@ export default function NewShiftScreen() {
             </FormField>
           </View>
 
-          <FormField label='Area' hint='Pick where this shift belongs operationally.'>
+          <FormField label='Area'>
             <OptionList
-              options={areas.map((area) => ({ id: area.id, label: area.name }))}
+              options={areas.map((a) => ({ id: a.id, label: a.name }))}
               selectedId={areaId}
               onSelect={(id) => {
                 setAreaId(id)
-                const nextArea = areas.find((area) => area.id === id)
+                const nextArea = areas.find((a) => a.id === id)
                 if (nextArea?.teamId) setAssignedTeamId(nextArea.teamId)
               }}
             />
           </FormField>
 
-          <FormField label='Team' hint='Ownership layer. Defaults from the selected area.'>
+          <FormField label='Team'>
             <OptionList
-              options={teams.map((team) => ({ id: team.id, label: team.name }))}
+              options={teams.map((t) => ({ id: t.id, label: t.name }))}
               selectedId={assignedTeamId}
               onSelect={setAssignedTeamId}
             />
           </FormField>
 
-          <FormField label='Assigned Person' hint='Optional frontline owner for this shift.'>
+          <FormField label='Assigned Person'>
             <OptionList
-              options={members.map((member) => ({ id: member.id, label: member.name }))}
+              options={members.map((m) => ({ id: m.id, label: m.name }))}
               selectedId={assignedUserId}
               onSelect={setAssignedUserId}
             />
           </FormField>
 
-          <FormField label='Notes' hint='Optional context for the manager or team lead.'>
+          <FormField label='Notes'>
             <Input
               value={notes}
               onChangeText={setNotes}
-              placeholder='Optional shift notes for the manager or lead.'
+              placeholder='Optional shift notes.'
               multiline
             />
           </FormField>
 
-          <AppCard style={s.previewCard}>
-            <Text style={s.previewEyebrow}>Planned Coverage</Text>
-            <Text style={s.previewTitle}>{title.trim() || 'New shift'}</Text>
-            <Text style={s.previewMeta}>
-              {startTime} - {endTime} {selectedArea ? `• ${selectedArea.name}` : ''}
-            </Text>
-          </AppCard>
+          <Pressable onPress={handleDelete} style={s.deleteRow}>
+            <Ionicons name='trash-outline' size={18} color={colors.textSecondary} />
+            <Text style={s.deleteText}>Delete this shift</Text>
+          </Pressable>
         </ScrollView>
 
         <View style={s.footer}>
           <AppButton
-            label='Save Shift'
-            accessibilityLabel='Save shift'
-            onPress={handleSubmit}
+            label='Save Changes'
+            accessibilityLabel='Save shift changes'
+            onPress={handleSave}
             disabled={!title.trim()}
-            loading={isPending}
+            loading={isUpdating || isDeleting}
             icon={<Ionicons name='save-outline' size={18} color='#fff' />}
           />
         </View>
@@ -292,25 +268,17 @@ const s = StyleSheet.create({
   optionChipTextSelected: {
     color: '#fff',
   },
-  previewCard: {
-    gap: 6,
-  },
-  previewEyebrow: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  previewTitle: {
-    ...typography.h4,
-    color: colors.text,
-  },
-  previewMeta: {
+  emptyOptionText: {
     ...typography.body2,
     color: colors.textSecondary,
   },
-  emptyOptionText: {
+  deleteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  deleteText: {
     ...typography.body2,
     color: colors.textSecondary,
   },

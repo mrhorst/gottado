@@ -1,6 +1,7 @@
 export interface TeamSummary {
   id: number
   name: string
+  color: string
   description?: string | null
   active: boolean
   memberCount: number

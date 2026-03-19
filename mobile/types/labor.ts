@@ -8,6 +8,7 @@ export interface LaborShift {
   areaName?: string | null
   assignedTeamId?: number | null
   assignedTeamName?: string | null
+  teamColor?: string | null
   assignedUserId?: number | null
   assignedUserName?: string | null
   notes?: string | null
@@ -24,6 +25,7 @@ export interface LaborReferenceArea {
 export interface LaborReferenceTeam {
   id: number
   name: string
+  color: string
   description?: string | null
 }
 
@@ -40,6 +42,35 @@ export interface LaborReferencesResponse {
   members: LaborReferenceMember[]
 }
 
+export interface DayPart {
+  id: number
+  name: string
+  startTime: string
+  endTime: string
+  sortOrder: number
+}
+
+export interface CreateDayPartPayload {
+  name: string
+  startTime: string
+  endTime: string
+  sortOrder?: number
+}
+
+export interface UpdateDayPartPayload {
+  name?: string
+  startTime?: string
+  endTime?: string
+  sortOrder?: number
+}
+
+export type ScheduleStatus = 'draft' | 'published'
+
+export interface LaborShiftsResponse {
+  shifts: LaborShift[]
+  scheduleStatus: ScheduleStatus
+}
+
 export interface CreateLaborShiftPayload {
   title: string
   shiftDate: string
@@ -49,4 +80,15 @@ export interface CreateLaborShiftPayload {
   assignedTeamId?: number | null
   assignedUserId?: number | null
   notes?: string
+}
+
+export interface UpdateLaborShiftPayload {
+  title?: string
+  shiftDate?: string
+  startTime?: string
+  endTime?: string
+  areaId?: number | null
+  assignedTeamId?: number | null
+  assignedUserId?: number | null
+  notes?: string | null
 }

@@ -6,6 +6,21 @@ import db from '@/utils/db.ts'
 import { AppError } from '@/utils/AppError.ts'
 import { getUserOrgRole } from '@/utils/auditHelpers.ts'
 
+const TEAM_PALETTE = [
+  '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+  '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1',
+]
+
+const pickTeamColor = async (orgId: number): Promise<string> => {
+  const existing = await db
+    .select({ color: team.color })
+    .from(team)
+    .where(eq(team.orgId, orgId))
+  const usedColors = new Set(existing.map((t) => t.color))
+  const available = TEAM_PALETTE.find((c) => !usedColors.has(c))
+  return available ?? TEAM_PALETTE[existing.length % TEAM_PALETTE.length]
+}
+
 const ensureOrgManager = async (userId: number, orgId: number) => {
   const role = await getUserOrgRole(userId, orgId)
   if (role !== 'owner' && role !== 'editor') {
@@ -31,6 +46,7 @@ export const listTeams = async (
       .select({
         id: team.id,
         name: team.name,
+        color: team.color,
         description: team.description,
         active: team.active,
         memberCount: count(teamMember.userId),
@@ -54,16 +70,19 @@ export const createTeam = async (
 ) => {
   const orgId = Number(req.headers['x-org-id'])
   const userId = Number(req.user!.sub)
-  const { name, description } = req.body
+  const { name, description, color } = req.body
 
   try {
     await ensureOrgManager(userId, orgId)
+
+    const assignedColor = color ?? (await pickTeamColor(orgId))
 
     const [createdTeam] = await db
       .insert(team)
       .values({
         orgId,
         name,
+        color: assignedColor,
         description: description ?? null,
       })
       .returning()
