@@ -4,6 +4,7 @@ import { colors, layout, radius, spacing } from '@/styles/theme'
 import {
   computeTimeRange,
   getHourTicks,
+  resolveEndMinutes,
   timeToMinutes,
   timeToPixel,
 } from '@/utils/timelineLayout'
@@ -97,7 +98,7 @@ const ShiftTimeline = React.memo(
           >
             {laneShifts.map((shift) => {
               const startMin = timeToMinutes(shift.startTime)
-              const endMin = timeToMinutes(shift.endTime)
+              const endMin = resolveEndMinutes(startMin, timeToMinutes(shift.endTime))
               const left = timeToPixel(startMin, rangeStart, rangeEnd, timelineWidth)
               const right = timeToPixel(endMin, rangeStart, rangeEnd, timelineWidth)
 

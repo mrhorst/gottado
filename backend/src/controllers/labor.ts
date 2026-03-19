@@ -303,39 +303,28 @@ export const publishScheduleDay = async (
   try {
     await ensureOrgManager(userId, orgId)
 
-    const [existing] = await db
-      .select({ id: scheduleDay.id })
-      .from(scheduleDay)
-      .where(and(eq(scheduleDay.orgId, orgId), eq(scheduleDay.scheduleDate, date)))
-      .limit(1)
-
-    if (existing) {
-      const [updated] = await db
-        .update(scheduleDay)
-        .set({
+    const now = new Date()
+    const [result] = await db
+      .insert(scheduleDay)
+      .values({
+        orgId,
+        scheduleDate: date,
+        status: 'published',
+        publishedBy: userId,
+        publishedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [scheduleDay.orgId, scheduleDay.scheduleDate],
+        set: {
           status: 'published',
           publishedBy: userId,
-          publishedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(scheduleDay.id, existing.id))
-        .returning()
+          publishedAt: now,
+          updatedAt: now,
+        },
+      })
+      .returning()
 
-      res.send(updated)
-    } else {
-      const [created] = await db
-        .insert(scheduleDay)
-        .values({
-          orgId,
-          scheduleDate: date,
-          status: 'published',
-          publishedBy: userId,
-          publishedAt: new Date(),
-        })
-        .returning()
-
-      res.status(201).send(created)
-    }
+    res.send(result)
   } catch (error) {
     next(error)
   }
@@ -353,27 +342,24 @@ export const unpublishScheduleDay = async (
   try {
     await ensureOrgManager(userId, orgId)
 
-    const [existing] = await db
-      .select({ id: scheduleDay.id })
-      .from(scheduleDay)
-      .where(and(eq(scheduleDay.orgId, orgId), eq(scheduleDay.scheduleDate, date)))
-      .limit(1)
-
-    if (existing) {
-      const [updated] = await db
-        .update(scheduleDay)
-        .set({
+    const now = new Date()
+    const [result] = await db
+      .insert(scheduleDay)
+      .values({
+        orgId,
+        scheduleDate: date,
+        status: 'draft',
+      })
+      .onConflictDoUpdate({
+        target: [scheduleDay.orgId, scheduleDay.scheduleDate],
+        set: {
           status: 'draft',
-          updatedAt: new Date(),
-        })
-        .where(eq(scheduleDay.id, existing.id))
-        .returning()
+          updatedAt: now,
+        },
+      })
+      .returning()
 
-      res.send(updated)
-    } else {
-      // Already draft implicitly
-      res.send({ status: 'draft', scheduleDate: date })
-    }
+    res.send(result)
   } catch (error) {
     next(error)
   }

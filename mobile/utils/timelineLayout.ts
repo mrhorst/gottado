@@ -13,6 +13,11 @@ export const minutesToTime = (minutes: number): string => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
+/** Resolve end time for overnight shifts: if end <= start, treat as next day */
+export const resolveEndMinutes = (startMin: number, endMin: number): number => {
+  return endMin <= startMin ? endMin + 1440 : endMin
+}
+
 /** Compute the visible time range from day parts, expanding if shifts fall outside */
 export const computeTimeRange = (
   dayParts: DayPart[],
@@ -29,7 +34,7 @@ export const computeTimeRange = (
   // Expand if shifts fall outside the day-part range
   for (const shift of shifts) {
     const start = timeToMinutes(shift.startTime)
-    const end = timeToMinutes(shift.endTime)
+    const end = resolveEndMinutes(start, timeToMinutes(shift.endTime))
     if (start < rangeStart) rangeStart = start
     if (end > rangeEnd) rangeEnd = end
   }
