@@ -5,3 +5,12 @@ backend/uploads/
 mobile/.playwright-browsers/
 mobile/playwright-report/
 mobile/test-results/
+
+# Internal docs (not for public repo)
+AGENTS.md
+CLAUDE.md
+IMPLEMENTATION_PLAN.md
+TECHNICAL_DOCS.md
+TESTING.md
+USER_GUIDE.md
+backend/TESTING.md
