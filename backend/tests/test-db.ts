@@ -1,6 +1,6 @@
+import { execSync } from 'child_process'
 import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Client } from 'pg'
 import * as schema from '../src/db/schema.ts'
 
@@ -16,16 +16,16 @@ const TEST_DB_URL = process.env.TEST_DATABASE_URL || `postgresql://localhost:543
 export async function createTestDatabase(): Promise<void> {
   const adminUrl = process.env.ADMIN_DATABASE_URL || 'postgresql://localhost:5432/postgres'
   const client = new Client({ connectionString: adminUrl })
-  
+
   try {
     await client.connect()
-    
+
     // Check if database exists
     const result = await client.query(
       'SELECT 1 FROM pg_database WHERE datname = $1',
       [TEST_DB_NAME]
     )
-    
+
     if (result.rows.length === 0) {
       console.log(`Creating test database: ${TEST_DB_NAME}`)
       await client.query(`CREATE DATABASE "${TEST_DB_NAME}"`)
@@ -41,10 +41,10 @@ export async function createTestDatabase(): Promise<void> {
 export async function resetTestDatabase(): Promise<void> {
   const adminUrl = process.env.ADMIN_DATABASE_URL || 'postgresql://localhost:5432/postgres'
   const client = new Client({ connectionString: adminUrl })
-  
+
   try {
     await client.connect()
-    
+
     // Terminate existing connections
     await client.query(`
       SELECT pg_terminate_backend(pg_stat_activity.pid)
@@ -52,7 +52,7 @@ export async function resetTestDatabase(): Promise<void> {
       WHERE pg_stat_activity.datname = $1
       AND pid <> pg_backend_pid()
     `, [TEST_DB_NAME])
-    
+
     // Drop and recreate
     await client.query(`DROP DATABASE IF EXISTS "${TEST_DB_NAME}"`)
     await client.query(`CREATE DATABASE "${TEST_DB_NAME}"`)
@@ -63,21 +63,15 @@ export async function resetTestDatabase(): Promise<void> {
 }
 
 /**
- * Run migrations on test database
+ * Push schema to test database using drizzle-kit push
  */
 export async function migrateTestDatabase(): Promise<void> {
-  const client = new Client({ connectionString: TEST_DB_URL })
-  
-  try {
-    await client.connect()
-    const db = drizzle(client, { schema })
-    
-    console.log('Running migrations...')
-    await migrate(db, { migrationsFolder: './drizzle' })
-    console.log('Migrations complete')
-  } finally {
-    await client.end()
-  }
+  console.log('Pushing schema to test database...')
+  execSync(`npx drizzle-kit push --force --url "${TEST_DB_URL}"`, {
+    stdio: 'inherit',
+    cwd: import.meta.dirname ? `${import.meta.dirname}/..` : process.cwd(),
+  })
+  console.log('Schema push complete')
 }
 
 /**
@@ -93,16 +87,18 @@ export function getTestDb() {
  */
 export async function cleanDatabase(): Promise<void> {
   const { client, db } = getTestDb()
-  
+
   try {
     await client.connect()
-    
+
     // Delete in order to respect foreign keys (table names in DB)
     const tables = [
       'audit_photos',
       'issue_records',
       'cost_records',
+      'schedule_days',
       'labor_shifts',
+      'day_parts',
       'task_activities',
       'audit_findings',
       'audit_checkpoints',
@@ -110,6 +106,7 @@ export async function cleanDatabase(): Promise<void> {
       'audit_templates',
       'task_completions',
       'tasks',
+      'logbook_entry_edits',
       'logbook_entries',
       'logbook_templates',
       'team_members',
@@ -122,7 +119,7 @@ export async function cleanDatabase(): Promise<void> {
       'users',
       'organizations',
     ]
-    
+
     for (const table of tables) {
       await db.execute(`DELETE FROM "${table}"`)
     }
@@ -142,7 +139,7 @@ export async function setupTestDb(): Promise<void> {
 // CLI usage
 if (import.meta.main) {
   const command = process.argv[2]
-  
+
   switch (command) {
     case 'create':
       await createTestDatabase()
