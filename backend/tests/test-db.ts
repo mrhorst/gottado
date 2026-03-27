@@ -16,16 +16,16 @@ const TEST_DB_URL = process.env.TEST_DATABASE_URL || `postgresql://localhost:543
 export async function createTestDatabase(): Promise<void> {
   const adminUrl = process.env.ADMIN_DATABASE_URL || 'postgresql://localhost:5432/postgres'
   const client = new Client({ connectionString: adminUrl })
-  
+
   try {
     await client.connect()
-    
+
     // Check if database exists
     const result = await client.query(
       'SELECT 1 FROM pg_database WHERE datname = $1',
       [TEST_DB_NAME]
     )
-    
+
     if (result.rows.length === 0) {
       console.log(`Creating test database: ${TEST_DB_NAME}`)
       await client.query(`CREATE DATABASE "${TEST_DB_NAME}"`)
@@ -41,10 +41,10 @@ export async function createTestDatabase(): Promise<void> {
 export async function resetTestDatabase(): Promise<void> {
   const adminUrl = process.env.ADMIN_DATABASE_URL || 'postgresql://localhost:5432/postgres'
   const client = new Client({ connectionString: adminUrl })
-  
+
   try {
     await client.connect()
-    
+
     // Terminate existing connections
     await client.query(`
       SELECT pg_terminate_backend(pg_stat_activity.pid)
@@ -52,7 +52,7 @@ export async function resetTestDatabase(): Promise<void> {
       WHERE pg_stat_activity.datname = $1
       AND pid <> pg_backend_pid()
     `, [TEST_DB_NAME])
-    
+
     // Drop and recreate
     await client.query(`DROP DATABASE IF EXISTS "${TEST_DB_NAME}"`)
     await client.query(`CREATE DATABASE "${TEST_DB_NAME}"`)
@@ -87,13 +87,14 @@ export function getTestDb() {
  */
 export async function cleanDatabase(): Promise<void> {
   const { client, db } = getTestDb()
-  
+
   try {
     await client.connect()
-    
+
     // Delete in order to respect foreign keys (table names in DB)
     const tables = [
       'audit_photos',
+      'issue_records',
       'cost_records',
       'schedule_days',
       'labor_shifts',
@@ -118,7 +119,7 @@ export async function cleanDatabase(): Promise<void> {
       'users',
       'organizations',
     ]
-    
+
     for (const table of tables) {
       await db.execute(`DELETE FROM "${table}"`)
     }
@@ -138,7 +139,7 @@ export async function setupTestDb(): Promise<void> {
 // CLI usage
 if (import.meta.main) {
   const command = process.argv[2]
-  
+
   switch (command) {
     case 'create':
       await createTestDatabase()
